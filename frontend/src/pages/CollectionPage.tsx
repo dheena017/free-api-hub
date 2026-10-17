@@ -4,7 +4,25 @@ import { ApiItem } from '../types/api';
 import { fetchApis } from '../api/client';
 import { ApiCard } from '../components/ApiCard';
 import { CustomSelect, SelectOption } from '../components/CustomSelect';
-import { FolderTree, Zap, Globe, Database, ShieldCheck, ArrowLeft, AlertCircle, AlertTriangle, RefreshCw, HelpCircle, Compass } from 'lucide-react';
+import {
+  FolderTree,
+  Zap,
+  Globe,
+  Database,
+  ShieldCheck,
+  ArrowLeft,
+  AlertCircle,
+  RefreshCw,
+  Search,
+  X,
+  LayoutGrid,
+  List,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  FilterX
+} from 'lucide-react';
 
 const SORT_OPTIONS: SelectOption[] = [
   { value: 'popular', label: 'Most Reliable', badge: 'Default' },
@@ -16,9 +34,15 @@ const SORT_OPTIONS: SelectOption[] = [
 export const CollectionPage: React.FC = () => {
   const { filter } = useParams<{ filter: string }>();
   const [apis, setApis] = useState<ApiItem[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [selectedSort, setSelectedSort] = useState('popular');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [viewMode, setViewMode] = useState<'grid' | 'compact'>('grid');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const pageSize = 24;
 
   const collections = [
     {
@@ -64,10 +88,13 @@ export const CollectionPage: React.FC = () => {
     try {
       const res = await fetchApis({
         collection: currentCollection.id,
+        q: searchQuery || undefined,
         sort: selectedSort,
-        limit: 50
+        limit: pageSize,
+        offset: (currentPage - 1) * pageSize
       });
       setApis(res.items);
+      setTotalCount(res.total);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : `Failed to load collection '${currentCollection.name}'`);
     } finally {
@@ -77,24 +104,66 @@ export const CollectionPage: React.FC = () => {
 
   useEffect(() => {
     loadCollection();
-  }, [currentCollection.id, selectedSort]);
+  }, [currentCollection.id, selectedSort, currentPage, searchQuery]);
+
+  // Reset page when collection changes
+  useEffect(() => {
+    setCurrentPage(1);
+    setSearchQuery('');
+  }, [filter]);
+
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   const Icon = currentCollection.icon;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Back button */}
-      <Link
-        to="/explore"
-        className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        <span>Back to All APIs</span>
-      </Link>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      {/* Top Header */}
+      <div className="flex items-center justify-between">
+        <Link
+          to="/explore"
+          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span>Back to All APIs</span>
+        </Link>
+
+        {/* View mode toggle */}
+        <div className="flex items-center rounded-lg bg-[#28292A] border border-[#3C4043] p-0.5">
+          <button
+            onClick={() => setViewMode('grid')}
+            title="Grid View"
+            className={`p-1.5 rounded-md transition-colors ${
+              viewMode === 'grid'
+                ? 'bg-[#3C4043] text-white shadow-sm'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('compact')}
+            title="Compact List View"
+            className={`p-1.5 rounded-md transition-colors ${
+              viewMode === 'compact'
+                ? 'bg-[#3C4043] text-white shadow-sm'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <List className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
 
       {/* Collection Navigation Tabs */}
-      {/* Collection Navigation Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
         {collections.map((col) => {
           const TabIcon = col.icon;
           const isSelected = col.id === currentCollection.id;
@@ -102,27 +171,27 @@ export const CollectionPage: React.FC = () => {
             <Link
               key={col.id}
               to={`/collections/${col.id}`}
-              className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors border ${
+              className={`px-4 py-2 rounded-xl flex items-center gap-2 whitespace-nowrap font-medium transition-colors border ${
                 isSelected
-                  ? 'bg-[#8AB4F8]/20 border-[#8AB4F8] text-[#8AB4F8] font-semibold'
-                  : 'bg-[#28292A] border-[#3C4043] text-slate-300 hover:text-white hover:bg-[#303134]'
+                  ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold border-[#8AB4F8]'
+                  : 'bg-[#28292A] border-[#3C4043] text-slate-300 hover:bg-[#303134] hover:text-white'
               }`}
             >
-              <TabIcon className="h-3.5 w-3.5" />
+              <TabIcon className="h-4 w-4" />
               <span>{col.name}</span>
             </Link>
           );
         })}
       </div>
 
-      {/* Editorial Header */}
+      {/* Hero Header */}
       <div className="bg-[#28292A] rounded-2xl p-6 sm:p-8 border border-[#3C4043] space-y-3">
-        <div className="flex items-center gap-2 text-[#8AB4F8] text-xs font-mono font-medium">
-          <Icon className="h-4 w-4" />
-          <span>Curated Collection</span>
+        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#8AB4F8]/10 border border-[#8AB4F8]/20 text-[#8AB4F8] text-xs font-mono font-medium">
+          <Icon className="h-3.5 w-3.5" />
+          <span>{currentCollection.tagline}</span>
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
           {currentCollection.name}
         </h1>
 
@@ -131,19 +200,44 @@ export const CollectionPage: React.FC = () => {
         </p>
 
         <div className="text-xs font-mono text-slate-400 pt-1">
-          Showing <strong className="text-white">{apis.length}</strong> verified endpoints
+          Showing <strong className="text-white">{totalCount.toLocaleString()}</strong> verified endpoints in this collection
         </div>
       </div>
 
-      {/* Sort Toolbar */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <span className="text-xs text-slate-400 font-medium">
-          Sort {currentCollection.name}
-        </span>
+      {/* Search & Sort Toolbar */}
+      <div className="bg-[#28292A] rounded-2xl border border-[#3C4043] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            placeholder={`Search within ${currentCollection.name}...`}
+            className="w-full pl-9 pr-8 py-2 rounded-xl bg-[#1F1F1F] border border-[#3C4043] text-xs text-white placeholder-slate-400 outline-none focus:border-[#8AB4F8]"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setCurrentPage(1);
+              }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+
         <div className="w-48">
           <CustomSelect
             value={selectedSort}
-            onChange={setSelectedSort}
+            onChange={(val) => {
+              setSelectedSort(val);
+              setCurrentPage(1);
+            }}
             options={SORT_OPTIONS}
             size="sm"
             variant="surface"
@@ -151,75 +245,120 @@ export const CollectionPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Results Grid & Error Diagnostics */}
-      <main className="space-y-4">
+      {/* Main Grid */}
+      <main className="space-y-6">
         {isLoading ? (
-          <div className="py-20 flex flex-col items-center justify-center gap-3 text-slate-400">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#8AB4F8]" />
-            <p className="text-xs">Filtering collection endpoints...</p>
+          <div className="py-24 flex flex-col items-center justify-center gap-3 text-slate-400">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent" />
+            <p className="text-xs font-mono">Loading collection APIs...</p>
           </div>
         ) : error ? (
-          <div className="bg-[#28292A] rounded-2xl p-6 sm:p-8 border border-rose-500/30 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-              <div className="flex items-start gap-3">
-                <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 flex-shrink-0">
-                  <AlertCircle className="h-5 w-5" />
-                </div>
-                <div className="space-y-1">
-                  <h2 className="text-base font-semibold text-white">
-                    Collection Query Error
-                  </h2>
-                  <p className="text-xs font-mono text-rose-300">
-                    {error}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                onClick={loadCollection}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#303134] hover:bg-[#3C4043] border border-[#3C4043] text-xs font-medium text-slate-200 transition-colors flex-shrink-0"
-              >
-                <RefreshCw className="h-3.5 w-3.5" />
-                <span>Retry Query</span>
-              </button>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-[#1F1F1F] border border-[#3C4043] text-xs text-slate-300 space-y-2">
-              <div className="font-semibold text-slate-200 flex items-center gap-1.5">
-                <HelpCircle className="h-3.5 w-3.5 text-[#8AB4F8]" />
-                <span>Troubleshooting Tips:</span>
-              </div>
-              <ul className="list-disc list-inside space-y-1 text-slate-400 text-[11px]">
-                <li>Confirm the backend is online at port 8000 (<code className="text-slate-200 bg-[#28292A] px-1 rounded">http://localhost:8000/api/v1/health</code>).</li>
-                <li>Switch the sort order to "Most Reliable" or "Fastest Response".</li>
-                <li>Explore all verified APIs directly in the directory.</li>
-              </ul>
-            </div>
+          <div className="bg-[#28292A] rounded-2xl p-8 text-center border border-rose-500/30 space-y-3">
+            <AlertCircle className="h-8 w-8 text-rose-400 mx-auto" />
+            <h3 className="text-base font-semibold text-white">Error Loading Collection</h3>
+            <p className="text-xs text-rose-300 max-w-md mx-auto">{error}</p>
+            <button
+              onClick={loadCollection}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#303134] hover:bg-[#3C4043] text-xs text-[#8AB4F8] font-medium border border-[#3C4043] transition-colors"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              <span>Retry</span>
+            </button>
           </div>
         ) : apis.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {apis.map((api) => (
-              <ApiCard key={api.id} api={api} />
-            ))}
+          <div className="space-y-6">
+            {viewMode === 'grid' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {apis.map((api) => (
+                  <ApiCard key={api.id} api={api} viewMode="grid" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {apis.map((api) => (
+                  <ApiCard key={api.id} api={api} viewMode="compact" />
+                ))}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="pt-6 pb-2 border-t border-[#3C4043] flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-xs text-slate-400 font-mono">
+                  Page <strong className="text-white">{currentPage}</strong> of{' '}
+                  <strong className="text-white">{totalPages}</strong> ({totalCount.toLocaleString()} endpoints)
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => handlePageChange(1)}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-lg bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronsLeft className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-lg bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+
+                  <div className="flex items-center gap-1 px-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let p = currentPage <= 3 ? i + 1 : currentPage >= totalPages - 2 ? totalPages - 4 + i : currentPage - 2 + i;
+                      if (p < 1 || p > totalPages) return null;
+                      return (
+                        <button
+                          key={p}
+                          onClick={() => handlePageChange(p)}
+                          className={`min-w-[34px] h-[34px] rounded-lg text-xs font-mono font-medium transition-colors border ${
+                            p === currentPage
+                              ? 'bg-[#8AB4F8] border-[#8AB4F8] text-[#1F1F1F] font-bold'
+                              : 'bg-[#28292A] border-[#3C4043] text-slate-300 hover:bg-[#303134]'
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-lg bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-lg bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronsRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
-          <div className="bg-[#28292A] rounded-2xl p-10 text-center border border-[#3C4043] space-y-3">
-            <div className="inline-flex p-3 rounded-full bg-[#1F1F1F] border border-[#3C4043] text-slate-400">
-              <AlertTriangle className="h-6 w-6 text-amber-400" />
-            </div>
-            <h3 className="text-base font-semibold text-white">No APIs Found in this Curated Collection</h3>
-            <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-              We only list verified, authentic REST APIs that meet this collection's criteria. Every endpoint is pre-tested and active.
+          <div className="bg-[#28292A] rounded-2xl p-12 text-center border border-[#3C4043] space-y-3">
+            <FilterX className="h-9 w-9 text-slate-500 mx-auto" />
+            <h3 className="text-base font-semibold text-white">No endpoints found</h3>
+            <p className="text-xs text-slate-400 max-w-sm mx-auto">
+              No APIs match your current search query in this collection.
             </p>
-            <div className="flex items-center justify-center gap-2 pt-2">
-              <Link
-                to="/explore"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#8AB4F8] hover:bg-[#A8C7FA] text-xs font-semibold text-[#1F1F1F] transition-colors"
-              >
-                <Compass className="h-3.5 w-3.5" />
-                <span>Explore All Categories</span>
-              </Link>
-            </div>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedSort('popular');
+              }}
+              className="px-4 py-2 rounded-xl bg-[#8AB4F8] text-[#1F1F1F] font-semibold text-xs hover:bg-[#A8C7FA] transition-colors"
+            >
+              Reset Search
+            </button>
           </div>
         )}
       </main>

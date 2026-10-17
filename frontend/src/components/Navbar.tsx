@@ -10,9 +10,10 @@ import {
   Compass,
   Menu,
   X,
-  Github
+  Github,
+  Star
 } from 'lucide-react';
-
+import { useBookmarks } from '../utils/useBookmarks';
 import { Logo } from './Logo';
 
 interface NavbarProps {
@@ -22,6 +23,7 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ onOpenSearchModal }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { bookmarks } = useBookmarks();
 
   const navLinks = [
     { label: 'Explore', href: '/explore', icon: Compass },
@@ -62,6 +64,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearchModal }) => {
 
         {/* Right Action Bar */}
         <div className="flex items-center gap-2.5">
+          {/* Saved Bookmarks Button */}
+          {bookmarks.length > 0 && (
+            <Link
+              to="/explore?fav=1"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 hover:text-amber-200 text-xs font-medium transition-colors"
+              title="View Bookmarked APIs"
+            >
+              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+              <span>Saved ({bookmarks.length})</span>
+            </Link>
+          )}
+
           {onOpenSearchModal && (
             <button
               onClick={onOpenSearchModal}
@@ -112,6 +126,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearchModal }) => {
               </Link>
             );
           })}
+          {bookmarks.length > 0 && (
+            <Link
+              to="/explore?fav=1"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-amber-300 hover:bg-[#303134]"
+            >
+              <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
+              <span>Saved APIs ({bookmarks.length})</span>
+            </Link>
+          )}
         </div>
       )}
     </header>

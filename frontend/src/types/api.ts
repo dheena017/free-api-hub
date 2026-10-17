@@ -25,6 +25,7 @@ export interface HealthCheckResult {
 }
 
 export interface BatchHealthCheckResponse {
+  probes_executed: number;
   total_probed: number;
   healthy_count: number;
   degraded_count: number;
