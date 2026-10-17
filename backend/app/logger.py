@@ -59,11 +59,20 @@ class BackendLogger:
             pass
 
     @staticmethod
-    def _safe_print(text: str, file=sys.stdout) -> None:
+    def _safe_print(text: str, file=None) -> None:
+        target = file or sys.stdout
         try:
-            print(text, file=file, flush=True)
-        except (BrokenPipeError, OSError, ValueError):
-            pass
+            target.write(text + "\n")
+            target.flush()
+        except Exception:
+            try:
+                if hasattr(target, "buffer"):
+                    target.buffer.write((text + "\n").encode("utf-8", errors="replace"))
+                    target.buffer.flush()
+                else:
+                    print(text, file=target, flush=True)
+            except Exception:
+                pass
 
     @staticmethod
     def _timestamp() -> str:

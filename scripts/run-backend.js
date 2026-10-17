@@ -60,11 +60,13 @@ const sharedEnv = {
   ...process.env,
   FORCE_COLOR: '1',
   PYTHONUNBUFFERED: '1',
+  PYTHONIOENCODING: 'utf-8',
+  PYTHONUTF8: '1',
   COLORTERM: 'truecolor'
 };
 
 // Use shell: false to avoid space-in-path issues on Windows (e.g. 'api mangement')
-const child = spawn(pythonBin, ['-m', 'uvicorn', 'app.main:app', '--reload', '--port', '8000'], {
+const child = spawn(pythonBin, ['-u', '-m', 'uvicorn', 'app.main:app', '--reload', '--port', '8000', '--access-log'], {
   cwd: backendDir,
   shell: false,
   env: sharedEnv

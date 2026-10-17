@@ -58,6 +58,8 @@ const sharedEnv = {
   ...process.env,
   FORCE_COLOR: '1',
   PYTHONUNBUFFERED: '1',
+  PYTHONIOENCODING: 'utf-8',
+  PYTHONUTF8: '1',
   COLORTERM: 'truecolor'
 };
 
@@ -174,7 +176,7 @@ await ensurePortFree(8000, { tag: BACKEND_TAG });
 await ensurePortFree(5173, { tag: FRONTEND_TAG });
 
 // Start backend
-const backendProcess = spawn(pythonBin, ['-m', 'uvicorn', 'app.main:app', '--reload', '--port', '8000'], {
+const backendProcess = spawn(pythonBin, ['-u', '-m', 'uvicorn', 'app.main:app', '--reload', '--port', '8000', '--access-log'], {
   cwd: backendDir,
   shell: false,
   env: sharedEnv

@@ -85,6 +85,26 @@ function pushLog(entry: Omit<LogEntry, 'id' | 'timestamp'> & { id?: string; time
     logHistory.shift();
   }
   notifySubscribers();
+
+  // Stream live logs to Vite dev server terminal
+  if (isBrowser) {
+    try {
+      const payload = JSON.stringify({
+        level: completeEntry.level,
+        message: completeEntry.message
+      });
+      if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+        navigator.sendBeacon('/__vite_log', payload);
+      } else {
+        fetch('/__vite_log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload,
+          keepalive: true
+        }).catch(() => {});
+      }
+    } catch {}
+  }
 }
 
 export const logger = {
