@@ -74,6 +74,8 @@ class CategorySummary(BaseModel):
 class CatalogStats(BaseModel):
     total_apis: int
     healthy_count: int
+    degraded_count: int = 0
+    offline_count: int = 0
     avg_latency_ms: int
     global_uptime_percent: float
     total_checks_today: int

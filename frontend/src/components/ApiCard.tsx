@@ -126,7 +126,7 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
   }
 
   return (
-    <div className="bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] rounded-2xl p-5 flex flex-col justify-between transition-all group relative shadow-sm hover:shadow-md">
+    <div className="bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] rounded-2xl p-5 flex flex-col justify-between transition-all group relative shadow-sm hover:shadow-md h-full">
       <div>
         {/* Top meta tags */}
         <div className="flex items-center justify-between gap-2 mb-3">
@@ -178,7 +178,7 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
 
         {/* Short Description */}
         <p
-          className="mt-2 text-xs text-slate-300 line-clamp-2 leading-relaxed"
+          className="mt-2 text-xs text-slate-300 line-clamp-2 leading-relaxed min-h-[2.5rem]"
           title={api.short_description || api.description}
         >
           {api.short_description || api.description}

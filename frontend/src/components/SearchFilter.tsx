@@ -50,7 +50,10 @@ export const SearchFilter: React.FC<SearchFilterProps> = ({
       </div>
 
       {/* Clean Friendly Filter Chips */}
-      <div className="flex items-center justify-center gap-2 overflow-x-auto pb-1 text-xs">
+      <div
+        className="flex items-center justify-start sm:justify-center gap-2 overflow-x-auto pb-1 text-xs scrollbar-none"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
         {quickFilters.map((qf) => {
           const Icon = qf.icon;
           const isSelected = activeCollection === qf.id;

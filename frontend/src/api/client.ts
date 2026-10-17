@@ -79,6 +79,7 @@ export interface ApiQueryParams {
   auth_type?: string;
   pricing_tier?: string;
   collection?: string;
+  status?: string;
   sort?: string;
   limit?: number;
   offset?: number;
@@ -91,6 +92,7 @@ export async function fetchApis(params?: ApiQueryParams): Promise<ApiListRespons
   if (params?.auth_type && params.auth_type !== 'all') query.set('auth_type', params.auth_type);
   if (params?.pricing_tier && params.pricing_tier !== 'all') query.set('pricing_tier', params.pricing_tier);
   if (params?.collection) query.set('collection', params.collection);
+  if (params?.status && params.status !== 'all') query.set('status', params.status);
   if (params?.sort) query.set('sort', params.sort);
   if (params?.limit) query.set('limit', params.limit.toString());
   if (params?.offset) query.set('offset', params.offset.toString());

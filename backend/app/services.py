@@ -60,6 +60,7 @@ class CatalogService:
         auth_type: Optional[str] = None,
         pricing_tier: Optional[str] = None,
         collection: Optional[str] = None,
+        status: Optional[str] = None,
         sort: Optional[str] = "popular",
         limit: int = 50,
         offset: int = 0
@@ -127,6 +128,11 @@ class CatalogService:
         # Filter by pricing tier
         if pricing_tier and pricing_tier.lower() != "all":
             results = [a for a in results if getattr(a.pricing_tier, "value", str(a.pricing_tier)) == pricing_tier]
+
+        # Filter by health status
+        if status and status.lower() != "all":
+            st_norm = status.lower().strip()
+            results = [a for a in results if getattr(a.health.status, "value", str(a.health.status)).lower() == st_norm]
 
         # Sort results (if not already sorted by relevance for popular)
         if not (q and sort == "popular"):
@@ -206,12 +212,16 @@ class CatalogService:
             return CatalogStats(
                 total_apis=0,
                 healthy_count=0,
+                degraded_count=0,
+                offline_count=0,
                 avg_latency_ms=0,
                 global_uptime_percent=100.0,
                 total_checks_today=0
             )
 
         healthy_count = sum(1 for a in self._apis if a.health.status == HealthStatus.HEALTHY)
+        degraded_count = sum(1 for a in self._apis if a.health.status == HealthStatus.DEGRADED)
+        offline_count = sum(1 for a in self._apis if a.health.status == HealthStatus.OFFLINE)
         avg_latency = int(sum(a.health.avg_latency_ms for a in self._apis) / total)
         avg_uptime = round(sum(a.health.uptime_percent for a in self._apis) / total, 2)
         total_checks = (total * 24) + self._probe_count
@@ -219,6 +229,8 @@ class CatalogService:
         return CatalogStats(
             total_apis=total,
             healthy_count=healthy_count,
+            degraded_count=degraded_count,
+            offline_count=offline_count,
             avg_latency_ms=avg_latency,
             global_uptime_percent=avg_uptime,
             total_checks_today=total_checks

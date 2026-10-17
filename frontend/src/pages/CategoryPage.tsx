@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ApiItem, CategorySummary } from '../types/api';
 import { fetchApis, fetchCategories } from '../api/client';
@@ -38,6 +38,14 @@ const AUTH_OPTIONS: SelectOption[] = [
 
 export const CategoryPage: React.FC = () => {
   const { category } = useParams<{ category: string }>();
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollCategories = (direction: 'left' | 'right') => {
+    if (categoryScrollRef.current) {
+      const amount = direction === 'left' ? -260 : 260;
+      categoryScrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+    }
+  };
   const [apis, setApis] = useState<ApiItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [categories, setCategories] = useState<CategorySummary[]>([]);
@@ -157,28 +165,54 @@ export const CategoryPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Quick Category Switcher Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none text-xs">
-        {categories.map((cat) => (
-          <Link
-            key={cat.slug}
-            to={`/category/${cat.slug}`}
-            className={`px-3.5 py-1.5 rounded-full whitespace-nowrap font-medium transition-colors border ${
-              category?.toLowerCase() === cat.slug.toLowerCase()
-                ? 'bg-accent/20 border-accent text-accent font-semibold'
-                : 'bg-[#28292A] border-[#3C4043] text-slate-300 hover:bg-[#3C4043] hover:text-white'
-            }`}
-          >
-            {cat.name} ({cat.count})
-          </Link>
-        ))}
+      {/* Quick Category Switcher Carousel */}
+      <div className="relative flex items-center group">
+        <button
+          type="button"
+          onClick={() => scrollCategories('left')}
+          className="hidden sm:flex items-center justify-center flex-shrink-0 mr-2 w-8 h-8 rounded-full bg-[#28292A] border border-[#3C4043] text-slate-300 hover:text-white hover:bg-[#3C4043] shadow-md transition-all z-10"
+          title="Scroll categories left"
+          aria-label="Scroll categories left"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+
+        <div
+          ref={categoryScrollRef}
+          className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none text-xs flex-1 scroll-smooth"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {categories.map((cat) => (
+            <Link
+              key={cat.slug}
+              to={`/category/${cat.slug}`}
+              className={`px-3.5 py-1.5 rounded-full whitespace-nowrap font-medium transition-colors border shadow-sm ${
+                category?.toLowerCase() === cat.slug.toLowerCase()
+                  ? 'bg-accent/20 border-accent text-accent font-semibold'
+                  : 'bg-[#28292A] border-[#3C4043] text-slate-300 hover:bg-[#3C4043] hover:text-white'
+              }`}
+            >
+              {cat.name} ({cat.count})
+            </Link>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => scrollCategories('right')}
+          className="hidden sm:flex items-center justify-center flex-shrink-0 ml-2 w-8 h-8 rounded-full bg-[#28292A] border border-[#3C4043] text-slate-300 hover:text-white hover:bg-[#3C4043] shadow-md transition-all z-10"
+          title="Scroll categories right"
+          aria-label="Scroll categories right"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
       </div>
 
       {/* Toolbar with Search, Auth Filter, and Sort */}
-      <div className="bg-[#28292A] rounded-2xl border border-[#3C4043] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-[#28292A] rounded-2xl border border-[#3C4043] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
         {/* Search inside category */}
         <div className="relative flex-1 max-w-md">
-          <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
@@ -204,7 +238,7 @@ export const CategoryPage: React.FC = () => {
 
         {/* Dropdowns */}
         <div className="flex items-center gap-3 flex-wrap">
-          <div className="w-44">
+          <div className="w-40 sm:w-44">
             <CustomSelect
               value={selectedAuth}
               onChange={(val) => {
@@ -216,7 +250,7 @@ export const CategoryPage: React.FC = () => {
               variant="surface"
             />
           </div>
-          <div className="w-44">
+          <div className="w-48 sm:w-52">
             <CustomSelect
               value={selectedSort}
               onChange={(val) => {

@@ -28,6 +28,7 @@ export interface CustomSelectProps<T extends string = string> {
   id?: string;
   fullWidth?: boolean;
   align?: 'left' | 'right';
+  showBadgeInTrigger?: boolean;
 }
 
 export function CustomSelect<T extends string = string>({
@@ -47,7 +48,8 @@ export function CustomSelect<T extends string = string>({
   menuClassName = '',
   id,
   fullWidth = true,
-  align = 'left'
+  align = 'left',
+  showBadgeInTrigger = false
 }: CustomSelectProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -228,7 +230,7 @@ export function CustomSelect<T extends string = string>({
           <span className={`truncate text-left ${!selectedOption ? 'text-slate-400' : 'text-slate-100'}`}>
             {selectedOption ? selectedOption.label : placeholder}
           </span>
-          {selectedOption?.badge && (
+          {showBadgeInTrigger && selectedOption?.badge && (
             <span className="ml-auto flex-shrink-0 text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#303134] text-slate-300 border border-[#3C4043]">
               {selectedOption.badge}
             </span>

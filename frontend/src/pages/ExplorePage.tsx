@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ApiItem, CategorySummary } from '../types/api';
 import { fetchApis, fetchCategories } from '../api/client';
@@ -36,6 +36,14 @@ export const ExplorePage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { bookmarks } = useBookmarks();
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollCategories = (direction: 'left' | 'right') => {
+    if (categoryScrollRef.current) {
+      const amount = direction === 'left' ? -280 : 280;
+      categoryScrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+    }
+  };
 
   const handleSurpriseMe = () => {
     if (apis.length > 0) {
@@ -153,49 +161,50 @@ export const ExplorePage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* Top Banner / Hero Title */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-[#3C4043]/60">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#3C4043]/60">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
               API Catalog Explorer
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-[#8AB4F8]/10 text-[#8AB4F8] border border-[#8AB4F8]/20">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-[#8AB4F8]/10 text-[#8AB4F8] border border-[#8AB4F8]/25 shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               {totalCount.toLocaleString()} Verified APIs
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            Search, filter, and instantly test genuine REST APIs without authentication roadblocks or credit card gates.
+          <p className="text-xs sm:text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
+            Search, filter, and test verified public REST APIs without authentication roadblocks or credit card gates.
           </p>
         </div>
 
-        {/* View Mode Toggle & Favorites Quick Switch */}
+        {/* View Mode Toggle & Quick Actions */}
         <div className="flex items-center gap-2 self-start md:self-auto flex-wrap">
           <button
             onClick={handleSurpriseMe}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border bg-[#28292A] border-[#3C4043] text-purple-300 hover:text-white hover:bg-purple-500/15 hover:border-purple-500/30 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium border bg-[#28292A] border-[#3C4043] text-purple-300 hover:text-white hover:bg-purple-500/15 hover:border-purple-500/30 transition-all shadow-sm"
             title="Jump to a random API to test in playground"
           >
-            <Dices className="h-3.5 w-3.5 text-purple-400" />
+            <Dices className="h-4 w-4 text-purple-400" />
             <span>Surprise Me</span>
           </button>
 
           <button
             onClick={() => updateQuery({ fav: favoritesOnly ? '0' : '1', page: '1' })}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium border transition-all shadow-sm ${
               favoritesOnly
                 ? 'bg-amber-500/15 border-amber-500/30 text-amber-300 font-semibold'
                 : 'bg-[#28292A] border-[#3C4043] text-slate-300 hover:text-white hover:bg-[#303134]'
             }`}
           >
-            <Star className={`h-3.5 w-3.5 ${favoritesOnly ? 'text-amber-400 fill-amber-400' : 'text-slate-400'}`} />
+            <Star className={`h-4 w-4 ${favoritesOnly ? 'text-amber-400 fill-amber-400' : 'text-slate-400'}`} />
             <span>Saved ({bookmarks.length})</span>
           </button>
 
-          <div className="flex items-center rounded-lg bg-[#28292A] border border-[#3C4043] p-0.5">
+          <div className="flex items-center rounded-xl bg-[#28292A] border border-[#3C4043] p-1 shadow-sm">
             <button
               onClick={() => setViewMode('grid')}
               title="Grid View"
-              className={`p-1.5 rounded-md transition-colors ${
+              className={`p-1.5 rounded-lg transition-colors ${
                 viewMode === 'grid'
                   ? 'bg-[#3C4043] text-white shadow-sm'
                   : 'text-slate-400 hover:text-white'
@@ -206,7 +215,7 @@ export const ExplorePage: React.FC = () => {
             <button
               onClick={() => setViewMode('compact')}
               title="Compact List View"
-              className={`p-1.5 rounded-md transition-colors ${
+              className={`p-1.5 rounded-lg transition-colors ${
                 viewMode === 'compact'
                   ? 'bg-[#3C4043] text-white shadow-sm'
                   : 'text-slate-400 hover:text-white'
@@ -218,64 +227,130 @@ export const ExplorePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Search Input Bar */}
-      <div className="relative max-w-3xl mx-auto">
-        <div className="absolute left-4.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-          <Search className="h-5 w-5" />
+      {/* Search Input Bar with Quick Filters */}
+      <div className="space-y-3">
+        <div className="relative max-w-4xl mx-auto">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+            <Search className="h-5 w-5" />
+          </div>
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Search by API name, category, feature, or keyword (e.g. weather, crypto, pokemon, geocoding)..."
+            className="w-full pl-12 pr-12 py-3.5 rounded-2xl bg-[#28292A] hover:bg-[#303134] focus:bg-[#303134] border border-[#3C4043] focus:border-[#8AB4F8] text-white placeholder-slate-400 text-sm transition-all outline-none shadow-md"
+          />
+          {searchInput && (
+            <button
+              onClick={() => {
+                setSearchInput('');
+                updateQuery({ q: null, page: '1' });
+              }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1 rounded-full hover:bg-[#3C4043] transition-colors"
+              title="Clear search"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
-        <input
-          type="text"
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          placeholder="Search by API name, category, feature, or keyword (e.g. weather, crypto, pokemon, geocoding)..."
-          className="w-full pl-12 pr-12 py-3.5 rounded-2xl bg-[#28292A] hover:bg-[#303134] focus:bg-[#303134] border border-[#3C4043] focus:border-[#8AB4F8] text-white placeholder-slate-400 text-sm transition-all outline-none shadow-sm"
-        />
-        {searchInput && (
-          <button
-            onClick={() => {
-              setSearchInput('');
-              updateQuery({ q: null, page: '1' });
-            }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1 rounded-full hover:bg-[#3C4043]"
-            title="Clear search"
-          >
-            <X className="h-4 w-4" />
-          </button>
+
+        {/* Quick popular tags */}
+        {!searchInput && (
+          <div className="flex items-center justify-center gap-2 flex-wrap text-xs text-slate-400 pt-0.5">
+            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-mono">Popular:</span>
+            <button
+              onClick={() => setSearchInput('weather')}
+              className="px-2.5 py-1 rounded-lg bg-[#28292A]/80 hover:bg-[#303134] text-slate-300 hover:text-white border border-[#3C4043]/60 transition-colors shadow-sm"
+            >
+              ☀️ Weather
+            </button>
+            <button
+              onClick={() => setSearchInput('crypto')}
+              className="px-2.5 py-1 rounded-lg bg-[#28292A]/80 hover:bg-[#303134] text-slate-300 hover:text-white border border-[#3C4043]/60 transition-colors shadow-sm"
+            >
+              🪙 Crypto
+            </button>
+            <button
+              onClick={() => setSearchInput('geolocation')}
+              className="px-2.5 py-1 rounded-lg bg-[#28292A]/80 hover:bg-[#303134] text-slate-300 hover:text-white border border-[#3C4043]/60 transition-colors shadow-sm"
+            >
+              📍 Geolocation
+            </button>
+            <button
+              onClick={() => setSearchInput('ai')}
+              className="px-2.5 py-1 rounded-lg bg-[#28292A]/80 hover:bg-[#303134] text-slate-300 hover:text-white border border-[#3C4043]/60 transition-colors shadow-sm"
+            >
+              ✨ AI & ML
+            </button>
+            <button
+              onClick={() => setSearchInput('finance')}
+              className="px-2.5 py-1 rounded-lg bg-[#28292A]/80 hover:bg-[#303134] text-slate-300 hover:text-white border border-[#3C4043]/60 transition-colors shadow-sm"
+            >
+              📈 Finance
+            </button>
+          </div>
         )}
       </div>
 
-      {/* Horizontal Category Filter Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none text-xs">
+      {/* Horizontal Category Carousel with Smooth Chevron Navigation */}
+      <div className="relative flex items-center group">
         <button
-          onClick={() => updateQuery({ category: 'all', page: '1' })}
-          className={`px-3.5 py-1.5 rounded-full whitespace-nowrap font-medium transition-colors border ${
-            categoryParam === 'all'
-              ? 'bg-accent/20 border-accent text-accent font-semibold'
-              : 'bg-[#28292A] border-[#3C4043] text-slate-300 hover:bg-[#3C4043] hover:text-white'
-          }`}
+          type="button"
+          onClick={() => scrollCategories('left')}
+          className="hidden sm:flex items-center justify-center flex-shrink-0 mr-2 w-8 h-8 rounded-full bg-[#28292A] border border-[#3C4043] text-slate-300 hover:text-white hover:bg-[#3C4043] shadow-md transition-all z-10"
+          title="Scroll categories left"
+          aria-label="Scroll categories left"
         >
-          All Categories
+          <ChevronLeft className="h-4 w-4" />
         </button>
-        {categories.map((cat) => (
+
+        <div
+          ref={categoryScrollRef}
+          className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none text-xs flex-1 scroll-smooth"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
           <button
-            key={cat.slug}
-            onClick={() => updateQuery({ category: cat.slug, page: '1' })}
-            className={`px-3.5 py-1.5 rounded-full whitespace-nowrap font-medium transition-colors border ${
-              categoryParam === cat.slug
+            onClick={() => updateQuery({ category: 'all', page: '1' })}
+            className={`px-3.5 py-1.5 rounded-full whitespace-nowrap font-medium transition-colors border shadow-sm ${
+              categoryParam === 'all'
                 ? 'bg-accent/20 border-accent text-accent font-semibold'
                 : 'bg-[#28292A] border-[#3C4043] text-slate-300 hover:bg-[#3C4043] hover:text-white'
             }`}
           >
-            {cat.name} ({cat.count})
+            All Categories
           </button>
-        ))}
+          {categories.map((cat) => (
+            <button
+              key={cat.slug}
+              onClick={() => updateQuery({ category: cat.slug, page: '1' })}
+              className={`px-3.5 py-1.5 rounded-full whitespace-nowrap font-medium transition-colors border shadow-sm ${
+                categoryParam === cat.slug
+                  ? 'bg-accent/20 border-accent text-accent font-semibold'
+                  : 'bg-[#28292A] border-[#3C4043] text-slate-300 hover:bg-[#3C4043] hover:text-white'
+              }`}
+            >
+              {cat.name} ({cat.count})
+            </button>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => scrollCategories('right')}
+          className="hidden sm:flex items-center justify-center flex-shrink-0 ml-2 w-8 h-8 rounded-full bg-[#28292A] border border-[#3C4043] text-slate-300 hover:text-white hover:bg-[#3C4043] shadow-md transition-all z-10"
+          title="Scroll categories right"
+          aria-label="Scroll categories right"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
       </div>
 
       {/* Active Filter Chips & Controls Bar */}
-      <div className="bg-[#28292A] rounded-2xl border border-[#3C4043] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-[#28292A] rounded-2xl border border-[#3C4043] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
         {/* Left: Active count and chips */}
         <div className="flex items-center gap-2 flex-wrap text-xs">
-          <span className="text-slate-400 font-medium">
+          <span className="text-slate-400 font-medium inline-flex items-center gap-1.5 mr-1">
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
             Showing <strong className="text-white">{Math.min(offset + 1, totalCount)}</strong> -{' '}
             <strong className="text-white">{Math.min(offset + pageSize, totalCount)}</strong> of{' '}
             <strong className="text-accent">{totalCount.toLocaleString()}</strong> APIs
@@ -283,7 +358,7 @@ export const ExplorePage: React.FC = () => {
 
           {/* Chips */}
           {qParam && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#1F1F1F] border border-[#3C4043] text-slate-200 text-xs">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#1F1F1F] border border-[#3C4043] text-slate-200 text-xs shadow-sm">
               <span>Query: <strong>"{qParam}"</strong></span>
               <button onClick={() => { setSearchInput(''); updateQuery({ q: null, page: '1' }); }} className="text-slate-400 hover:text-white">
                 <X className="h-3 w-3" />
@@ -292,7 +367,7 @@ export const ExplorePage: React.FC = () => {
           )}
 
           {categoryParam !== 'all' && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#1F1F1F] border border-[#3C4043] text-slate-200 text-xs">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#1F1F1F] border border-[#3C4043] text-slate-200 text-xs shadow-sm">
               <span>Category: <strong>{categoryParam}</strong></span>
               <button onClick={() => updateQuery({ category: 'all', page: '1' })} className="text-slate-400 hover:text-white">
                 <X className="h-3 w-3" />
@@ -301,7 +376,7 @@ export const ExplorePage: React.FC = () => {
           )}
 
           {authParam !== 'all' && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#1F1F1F] border border-[#3C4043] text-slate-200 text-xs">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#1F1F1F] border border-[#3C4043] text-slate-200 text-xs shadow-sm">
               <span>Auth: <strong>{authParam === 'none' ? 'No Key' : 'Free Key'}</strong></span>
               <button onClick={() => updateQuery({ auth: 'all', page: '1' })} className="text-slate-400 hover:text-white">
                 <X className="h-3 w-3" />
@@ -312,17 +387,18 @@ export const ExplorePage: React.FC = () => {
           {hasActiveFilters && (
             <button
               onClick={handleResetFilters}
-              className="text-xs text-[#8AB4F8] hover:underline font-semibold ml-1"
+              className="text-xs text-[#8AB4F8] hover:underline font-semibold ml-1 inline-flex items-center gap-1"
             >
-              Clear All
+              <FilterX className="h-3 w-3" />
+              <span>Clear All</span>
             </button>
           )}
         </div>
 
         {/* Right: Dropdowns (Auth, Sort, Page Size) */}
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
           {/* Auth filter */}
-          <div className="w-40">
+          <div className="w-40 sm:w-44">
             <CustomSelect
               value={authParam}
               onChange={(val) => updateQuery({ auth: val, page: '1' })}
@@ -337,7 +413,7 @@ export const ExplorePage: React.FC = () => {
           </div>
 
           {/* Sort */}
-          <div className="w-44">
+          <div className="w-48 sm:w-52">
             <CustomSelect
               value={sortParam}
               onChange={(val) => updateQuery({ sort: val, page: '1' })}
@@ -353,7 +429,7 @@ export const ExplorePage: React.FC = () => {
           </div>
 
           {/* Page Size */}
-          <div className="w-36">
+          <div className="w-32 sm:w-36">
             <CustomSelect
               value={pageSize.toString()}
               onChange={(val) => updateQuery({ limit: val, page: '1' })}

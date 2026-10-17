@@ -74,6 +74,8 @@ export interface CategorySummary {
 export interface CatalogStats {
   total_apis: number;
   healthy_count: number;
+  degraded_count?: number;
+  offline_count?: number;
   avg_latency_ms: number;
   global_uptime_percent: number;
   total_checks_today: number;

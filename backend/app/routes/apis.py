@@ -12,8 +12,9 @@ async def list_apis(
     auth_type: Optional[str] = Query(None, description="Filter by auth requirement (none, api_key, oauth)"),
     pricing_tier: Optional[str] = Query(None, description="Filter by pricing tier (open, free_forever, freemium_no_cc)"),
     collection: Optional[str] = Query(None, description="Filter by curated collection (no-auth, cors-enabled, mock-data)"),
+    status: Optional[str] = Query(None, description="Filter by health status (healthy, degraded, offline)"),
     sort: Optional[str] = Query("popular", description="Sort order: popular, latency, uptime, alphabetical"),
-    limit: int = Query(50, ge=1, le=100),
+    limit: int = Query(50, ge=1, le=500),
     offset: int = Query(0, ge=0)
 ):
     items, total = catalog_service.search_apis(
@@ -22,6 +23,7 @@ async def list_apis(
         auth_type=auth_type,
         pricing_tier=pricing_tier,
         collection=collection,
+        status=status,
         sort=sort,
         limit=limit,
         offset=offset
