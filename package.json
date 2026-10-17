@@ -1,0 +1,15 @@
+{
+  "name": "free-api-hub",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/run-all.js",
+    "dev": "node scripts/run-all.js",
+    "backend": "node scripts/run-backend.js",
+    "frontend": "node scripts/run-frontend.js",
+    "forntend": "node scripts/run-frontend.js",
+    "test": "cd backend && .\\venv\\Scripts\\python.exe -m pytest -m offline",
+    "test:all": "cd backend && .\\venv\\Scripts\\python.exe -m pytest"
+  }
+}
