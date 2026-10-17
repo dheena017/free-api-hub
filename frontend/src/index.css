@@ -7,6 +7,7 @@
     background-color: #1F1F1F;
     color: #E8EAED;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 }
 
@@ -37,4 +38,20 @@
 
 .glass-panel:hover {
   border-color: #4D5156;
+}
+
+/* Smooth Interactive Card Hover */
+.api-card-hover {
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.api-card-hover:hover {
+  transform: translateY(-2px);
+  border-color: #5F6368;
+}
+
+/* Fast CSS list performance rendering */
+.content-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 160px;
 }

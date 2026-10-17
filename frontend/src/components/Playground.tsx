@@ -22,7 +22,10 @@ import {
   ExternalLink,
   HelpCircle,
   Info,
-  ShieldAlert
+  ShieldAlert,
+  Download,
+  Plus,
+  Trash2
 } from 'lucide-react';
 import { logger } from '../utils/logger';
 import { CustomSelect, SelectOption } from './CustomSelect';
@@ -238,6 +241,14 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
     return [];
   });
 
+  const [headers, setHeaders] = useState<Array<{ key: string; value: string }>>(() => {
+    if (api.default_headers) {
+      return Object.entries(api.default_headers).map(([key, value]) => ({ key, value }));
+    }
+    return [];
+  });
+  const [activeParamTab, setActiveParamTab] = useState<'params' | 'headers'>('params');
+
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState<ProxyResponse | null>(null);
   const [activeSnippetTab, setActiveSnippetTab] = useState<'curl' | 'js' | 'python' | 'go'>('curl');
@@ -249,6 +260,12 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
   // Convert param list to map
   const paramMap = params.reduce((acc, p) => {
     if (p.key.trim()) acc[p.key.trim()] = p.value;
+    return acc;
+  }, {} as Record<string, string>);
+
+  // Convert header list to map
+  const headerMap = headers.reduce((acc, h) => {
+    if (h.key.trim()) acc[h.key.trim()] = h.value;
     return acc;
   }, {} as Record<string, string>);
 
@@ -274,7 +291,10 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
       const result = await executeProxy({
         url: targetUrl,
         method: method,
-        headers: api.default_headers || {},
+        headers: {
+          ...(api.default_headers || {}),
+          ...headerMap
+        },
         params: {}
       });
       logger.playground(targetUrl, method, result.status_code, result.latency_ms);
@@ -323,13 +343,14 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
 
   const getActiveSnippet = () => {
     const targetUrl = buildFullUrl(endpointUrl, paramMap);
+    const mergedHeaders = { ...(api.default_headers || {}), ...headerMap };
     switch (activeSnippetTab) {
       case 'curl':
-        return generateCurlSnippet(targetUrl, method, api.default_headers, {});
+        return generateCurlSnippet(targetUrl, method, mergedHeaders, {});
       case 'js':
-        return generateJsSnippet(targetUrl, method, api.default_headers, {});
+        return generateJsSnippet(targetUrl, method, mergedHeaders, {});
       case 'python':
-        return generatePythonSnippet(targetUrl, method, api.default_headers, {});
+        return generatePythonSnippet(targetUrl, method, mergedHeaders, {});
       case 'go':
         return generateGoSnippet(targetUrl, method, {});
     }
@@ -347,6 +368,45 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
       setCopiedJson(true);
       setTimeout(() => setCopiedJson(false), 2000);
     }
+  };
+
+  const handleDownloadJson = () => {
+    if (response?.data) {
+      const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${api.slug || 'api'}-response.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  const getPayloadSize = (data: unknown) => {
+    try {
+      const bytes = new Blob([typeof data === 'string' ? data : JSON.stringify(data)]).size;
+      return bytes > 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${bytes} B`;
+    } catch {
+      return '';
+    }
+  };
+
+  const handleAddParam = () => {
+    setParams((prev) => [...prev, { key: '', value: '' }]);
+    setActiveParamTab('params');
+  };
+
+  const handleRemoveParam = (index: number) => {
+    setParams((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddHeader = () => {
+    setHeaders((prev) => [...prev, { key: '', value: '' }]);
+    setActiveParamTab('headers');
+  };
+
+  const handleRemoveHeader = (index: number) => {
+    setHeaders((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -403,31 +463,149 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
           </div>
         )}
 
-        {/* Parameter Key-Value Editor */}
-        {params.length > 0 && (
-          <div className="pt-3 border-t border-[#3C4043] space-y-2">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-              Query Parameters
-            </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-              {params.map((p, index) => (
-                <div key={index} className="flex items-center gap-1.5 bg-[#1F1F1F] px-2.5 py-1.5 rounded-lg border border-[#3C4043]">
-                  <span className="text-xs font-mono text-[#8AB4F8] font-medium">{p.key}:</span>
-                  <input
-                    type="text"
-                    value={p.value}
-                    onChange={(e) => {
-                      const updated = [...params];
-                      updated[index].value = e.target.value;
-                      setParams(updated);
-                    }}
-                    className="flex-1 bg-transparent text-xs font-mono text-slate-200 outline-none"
-                  />
-                </div>
-              ))}
+        {/* Request Configurator: Query Parameters & Custom Headers */}
+        <div className="pt-3 border-t border-[#3C4043] space-y-3">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => setActiveParamTab('params')}
+                className={`px-3 py-1 rounded-lg font-mono font-medium transition-colors ${
+                  activeParamTab === 'params'
+                    ? 'bg-[#3C4043] text-white'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Query Params ({params.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveParamTab('headers')}
+                className={`px-3 py-1 rounded-lg font-mono font-medium transition-colors ${
+                  activeParamTab === 'headers'
+                    ? 'bg-[#3C4043] text-white'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Request Headers ({headers.length})
+              </button>
             </div>
+
+            {activeParamTab === 'params' ? (
+              <button
+                type="button"
+                onClick={handleAddParam}
+                className="inline-flex items-center gap-1 text-[11px] font-mono text-[#8AB4F8] hover:text-[#A8C7FA] px-2.5 py-1 rounded bg-[#8AB4F8]/10 hover:bg-[#8AB4F8]/20 border border-[#8AB4F8]/30 transition-colors"
+              >
+                <Plus className="h-3 w-3" />
+                <span>Add Query Param</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleAddHeader}
+                className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-400 hover:text-emerald-300 px-2.5 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 transition-colors"
+              >
+                <Plus className="h-3 w-3" />
+                <span>Add Header (e.g. Auth/API-Key)</span>
+              </button>
+            )}
           </div>
-        )}
+
+          {/* Active Tab View: Params */}
+          {activeParamTab === 'params' && (
+            params.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                {params.map((p, index) => (
+                  <div key={index} className="flex items-center gap-1.5 bg-[#1F1F1F] px-2.5 py-1.5 rounded-lg border border-[#3C4043]">
+                    <input
+                      type="text"
+                      placeholder="key"
+                      value={p.key}
+                      onChange={(e) => {
+                        const updated = [...params];
+                        updated[index].key = e.target.value;
+                        setParams(updated);
+                      }}
+                      className="w-24 bg-transparent text-xs font-mono text-[#8AB4F8] font-medium outline-none placeholder:text-slate-600"
+                    />
+                    <span className="text-slate-500 font-mono">:</span>
+                    <input
+                      type="text"
+                      placeholder="value"
+                      value={p.value}
+                      onChange={(e) => {
+                        const updated = [...params];
+                        updated[index].value = e.target.value;
+                        setParams(updated);
+                      }}
+                      className="flex-1 bg-transparent text-xs font-mono text-slate-200 outline-none placeholder:text-slate-600"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveParam(index)}
+                      className="text-slate-500 hover:text-rose-400 p-0.5 rounded transition-colors"
+                      title="Remove parameter"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-[11px] font-mono text-slate-500 py-1">
+                No query parameters attached. Click "+ Add Query Param" to add custom filters or pagination.
+              </div>
+            )
+          )}
+
+          {/* Active Tab View: Headers */}
+          {activeParamTab === 'headers' && (
+            headers.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                {headers.map((h, index) => (
+                  <div key={index} className="flex items-center gap-1.5 bg-[#1F1F1F] px-2.5 py-1.5 rounded-lg border border-[#3C4043]">
+                    <input
+                      type="text"
+                      placeholder="Header-Name"
+                      value={h.key}
+                      onChange={(e) => {
+                        const updated = [...headers];
+                        updated[index].key = e.target.value;
+                        setHeaders(updated);
+                      }}
+                      className="w-28 bg-transparent text-xs font-mono text-emerald-400 font-medium outline-none placeholder:text-slate-600"
+                    />
+                    <span className="text-slate-500 font-mono">:</span>
+                    <input
+                      type="text"
+                      placeholder="Value"
+                      value={h.value}
+                      onChange={(e) => {
+                        const updated = [...headers];
+                        updated[index].value = e.target.value;
+                        setHeaders(updated);
+                      }}
+                      className="flex-1 bg-transparent text-xs font-mono text-slate-200 outline-none placeholder:text-slate-600"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveHeader(index)}
+                      className="text-slate-500 hover:text-rose-400 p-0.5 rounded transition-colors"
+                      title="Remove header"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-[11px] font-mono text-slate-500 py-1">
+                No custom headers specified. Standard headers are automatically set by the proxy.
+              </div>
+            )
+          )}
+        </div>
       </div>
 
       {/* Main Split Grid: Live Response & Code Snippets */}
@@ -461,14 +639,27 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
             )}
 
             {Boolean(response?.data) && (
-              <button
-                onClick={handleCopyJson}
-                className="text-xs text-slate-400 hover:text-white flex items-center gap-1 px-2.5 py-1 rounded bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] transition-colors"
-                title="Copy JSON"
-              >
-                {copiedJson ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
-                <span>{copiedJson ? 'Copied' : 'Copy'}</span>
-              </button>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-mono text-slate-400 px-1.5 py-0.5 rounded bg-[#1F1F1F] border border-[#3C4043]">
+                  {getPayloadSize(response?.data)}
+                </span>
+                <button
+                  onClick={handleCopyJson}
+                  className="text-xs text-slate-400 hover:text-white flex items-center gap-1 px-2.5 py-1 rounded bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] transition-colors"
+                  title="Copy JSON"
+                >
+                  {copiedJson ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                  <span>{copiedJson ? 'Copied' : 'Copy'}</span>
+                </button>
+                <button
+                  onClick={handleDownloadJson}
+                  className="text-xs text-slate-400 hover:text-white flex items-center gap-1 px-2.5 py-1 rounded bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] transition-colors"
+                  title="Download JSON file"
+                >
+                  <Download className="h-3 w-3" />
+                  <span>Download</span>
+                </button>
+              </div>
             )}
           </div>
 

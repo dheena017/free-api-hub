@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ApiItem, CategorySummary } from '../types/api';
 import { fetchApis, fetchCategories } from '../api/client';
 import { ApiCard } from '../components/ApiCard';
+import { SkeletonGrid } from '../components/SkeletonCard';
 import { CustomSelect, SelectOption } from '../components/CustomSelect';
 import {
   Layers,
@@ -233,10 +234,7 @@ export const CategoryPage: React.FC = () => {
       {/* API Grid & Error Diagnostics */}
       <main className="space-y-6">
         {isLoading ? (
-          <div className="py-24 flex flex-col items-center justify-center gap-3 text-slate-400">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent" />
-            <p className="text-xs font-mono">Loading {categoryTitle} endpoints...</p>
-          </div>
+          <SkeletonGrid count={pageSize} viewMode={viewMode} />
         ) : error ? (
           <div className="bg-[#28292A] rounded-2xl p-8 text-center border border-rose-500/30 space-y-3">
             <AlertCircle className="h-8 w-8 text-rose-400 mx-auto" />

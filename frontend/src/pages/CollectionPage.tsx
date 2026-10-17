@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ApiItem } from '../types/api';
 import { fetchApis } from '../api/client';
 import { ApiCard } from '../components/ApiCard';
+import { SkeletonGrid } from '../components/SkeletonCard';
 import { CustomSelect, SelectOption } from '../components/CustomSelect';
 import {
   FolderTree,
@@ -21,7 +22,9 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  FilterX
+  FilterX,
+  Gauge,
+  Building2
 } from 'lucide-react';
 
 const SORT_OPTIONS: SelectOption[] = [
@@ -60,6 +63,22 @@ export const CollectionPage: React.FC = () => {
       icon: Globe,
       description:
         'These APIs return explicit Access-Control-Allow-Origin headers, meaning you can fetch them straight from client-side vanilla JavaScript or React without needing a proxy server.'
+    },
+    {
+      id: 'fast-response',
+      name: 'Ultra Fast (<120ms)',
+      tagline: 'Lightning Latency',
+      icon: Gauge,
+      description:
+        'Blazing fast response times verified under 120 milliseconds. Ideal for high-throughput mobile apps, autocompletes, and interactive micro-interactions.'
+    },
+    {
+      id: 'open-data',
+      name: 'Public & Open Datasets',
+      tagline: 'Science, Civic & Geodata',
+      icon: Building2,
+      description:
+        'Free governmental, scientific, astronomical, meteorological, and educational repositories with zero licensing restrictions.'
     },
     {
       id: 'mock-data',
@@ -248,10 +267,7 @@ export const CollectionPage: React.FC = () => {
       {/* Main Grid */}
       <main className="space-y-6">
         {isLoading ? (
-          <div className="py-24 flex flex-col items-center justify-center gap-3 text-slate-400">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent" />
-            <p className="text-xs font-mono">Loading collection APIs...</p>
-          </div>
+          <SkeletonGrid count={pageSize} viewMode={viewMode} />
         ) : error ? (
           <div className="bg-[#28292A] rounded-2xl p-8 text-center border border-rose-500/30 space-y-3">
             <AlertCircle className="h-8 w-8 text-rose-400 mx-auto" />

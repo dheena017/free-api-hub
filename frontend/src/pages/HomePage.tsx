@@ -39,12 +39,18 @@ import {
   Star,
   CheckCircle2,
   Play,
-  Layers
+  Layers,
+  Dices,
+  Clock,
+  Trash2
 } from 'lucide-react';
+import { SkeletonGrid } from '../components/SkeletonCard';
+import { useHistory } from '../utils/useHistory';
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { bookmarks } = useBookmarks();
+  const { history, clearHistory } = useHistory();
   const [searchTerm, setSearchTerm] = useState('');
   const [stats, setStats] = useState<CatalogStats | null>(null);
   const [featuredTab, setFeaturedTab] = useState<'popular' | 'no-auth' | 'fast' | 'saved'>('popular');
@@ -114,6 +120,15 @@ export const HomePage: React.FC = () => {
   const handleCollectionSelect = (collection: string) => {
     if (collection) {
       navigate(`/collections/${collection}`);
+    }
+  };
+
+  const handleSurpriseMe = () => {
+    if (featuredApis.length > 0) {
+      const random = featuredApis[Math.floor(Math.random() * featuredApis.length)];
+      navigate(`/api/${random.slug}`);
+    } else {
+      navigate('/explore');
     }
   };
 
@@ -209,7 +224,7 @@ export const HomePage: React.FC = () => {
             />
           </form>
 
-          {/* Quick Search Suggestions */}
+          {/* Quick Search Suggestions & Surprise Me */}
           <div className="mt-3 flex items-center justify-center gap-2 flex-wrap text-xs text-slate-400">
             <span className="text-[11px] font-mono text-slate-500">Trending:</span>
             {popularQueries.map((item) => (
@@ -221,6 +236,14 @@ export const HomePage: React.FC = () => {
                 {item.label}
               </button>
             ))}
+            <button
+              onClick={handleSurpriseMe}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 hover:text-white transition-colors text-[11px] font-medium"
+              title="Test a surprise random API"
+            >
+              <Dices className="h-3 w-3 text-purple-400" />
+              <span>Surprise Me</span>
+            </button>
           </div>
         </div>
 
@@ -295,6 +318,47 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
+      {/* Recently Viewed APIs Shelf */}
+      {history.length > 0 && (
+        <section className="max-w-5xl mx-auto px-4">
+          <div className="bg-[#28292A] border border-[#3C4043] rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#3C4043]">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-[#8AB4F8]" />
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
+                  Recently Viewed APIs ({history.length})
+                </h3>
+              </div>
+              <button
+                onClick={clearHistory}
+                className="text-[11px] font-mono text-slate-400 hover:text-rose-400 inline-flex items-center gap-1 transition-colors"
+                title="Clear recent viewing history"
+              >
+                <Trash2 className="h-3 w-3" />
+                <span>Clear History</span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-thin">
+              {history.map((item) => (
+                <Link
+                  key={item.slug}
+                  to={`/api/${item.slug}`}
+                  className="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] hover:border-[#8AB4F8]/50 transition-colors group"
+                >
+                  <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-[#28292A] text-slate-400 group-hover:text-white">
+                    {item.category.split('-')[0]}
+                  </span>
+                  <span className="text-xs font-semibold text-slate-200 group-hover:text-[#8AB4F8]">
+                    {item.name}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Featured APIs Section with Dynamic Tabs */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -363,7 +427,9 @@ export const HomePage: React.FC = () => {
         </div>
 
         {/* Featured API Cards */}
-        {featuredApis.length > 0 ? (
+        {isLoading ? (
+          <SkeletonGrid count={6} viewMode="grid" />
+        ) : featuredApis.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {featuredApis.map((api) => (
               <ApiCard key={api.id} api={api} />
@@ -373,7 +439,7 @@ export const HomePage: React.FC = () => {
           <div className="p-8 text-center bg-[#28292A] rounded-2xl border border-[#3C4043] text-xs text-slate-400">
             {featuredTab === 'saved'
               ? 'No bookmarked APIs found yet. Click the star icon on any card to save it!'
-              : 'Loading featured APIs...'}
+              : 'No APIs found in this category.'}
           </div>
         )}
       </section>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, X, Zap, Globe, ShieldCheck, Database } from 'lucide-react';
+import { Search, X, Zap, Globe, ShieldCheck, Database, Gauge, Building2 } from 'lucide-react';
 
 interface SearchFilterProps {
   searchTerm: string;
@@ -19,6 +19,8 @@ export const SearchFilter: React.FC<SearchFilterProps> = ({
   const quickFilters = [
     { id: 'no-auth', label: 'No Key Needed', icon: Zap },
     { id: 'cors-enabled', label: 'Browser Ready (CORS)', icon: Globe },
+    { id: 'fast-response', label: 'Ultra Fast (<120ms)', icon: Gauge },
+    { id: 'open-data', label: 'Open Datasets', icon: Building2 },
     { id: 'high-uptime', label: 'High Uptime (99%+)', icon: ShieldCheck },
     { id: 'mock-data', label: 'Mock & Proto Data', icon: Database },
   ];

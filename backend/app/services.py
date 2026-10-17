@@ -77,17 +77,43 @@ class CatalogService:
                 results = [a for a in results if "mock-data" in a.tags or a.category == "developer-tools"]
             elif c in ("high-uptime", "uptime"):
                 results = [a for a in results if a.health.uptime_percent >= 99.7]
+            elif c in ("fast-response", "ultra-fast", "low-latency"):
+                results = [a for a in results if a.health.avg_latency_ms < 120]
+            elif c in ("open-data", "public-data"):
+                results = [a for a in results if a.category in ("open-data", "science", "geography") or "open-data" in a.tags]
 
-        # Filter by query
+        # Filter by query with multi-word tokenization and relevance scoring
         if q:
             term = q.lower().strip()
-            results = [
-                a for a in results
-                if term in a.name.lower()
-                or term in a.description.lower()
-                or any(term in tag.lower() for tag in a.tags)
-                or term in a.category.lower()
-            ]
+            words = [w for w in term.split() if w]
+            scored_results = []
+            for a in results:
+                name_l = a.name.lower()
+                desc_l = a.description.lower()
+                cat_l = a.category.lower()
+                tags_l = [t.lower() for t in a.tags]
+                combined = f"{name_l} {desc_l} {cat_l} {' '.join(tags_l)}"
+
+                # Check if all search words appear
+                if all(w in combined for w in words):
+                    # Calculate relevance score: name match = 100, tag match = 50, exact phrase = 40, desc = 10
+                    score = 0
+                    if term in name_l:
+                        score += 100
+                    if any(term == t for t in tags_l):
+                        score += 50
+                    if term in combined:
+                        score += 30
+                    if all(w in name_l for w in words):
+                        score += 40
+                    scored_results.append((score, a))
+
+            if sort == "popular":
+                # For default sort with query, sort primarily by relevance score, then health
+                scored_results.sort(key=lambda item: (item[0], item[1].health.uptime_percent, -item[1].health.avg_latency_ms), reverse=True)
+                results = [item[1] for item in scored_results]
+            else:
+                results = [item[1] for item in scored_results]
 
         # Filter by category
         if category and category.lower() != "all":
@@ -96,21 +122,22 @@ class CatalogService:
 
         # Filter by auth type
         if auth_type and auth_type.lower() != "all":
-            results = [a for a in results if a.auth_type.value == auth_type]
+            results = [a for a in results if getattr(a.auth_type, "value", str(a.auth_type)) == auth_type]
 
         # Filter by pricing tier
         if pricing_tier and pricing_tier.lower() != "all":
-            results = [a for a in results if a.pricing_tier.value == pricing_tier]
+            results = [a for a in results if getattr(a.pricing_tier, "value", str(a.pricing_tier)) == pricing_tier]
 
-        # Sort results
-        if sort == "latency":
-            results = sorted(results, key=lambda a: a.health.avg_latency_ms)
-        elif sort == "uptime":
-            results = sorted(results, key=lambda a: a.health.uptime_percent, reverse=True)
-        elif sort == "alphabetical":
-            results = sorted(results, key=lambda a: a.name.lower())
-        else: # "popular" default
-            results = sorted(results, key=lambda a: (a.health.uptime_percent, -a.health.avg_latency_ms), reverse=True)
+        # Sort results (if not already sorted by relevance for popular)
+        if not (q and sort == "popular"):
+            if sort == "latency":
+                results = sorted(results, key=lambda a: a.health.avg_latency_ms)
+            elif sort == "uptime":
+                results = sorted(results, key=lambda a: a.health.uptime_percent, reverse=True)
+            elif sort == "alphabetical":
+                results = sorted(results, key=lambda a: a.name.lower())
+            else: # "popular" default
+                results = sorted(results, key=lambda a: (a.health.uptime_percent, -a.health.avg_latency_ms), reverse=True)
 
         total = len(results)
         paginated = results[offset : offset + limit]

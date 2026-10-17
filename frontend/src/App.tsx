@@ -13,6 +13,7 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { fetchApis } from './api/client';
 import { ApiItem } from './types/api';
 import { Search, X, ArrowRight, Zap, Star } from 'lucide-react';
+import { ToastProvider } from './utils/useToast';
 
 // Upgraded Global Search Modal with Live Suggestions & Keyboard Navigation
 const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
@@ -195,6 +196,61 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
           </div>
         )}
 
+        {/* Quick Jump Bar when search is empty */}
+        {!query.trim() && (
+          <div className="p-4 space-y-4">
+            <div>
+              <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider mb-2">
+                Quick Collections
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[
+                  { label: 'Zero-Auth', path: '/collections/no-auth', desc: 'No Key Required' },
+                  { label: 'CORS-Ready', path: '/collections/cors-enabled', desc: 'Direct Browser' },
+                  { label: 'Ultra Fast', path: '/collections/fast-response', desc: '<120ms Latency' },
+                  { label: 'Open Data', path: '/collections/open-data', desc: 'Public Science/Geo' }
+                ].map((item) => (
+                  <button
+                    key={item.label}
+                    onClick={() => {
+                      navigate(item.path);
+                      onClose();
+                    }}
+                    className="p-2.5 rounded-xl bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] text-left transition-colors group"
+                  >
+                    <div className="text-xs font-semibold text-white group-hover:text-[#8AB4F8]">
+                      {item.label}
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                      {item.desc}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider mb-2">
+                Trending Searches
+              </div>
+              <div className="flex flex-wrap gap-1.5 text-xs">
+                {['weather', 'crypto', 'pokemon', 'geocoding', 'placeholder', 'ai', 'books'].map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => {
+                      navigate(`/explore?q=${encodeURIComponent(tag)}`);
+                      onClose();
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] text-slate-300 hover:text-white transition-colors font-mono text-[11px]"
+                  >
+                    #{tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Empty state when query produces no result */}
         {query.trim() && !isSearching && suggestions.length === 0 && (
           <div className="p-8 text-center text-xs text-slate-400">
@@ -245,27 +301,29 @@ export default function App() {
   }, []);
 
   return (
-    <BrowserRouter>
-      <div className="min-h-screen flex flex-col bg-background text-slate-100 font-sans">
-        <Navbar onOpenSearchModal={() => setSearchModalOpen(true)} />
-        <div className="flex-1">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/explore" element={<ExplorePage />} />
-            <Route path="/api/:slug" element={<ApiDetailPage />} />
-            <Route path="/category/:category" element={<CategoryPage />} />
-            <Route path="/collections/:filter" element={<CollectionPage />} />
-            <Route path="/status" element={<StatusPage />} />
-            <Route path="/submit" element={<SubmitPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
+    <ToastProvider>
+      <BrowserRouter>
+        <div className="min-h-screen flex flex-col bg-background text-slate-100 font-sans">
+          <Navbar onOpenSearchModal={() => setSearchModalOpen(true)} />
+          <div className="flex-1">
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/explore" element={<ExplorePage />} />
+              <Route path="/api/:slug" element={<ApiDetailPage />} />
+              <Route path="/category/:category" element={<CategoryPage />} />
+              <Route path="/collections/:filter" element={<CollectionPage />} />
+              <Route path="/status" element={<StatusPage />} />
+              <Route path="/submit" element={<SubmitPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </div>
+          <Footer />
+          <GlobalSearchModal
+            isOpen={searchModalOpen}
+            onClose={() => setSearchModalOpen(false)}
+          />
         </div>
-        <Footer />
-        <GlobalSearchModal
-          isOpen={searchModalOpen}
-          onClose={() => setSearchModalOpen(false)}
-        />
-      </div>
-    </BrowserRouter>
+      </BrowserRouter>
+    </ToastProvider>
   );
 }

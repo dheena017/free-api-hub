@@ -13,8 +13,10 @@ import {
 } from '../types/api';
 import { logger } from '../utils/logger';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-const API_PREFIX = `${BASE_URL}/api/v1`;
+// Prefer relative '/api/v1' in development to utilize Vite's dev proxy seamlessly without CORS
+const ENV_BASE = import.meta.env.VITE_API_BASE_URL;
+const BASE_URL = ENV_BASE !== undefined ? ENV_BASE : '';
+const API_PREFIX = BASE_URL ? `${BASE_URL}/api/v1` : '/api/v1';
 
 async function handleResponseError(res: Response, fallbackMessage: string): Promise<never> {
   let message = fallbackMessage;

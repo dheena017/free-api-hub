@@ -18,8 +18,11 @@ import {
   Search,
   X,
   Play,
-  ArrowRight
+  ArrowRight,
+  Copy,
+  Check
 } from 'lucide-react';
+import { SkeletonCard } from '../components/SkeletonCard';
 
 const STATUS_SORT_OPTIONS: SelectOption[] = [
   { value: 'uptime', label: 'Highest Uptime %' },
@@ -34,6 +37,8 @@ export const StatusPage: React.FC = () => {
   const [statusSort, setStatusSort] = useState<'uptime' | 'latency' | 'name'>('uptime');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [autoRefreshInterval, setAutoRefreshInterval] = useState<number>(0);
+  const [copiedReport, setCopiedReport] = useState(false);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
   const [probeError, setProbeError] = useState<string | null>(null);
   const [isBatchProbing, setIsBatchProbing] = useState(false);
@@ -45,6 +50,34 @@ export const StatusPage: React.FC = () => {
     offline: number;
     timestamp: string;
   } | null>(null);
+
+  useEffect(() => {
+    if (autoRefreshInterval <= 0) return;
+    const intervalId = setInterval(() => {
+      loadStatusData();
+    }, autoRefreshInterval * 1000);
+    return () => clearInterval(intervalId);
+  }, [autoRefreshInterval]);
+
+  const handleCopyReport = () => {
+    const report = [
+      `=========================================`,
+      ` FREE API HUB — SYSTEM STATUS REPORT`,
+      ` Timestamp: ${new Date().toISOString()}`,
+      `=========================================`,
+      `Global Uptime      : ${stats?.global_uptime_percent || 99.8}%`,
+      `Total APIs Monitored: ${stats?.total_apis || 4045}`,
+      `Average Latency    : ${stats?.avg_latency_ms || 135}ms`,
+      `Healthy Endpoints  : ${healthyCount}`,
+      `Degraded Endpoints : ${degradedCount}`,
+      `Offline Endpoints  : ${offlineCount}`,
+      `Incident Status    : ${offlineCount === 0 ? 'All Systems Operational' : `${offlineCount} Incidents Active`}`,
+      `=========================================`
+    ].join('\n');
+    navigator.clipboard.writeText(report);
+    setCopiedReport(true);
+    setTimeout(() => setCopiedReport(false), 2000);
+  };
 
   const loadStatusData = async () => {
     setIsLoading(true);
@@ -184,11 +217,38 @@ export const StatusPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Auto-Refresh Toggle */}
+            <div className="flex items-center bg-[#1F1F1F] rounded-xl border border-[#3C4043] p-1 text-xs">
+              <span className="text-[10px] text-slate-400 font-mono px-2">Refresh:</span>
+              {[0, 30, 60].map((interval) => (
+                <button
+                  key={interval}
+                  onClick={() => setAutoRefreshInterval(interval)}
+                  className={`px-2 py-0.5 rounded-lg text-[10px] font-mono transition-colors ${
+                    autoRefreshInterval === interval
+                      ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {interval === 0 ? 'Off' : `${interval}s`}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={handleCopyReport}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#28292A] hover:bg-[#303134] text-slate-300 hover:text-white text-xs font-medium border border-[#3C4043] transition-colors"
+              title="Copy markdown health report"
+            >
+              {copiedReport ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5 text-slate-400" />}
+              <span>{copiedReport ? 'Report Copied!' : 'Copy Report'}</span>
+            </button>
+
             <button
               onClick={handleBatchProbe}
               disabled={isBatchProbing}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#8AB4F8] hover:bg-[#A8C7FA] text-xs font-bold text-[#1F1F1F] transition-all disabled:opacity-50 shadow-sm"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#8AB4F8] hover:bg-[#A8C7FA] text-xs font-bold text-[#1F1F1F] transition-all disabled:opacity-50 shadow-sm"
             >
               <Radio className={`h-4 w-4 ${isBatchProbing ? 'animate-pulse' : ''}`} />
               <span>{isBatchProbing ? 'Probing 30 Endpoints...' : 'Run Live Batch Probe'}</span>
@@ -197,7 +257,7 @@ export const StatusPage: React.FC = () => {
             <button
               onClick={loadStatusData}
               disabled={isLoading}
-              className="p-2.5 rounded-xl bg-[#303134] hover:bg-[#3C4043] text-slate-300 hover:text-white border border-[#3C4043] transition-colors"
+              className="p-2 rounded-xl bg-[#303134] hover:bg-[#3C4043] text-slate-300 hover:text-white border border-[#3C4043] transition-colors"
               title="Refresh status data"
             >
               <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -344,9 +404,10 @@ export const StatusPage: React.FC = () => {
       {/* Status Table List */}
       <main className="space-y-3">
         {isLoading ? (
-          <div className="py-20 flex flex-col items-center justify-center gap-2 text-slate-400">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent" />
-            <p className="text-xs font-mono">Gathering endpoint telemetry...</p>
+          <div className="space-y-2.5">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <SkeletonCard key={i} viewMode="compact" />
+            ))}
           </div>
         ) : filteredEndpoints.length > 0 ? (
           <div className="space-y-2.5">

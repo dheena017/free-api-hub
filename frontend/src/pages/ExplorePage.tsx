@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ApiItem, CategorySummary } from '../types/api';
 import { fetchApis, fetchCategories } from '../api/client';
 import { ApiCard } from '../components/ApiCard';
+import { SkeletonGrid } from '../components/SkeletonCard';
 import { CustomSelect } from '../components/CustomSelect';
 import { useBookmarks } from '../utils/useBookmarks';
 import {
@@ -21,7 +22,8 @@ import {
   RefreshCw,
   Zap,
   Globe,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Dices
 } from 'lucide-react';
 
 const PAGE_SIZE_OPTIONS = [
@@ -31,8 +33,16 @@ const PAGE_SIZE_OPTIONS = [
 ];
 
 export const ExplorePage: React.FC = () => {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { bookmarks } = useBookmarks();
+
+  const handleSurpriseMe = () => {
+    if (apis.length > 0) {
+      const random = apis[Math.floor(Math.random() * apis.length)];
+      navigate(`/api/${random.slug}`);
+    }
+  };
 
   const qParam = searchParams.get('q') || '';
   const categoryParam = searchParams.get('category') || 'all';
@@ -159,7 +169,16 @@ export const ExplorePage: React.FC = () => {
         </div>
 
         {/* View Mode Toggle & Favorites Quick Switch */}
-        <div className="flex items-center gap-2 self-start md:self-auto">
+        <div className="flex items-center gap-2 self-start md:self-auto flex-wrap">
+          <button
+            onClick={handleSurpriseMe}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border bg-[#28292A] border-[#3C4043] text-purple-300 hover:text-white hover:bg-purple-500/15 hover:border-purple-500/30 transition-colors"
+            title="Jump to a random API to test in playground"
+          >
+            <Dices className="h-3.5 w-3.5 text-purple-400" />
+            <span>Surprise Me</span>
+          </button>
+
           <button
             onClick={() => updateQuery({ fav: favoritesOnly ? '0' : '1', page: '1' })}
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
@@ -349,10 +368,7 @@ export const ExplorePage: React.FC = () => {
       {/* Main Grid or Compact List */}
       <main>
         {isLoading ? (
-          <div className="py-24 flex flex-col items-center justify-center gap-3 text-slate-400">
-            <div className="animate-spin rounded-full h-9 w-9 border-b-2 border-accent" />
-            <p className="text-xs font-mono">Fetching verified APIs from catalog...</p>
-          </div>
+          <SkeletonGrid count={pageSize > 24 ? 12 : pageSize} viewMode={viewMode} />
         ) : loadError ? (
           <div className="bg-[#28292A] rounded-2xl p-10 text-center border border-rose-500/30 space-y-3">
             <AlertCircle className="h-10 w-10 text-rose-400 mx-auto" />

@@ -9,7 +9,8 @@ import {
   Sparkles,
   ShieldAlert,
   Send,
-  Loader2
+  Loader2,
+  Zap
 } from 'lucide-react';
 import { CustomSelect, SelectOption } from '../components/CustomSelect';
 
@@ -73,6 +74,39 @@ export const SubmitPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const handleQuickFill = (preset: 'catfacts' | 'openmeteo') => {
+    if (preset === 'catfacts') {
+      setFormData({
+        name: 'Cat Facts Daily API',
+        category: 'reference',
+        base_url: 'https://catfact.ninja',
+        sample_endpoint: '/fact',
+        documentation_url: 'https://catfact.ninja',
+        auth_type: 'none',
+        pricing_tier: 'open',
+        description: 'Randomized daily feline facts with zero API key requirement.',
+        short_description: 'Randomized daily feline facts with zero API key requirement.',
+        detailed_description: 'Public REST endpoint providing interesting cat facts for educational apps, widgets, and bot automation.'
+      });
+    } else {
+      setFormData({
+        name: 'Open-Meteo Weather API',
+        category: 'weather',
+        base_url: 'https://api.open-meteo.com',
+        sample_endpoint: '/v1/forecast?latitude=52.52&longitude=13.41&current_weather=true',
+        documentation_url: 'https://open-meteo.com/en/docs',
+        auth_type: 'none',
+        pricing_tier: 'open',
+        description: 'Free open-source weather forecast API for developers without keys.',
+        short_description: 'Free open-source weather forecast API for developers without keys.',
+        detailed_description: 'National weather services forecast model data aggregated into high-speed RESTful JSON responses.'
+      });
+    }
+    setFieldErrors({});
+    setValidationResult(null);
+    setSubmitError(null);
+  };
 
   const validateUrl = (url: string) => {
     try {
@@ -247,6 +281,30 @@ export const SubmitPage: React.FC = () => {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Quick Demo Pre-fill Bar */}
+          <div className="bg-[#28292A] rounded-2xl p-4 border border-[#3C4043] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2 text-slate-300">
+              <Zap className="h-4 w-4 text-accent" />
+              <span>Testing the verification pipeline? Load a verified demo payload:</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleQuickFill('openmeteo')}
+                className="px-3 py-1.5 rounded-lg bg-[#1F1F1F] hover:bg-[#3C4043] border border-[#3C4043] text-slate-200 text-xs font-mono transition-colors"
+              >
+                🌤️ Open-Meteo
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickFill('catfacts')}
+                className="px-3 py-1.5 rounded-lg bg-[#1F1F1F] hover:bg-[#3C4043] border border-[#3C4043] text-slate-200 text-xs font-mono transition-colors"
+              >
+                🐱 Cat Facts
+              </button>
+            </div>
+          </div>
+
           <div className="bg-[#28292A] rounded-2xl p-6 sm:p-8 border border-[#3C4043] space-y-6">
             <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wider border-b border-[#3C4043] pb-3">
               1. API Information

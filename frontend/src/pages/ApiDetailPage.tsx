@@ -38,8 +38,13 @@ import {
   Copy,
   Check,
   Terminal,
-  Play
+  Play,
+  FileDown,
+  Share2
 } from 'lucide-react';
+import { useHistory } from '../utils/useHistory';
+import { useToast } from '../utils/useToast';
+import { generatePostmanCollection, generateHttpFileSnippet, downloadFile } from '../utils/exporter';
 
 const getApiSpecificUseCases = (api: ApiItem): string[] => {
   const nameLower = api.name.toLowerCase();
@@ -135,6 +140,9 @@ const getApiSpecificUseCases = (api: ApiItem): string[] => {
 export const ApiDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { isBookmarked, toggleBookmark } = useBookmarks();
+  const { addHistoryItem } = useHistory();
+  const { success, info } = useToast();
+
   const [api, setApi] = useState<ApiItem | null>(null);
   const [relatedApis, setRelatedApis] = useState<ApiItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -170,6 +178,7 @@ export const ApiDetailPage: React.FC = () => {
           }
         });
       }
+      success('Health probe completed', `Status: HTTP ${result.status_code} (${result.latency_ms}ms)`);
     } catch (err: unknown) {
       setProbeError(err instanceof Error ? err.message : 'Live health probe failed to reach backend/target');
     } finally {
@@ -186,6 +195,7 @@ export const ApiDetailPage: React.FC = () => {
       try {
         const item = await fetchApiBySlug(slug);
         setApi(item);
+        addHistoryItem(item);
 
         // Fetch related APIs in the same category
         const relatedRes = await fetchApis({ category: item.category, limit: 4 });
@@ -197,11 +207,12 @@ export const ApiDetailPage: React.FC = () => {
       }
     }
     loadApi();
-  }, [slug]);
+  }, [slug, addHistoryItem]);
 
   const handleCopySnippet = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopiedSnippet(true);
+    success('Code snippet copied to clipboard');
     setTimeout(() => setCopiedSnippet(false), 2000);
   };
 
@@ -209,7 +220,39 @@ export const ApiDetailPage: React.FC = () => {
     if (!api) return;
     navigator.clipboard.writeText(`${api.base_url}${api.sample_endpoint}`);
     setCopiedUrl(true);
+    success('Endpoint URL copied to clipboard');
     setTimeout(() => setCopiedUrl(false), 2000);
+  };
+
+  const handleExportPostman = () => {
+    if (!api) return;
+    const collection = generatePostmanCollection(api);
+    downloadFile(
+      collection,
+      `${api.slug}-postman-collection.json`,
+      'application/json'
+    );
+    success('Postman collection exported', `${api.name} schema downloaded`);
+  };
+
+  const handleCopyHttpFile = () => {
+    if (!api) return;
+    const content = generateHttpFileSnippet(api);
+    navigator.clipboard.writeText(content);
+    success('REST Client (.http) copied', 'Ready to paste into VS Code or IntelliJ');
+  };
+
+  const handleShare = () => {
+    if (navigator.share && api) {
+      navigator.share({
+        title: `${api.name} - Free API Hub`,
+        text: api.short_description || api.description,
+        url: window.location.href,
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      info('API link copied to clipboard');
+    }
   };
 
   if (isLoading) {
@@ -374,6 +417,36 @@ export const ApiDetailPage: React.FC = () => {
                     <span className="text-[11px]">Copy</span>
                   </>
                 )}
+              </button>
+            </div>
+
+            {/* Developer Tool Action Bar */}
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={handleExportPostman}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1F1F1F] hover:bg-[#303134] text-xs font-medium text-slate-200 border border-[#3C4043] transition-colors"
+                title="Download standard Postman Collection v2.1 format"
+              >
+                <FileDown className="h-3.5 w-3.5 text-amber-400" />
+                <span>Export Postman</span>
+              </button>
+
+              <button
+                onClick={handleCopyHttpFile}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1F1F1F] hover:bg-[#303134] text-xs font-medium text-slate-200 border border-[#3C4043] transition-colors"
+                title="Copy REST Client .http format for VS Code and IntelliJ"
+              >
+                <Code2 className="h-3.5 w-3.5 text-[#8AB4F8]" />
+                <span>Copy .http (VS Code)</span>
+              </button>
+
+              <button
+                onClick={handleShare}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1F1F1F] hover:bg-[#303134] text-xs font-medium text-slate-200 border border-[#3C4043] transition-colors"
+                title="Share this API page"
+              >
+                <Share2 className="h-3.5 w-3.5 text-slate-400" />
+                <span>Share</span>
               </button>
             </div>
 

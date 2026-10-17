@@ -112,6 +112,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearchModal }) => {
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="md:hidden border-b border-[#3C4043] bg-[#28292A] px-4 pt-2 pb-4 space-y-1">
+          {onOpenSearchModal && (
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onOpenSearchModal();
+              }}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-slate-300 bg-[#1F1F1F] border border-[#3C4043] mb-2"
+            >
+              <div className="flex items-center gap-2">
+                <Search className="h-4 w-4 text-slate-400" />
+                <span>Search APIs...</span>
+              </div>
+              <span className="text-[10px] text-slate-500 font-mono">Ctrl K</span>
+            </button>
+          )}
           {navLinks.map((link) => {
             const Icon = link.icon;
             return (
