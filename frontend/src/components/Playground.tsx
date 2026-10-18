@@ -46,10 +46,13 @@ import {
   FileCode,
   Zap,
   ArrowRight,
-  Globe
+  Globe,
+  BookOpen,
+  X
 } from 'lucide-react';
 import { logger } from '../utils/logger';
 import { CustomSelect, SelectOption } from './CustomSelect';
+import { ApiDocumentationView } from './ApiDocumentationView';
 
 function getErrorDiagnostics(statusCode: number, errorMessage?: string | null) {
   if (statusCode === 400) {
@@ -192,19 +195,41 @@ const HTTP_METHOD_OPTIONS: SelectOption[] = [
 
 interface PlaygroundProps {
   api: ApiItem;
+  initialEndpoint?: string;
+  initialMethod?: string;
+  initialParams?: Record<string, string>;
+  initialBody?: string;
+  onOpenDocs?: () => void;
 }
 
-export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
+export const Playground: React.FC<PlaygroundProps> = ({
+  api,
+  initialEndpoint,
+  initialMethod,
+  initialParams,
+  initialBody,
+  onOpenDocs
+}) => {
   const initialUrl = api.base_url.replace(/\/+$/, '');
-  const initialEndpoint = api.sample_endpoint.startsWith('/')
+  const initialEndpointStr = api.sample_endpoint.startsWith('/')
     ? api.sample_endpoint
     : `/${api.sample_endpoint}`;
-  const fullInitialUrl = `${initialUrl}${initialEndpoint}`;
+  const fullInitialUrl = `${initialUrl}${initialEndpointStr}`;
 
   // Request State
-  const [method, setMethod] = useState(api.method || 'GET');
-  const [endpointUrl, setEndpointUrl] = useState(fullInitialUrl);
+  const [method, setMethod] = useState(initialMethod || api.method || 'GET');
+  const [endpointUrl, setEndpointUrl] = useState(() => {
+    if (initialEndpoint) {
+      return initialEndpoint.startsWith('http')
+        ? initialEndpoint
+        : `${initialUrl}${initialEndpoint.startsWith('/') ? initialEndpoint : `/${initialEndpoint}`}`;
+    }
+    return fullInitialUrl;
+  });
   const [params, setParams] = useState<Array<{ key: string; value: string }>>(() => {
+    if (initialParams) {
+      return Object.entries(initialParams).map(([key, value]) => ({ key, value }));
+    }
     if (api.default_params) {
       return Object.entries(api.default_params).map(([key, value]) => ({ key, value }));
     }
@@ -216,8 +241,32 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
     }
     return [];
   });
-  const [requestBody, setRequestBody] = useState<string>('');
-  const [activeParamTab, setActiveParamTab] = useState<'params' | 'headers' | 'body'>('params');
+  const [requestBody, setRequestBody] = useState<string>(initialBody || '');
+  const [activeParamTab, setActiveParamTab] = useState<'params' | 'headers' | 'body'>(
+    initialBody ? 'body' : 'params'
+  );
+
+  // Sync when initial props change
+  useEffect(() => {
+    if (initialEndpoint) {
+      const base = api.base_url.replace(/\/+$/, '');
+      setEndpointUrl(
+        initialEndpoint.startsWith('http')
+          ? initialEndpoint
+          : `${base}${initialEndpoint.startsWith('/') ? initialEndpoint : `/${initialEndpoint}`}`
+      );
+    }
+    if (initialMethod) {
+      setMethod(initialMethod);
+    }
+    if (initialParams) {
+      setParams(Object.entries(initialParams).map(([key, value]) => ({ key, value })));
+    }
+    if (initialBody !== undefined) {
+      setRequestBody(initialBody);
+      if (initialBody) setActiveParamTab('body');
+    }
+  }, [initialEndpoint, initialMethod, initialParams, initialBody, api.base_url]);
 
   // Response State
   const [isLoading, setIsLoading] = useState(false);
@@ -228,6 +277,7 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [viewLayout, setViewLayout] = useState<'split' | 'focus' | 'stacked'>('split');
   const [isCurlModalOpen, setIsCurlModalOpen] = useState(false);
+  const [showDocsModal, setShowDocsModal] = useState(false);
 
   // Response Inspector Tabs
   const [activeResponseTab, setActiveResponseTab] = useState<
@@ -660,6 +710,50 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
         onImport={handleImportCurl}
       />
 
+      {/* 6-Pillar API Docs Modal */}
+      {showDocsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#202124] border border-[#3C4043] rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div className="p-4 border-b border-[#3C4043] flex items-center justify-between bg-[#28292A]">
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-[#8AB4F8]" />
+                <h3 className="text-sm font-bold text-white">
+                  {api.name} — Full API Documentation (6 Pillars)
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowDocsModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#303134]"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-4 sm:p-6 overflow-y-auto">
+              <ApiDocumentationView
+                api={api}
+                onSelectEndpointForPlayground={(ep, m, p, b) => {
+                  const base = api.base_url.replace(/\/+$/, '');
+                  const resolvedUrl = ep.startsWith('http') ? ep : `${base}${ep.startsWith('/') ? ep : `/${ep}`}`;
+                  setEndpointUrl(resolvedUrl);
+                  setMethod(m);
+                  if (p) {
+                    setParams(Object.entries(p).map(([k, v]) => ({ key: k, value: v })));
+                  }
+                  if (b !== undefined) {
+                    setRequestBody(b);
+                    setActiveParamTab('body');
+                  }
+                  setShowDocsModal(false);
+                  setTimeout(() => {
+                    handleRunTest(resolvedUrl, m, b || '');
+                  }, 50);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Top Request Section */}
       <div className="bg-[#28292A] rounded-2xl p-4 sm:p-5 border border-[#3C4043] space-y-3.5">
         {/* Presets Bar */}
@@ -670,14 +764,31 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
                 <Sparkles className="h-3 w-3 text-[#8AB4F8]" />
                 <span>1-Click Scenarios & Presets:</span>
               </span>
-              <button
-                type="button"
-                onClick={() => setIsCurlModalOpen(true)}
-                className="text-[11px] font-mono text-[#8AB4F8] hover:text-[#A8C7FA] flex items-center gap-1 hover:underline transition-colors"
-              >
-                <Terminal className="h-3 w-3" />
-                <span>Import cURL</span>
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onOpenDocs) {
+                      onOpenDocs();
+                    } else {
+                      setShowDocsModal(true);
+                    }
+                  }}
+                  className="text-[11px] font-mono text-[#8AB4F8] hover:text-[#A8C7FA] flex items-center gap-1 hover:underline transition-colors cursor-pointer"
+                  title="View complete 6-pillar API documentation"
+                >
+                  <BookOpen className="h-3 w-3" />
+                  <span>API Docs (6 Pillars)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsCurlModalOpen(true)}
+                  className="text-[11px] font-mono text-[#8AB4F8] hover:text-[#A8C7FA] flex items-center gap-1 hover:underline transition-colors"
+                >
+                  <Terminal className="h-3 w-3" />
+                  <span>Import cURL</span>
+                </button>
+              </div>
             </div>
 
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-none">

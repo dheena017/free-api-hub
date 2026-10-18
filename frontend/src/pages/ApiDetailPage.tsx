@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ApiItem, HealthCheckResult } from '../types/api';
 import { fetchApiBySlug, fetchApis, checkApiHealth, reportApiIssue } from '../api/client';
 import { Playground } from '../components/Playground';
+import { ApiDocumentationView } from '../components/ApiDocumentationView';
 import { ApiCard } from '../components/ApiCard';
 import { LivePingBadge } from '../components/LivePingBadge';
 import { useBookmarks } from '../utils/useBookmarks';
@@ -182,7 +183,27 @@ export const ApiDetailPage: React.FC = () => {
   const [isProbing, setIsProbing] = useState(false);
   const [probeResult, setProbeResult] = useState<HealthCheckResult | null>(null);
   const [probeError, setProbeError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'playground' | 'snippets' | 'architecture'>('playground');
+  const [activeTab, setActiveTab] = useState<'documentation' | 'playground' | 'snippets'>('documentation');
+  const [playgroundConfig, setPlaygroundConfig] = useState<{
+    endpoint?: string;
+    method?: string;
+    params?: Record<string, string>;
+    body?: string;
+  }>({});
+
+  const handleSelectEndpointFromDocs = (
+    endpoint: string,
+    method: string,
+    params?: Record<string, string>,
+    body?: string
+  ) => {
+    setPlaygroundConfig({ endpoint, method, params, body });
+    setActiveTab('playground');
+    if (tabsRef.current) {
+      tabsRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   const [snippetCategory, setSnippetCategory] = useState<SnippetCategory>('All');
   const [snippetLang, setSnippetLang] = useState<SnippetLanguage>('curl');
   const [copiedSnippet, setCopiedSnippet] = useState(false);
@@ -859,13 +880,25 @@ export const ApiDetailPage: React.FC = () => {
         )}
       </div>
 
-      {/* Navigation Tabs (Playground, Code Snippets, Architecture Specs) */}
+      {/* Navigation Tabs (Full Documentation, Playground, Code Snippets) */}
       <div ref={tabsRef} className="flex items-center gap-2 border-b border-[#3C4043] pb-2 text-xs overflow-x-auto">
+        <button
+          onClick={() => setActiveTab('documentation')}
+          className={`px-4 py-2.5 rounded-xl font-semibold flex items-center gap-2 transition-colors border whitespace-nowrap ${
+            activeTab === 'documentation'
+              ? 'bg-[#8AB4F8] text-[#1F1F1F] border-[#8AB4F8] shadow-sm font-bold'
+              : 'bg-[#28292A] text-slate-300 border-[#3C4043] hover:bg-[#303134]'
+          }`}
+        >
+          <BookOpen className="h-3.5 w-3.5" />
+          <span>Full API Documentation (6 Pillars)</span>
+        </button>
+
         <button
           onClick={() => setActiveTab('playground')}
           className={`px-4 py-2.5 rounded-xl font-semibold flex items-center gap-2 transition-colors border whitespace-nowrap ${
             activeTab === 'playground'
-              ? 'bg-[#8AB4F8] text-[#1F1F1F] border-[#8AB4F8] shadow-sm'
+              ? 'bg-[#8AB4F8] text-[#1F1F1F] border-[#8AB4F8] shadow-sm font-bold'
               : 'bg-[#28292A] text-slate-300 border-[#3C4043] hover:bg-[#303134]'
           }`}
         >
@@ -877,31 +910,65 @@ export const ApiDetailPage: React.FC = () => {
           onClick={() => setActiveTab('snippets')}
           className={`px-4 py-2.5 rounded-xl font-semibold flex items-center gap-2 transition-colors border whitespace-nowrap ${
             activeTab === 'snippets'
-              ? 'bg-[#8AB4F8] text-[#1F1F1F] border-[#8AB4F8] shadow-sm'
+              ? 'bg-[#8AB4F8] text-[#1F1F1F] border-[#8AB4F8] shadow-sm font-bold'
               : 'bg-[#28292A] text-slate-300 border-[#3C4043] hover:bg-[#303134]'
           }`}
         >
           <Code2 className="h-3.5 w-3.5" />
           <span>Integration Code ({SUPPORTED_LANGUAGES.length})</span>
         </button>
-
-        <button
-          onClick={() => setActiveTab('architecture')}
-          className={`px-4 py-2.5 rounded-xl font-semibold flex items-center gap-2 transition-colors border whitespace-nowrap ${
-            activeTab === 'architecture'
-              ? 'bg-[#8AB4F8] text-[#1F1F1F] border-[#8AB4F8] shadow-sm'
-              : 'bg-[#28292A] text-slate-300 border-[#3C4043] hover:bg-[#303134]'
-          }`}
-        >
-          <BookOpen className="h-3.5 w-3.5" />
-          <span>Specs, Parameters & Architecture</span>
-        </button>
       </div>
 
-      {/* Tab 1: Interactive Playground */}
+      {/* Tab 1: Full API Documentation (6 Pillars) */}
+      {activeTab === 'documentation' && (
+        <section id="documentation-section" className="space-y-6">
+          <ApiDocumentationView
+            api={api}
+            onSelectEndpointForPlayground={handleSelectEndpointFromDocs}
+          />
+
+          {/* Technical Architecture Deep Dive & Capability Overview */}
+          <div className="bg-[#28292A] border border-[#3C4043] rounded-2xl p-6 sm:p-8 space-y-5">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <Layers className="h-4 w-4 text-[#8AB4F8]" />
+              <span>Technical Architecture & Capability Overview</span>
+            </h3>
+            <div className="space-y-3 text-xs text-slate-300 leading-relaxed font-sans">
+              {(api.detailed_description || api.description).split('\n\n').map((para, i) => (
+                <p key={i}>{para}</p>
+              ))}
+            </div>
+
+            {/* Recommended Production Use Cases */}
+            <div className="bg-[#1F1F1F] p-5 rounded-xl border border-[#3C4043] space-y-3 pt-4">
+              <h4 className="text-xs font-semibold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                <span>Recommended Production Use Cases</span>
+              </h4>
+              <ul className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-slate-300">
+                {getApiSpecificUseCases(api).map((useCase, idx) => (
+                  <li key={idx} className="bg-[#28292A] p-3 rounded-lg border border-[#3C4043] flex items-start gap-2.5">
+                    <span className="text-[#8AB4F8] font-bold mt-0.5">•</span>
+                    <span className="leading-relaxed">{useCase}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Tab 2: Interactive Playground */}
       {activeTab === 'playground' && (
         <section id="playground-section" className="space-y-3">
-          <Playground api={api} />
+          <Playground
+            api={api}
+            initialEndpoint={playgroundConfig.endpoint}
+            initialMethod={playgroundConfig.method}
+            initialParams={playgroundConfig.params}
+            initialBody={playgroundConfig.body}
+            onOpenDocs={() => setActiveTab('documentation')}
+          />
         </section>
       )}
 
@@ -1019,151 +1086,6 @@ export const ApiDetailPage: React.FC = () => {
           </div>
         </section>
       )}
-
-      {/* Tab 3: Architecture & Specifications */}
-      {activeTab === 'architecture' && (
-        <section className="bg-[#28292A] border border-[#3C4043] rounded-2xl p-6 sm:p-8 space-y-6">
-          <div className="space-y-3">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Layers className="h-4 w-4 text-[#8AB4F8]" />
-              <span>Technical Architecture & Capability Overview</span>
-            </h2>
-            <div className="space-y-3 text-xs text-slate-300 leading-relaxed font-sans">
-              {(api.detailed_description || api.description).split('\n\n').map((para, i) => (
-                <p key={i}>{para}</p>
-              ))}
-            </div>
-          </div>
-
-          {/* Query Parameters Table */}
-          <div className="space-y-3 pt-4 border-t border-[#3C4043]">
-            <h3 className="text-xs font-semibold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
-              <Sliders className="h-3.5 w-3.5 text-[#8AB4F8]" />
-              <span>Endpoint Query Parameters</span>
-            </h3>
-
-            {api.default_params && Object.keys(api.default_params).length > 0 ? (
-              <div className="bg-[#1F1F1F] rounded-xl border border-[#3C4043] overflow-hidden">
-                <table className="w-full text-left text-xs font-mono">
-                  <thead className="bg-[#18191A] text-slate-400 border-b border-[#3C4043]">
-                    <tr>
-                      <th className="py-2.5 px-4 font-semibold">Parameter</th>
-                      <th className="py-2.5 px-4 font-semibold">Default / Sample Value</th>
-                      <th className="py-2.5 px-4 font-semibold">Type</th>
-                      <th className="py-2.5 px-4 font-semibold">Requirement</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#3C4043]/60 text-slate-300">
-                    {Object.entries(api.default_params).map(([paramKey, paramVal]) => (
-                      <tr key={paramKey} className="hover:bg-[#28292A]/50 transition-colors">
-                        <td className="py-2.5 px-4 text-[#8AB4F8] font-bold select-all">{paramKey}</td>
-                        <td className="py-2.5 px-4 select-all text-emerald-400">{paramVal || '—'}</td>
-                        <td className="py-2.5 px-4 text-slate-400">
-                          {Number.isFinite(Number(paramVal)) && paramVal !== '' ? 'number' : 'string'}
-                        </td>
-                        <td className="py-2.5 px-4">
-                          <span className="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 border border-slate-700">
-                            Pre-configured
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="bg-[#1F1F1F] rounded-xl border border-[#3C4043] p-4 text-xs text-slate-400 flex items-center gap-2">
-                <CheckSquare className="h-4 w-4 text-emerald-400" />
-                <span>Zero mandatory query parameters. This endpoint responds with default collection payload out of the box.</span>
-              </div>
-            )}
-          </div>
-
-          {/* Request Headers & Security Specs */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-[#3C4043]">
-            {/* Headers card */}
-            <div className="bg-[#1F1F1F] p-4 rounded-xl border border-[#3C4043] space-y-2.5">
-              <h3 className="text-xs font-semibold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
-                <Code2 className="h-3.5 w-3.5 text-[#8AB4F8]" />
-                <span>Default Request Headers</span>
-              </h3>
-              <div className="space-y-2 text-xs font-mono">
-                <div className="flex items-center justify-between text-slate-400 py-1 border-b border-[#3C4043]/40">
-                  <span>Accept:</span>
-                  <span className="text-slate-200 select-all bg-[#28292A] px-2 py-0.5 rounded border border-[#3C4043]">
-                    {api.default_headers?.['Accept'] || 'application/json'}
-                  </span>
-                </div>
-                {api.default_headers &&
-                  Object.entries(api.default_headers)
-                    .filter(([k]) => k !== 'Accept')
-                    .map(([hKey, hVal]) => (
-                      <div key={hKey} className="flex items-center justify-between text-slate-400 py-1 border-b border-[#3C4043]/40">
-                        <span>{hKey}:</span>
-                        <span className="text-slate-200 select-all bg-[#28292A] px-2 py-0.5 rounded border border-[#3C4043]">
-                          {hVal}
-                        </span>
-                      </div>
-                    ))}
-                <div className="flex items-center justify-between text-slate-400 py-1">
-                  <span>User-Agent:</span>
-                  <span className="text-slate-400 italic">FreeApiHub/1.0 (or standard browser)</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Authentication & Access Profile */}
-            <div className="bg-[#1F1F1F] p-4 rounded-xl border border-[#3C4043] space-y-2.5">
-              <h3 className="text-xs font-semibold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
-                <Shield className="h-3.5 w-3.5 text-emerald-400" />
-                <span>Authentication & Access Profile</span>
-              </h3>
-              <div className="space-y-2 text-xs text-slate-300">
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-400 font-mono">Auth Protocol:</span>
-                  <span className="font-semibold text-white capitalize">{api.auth_type.replace('_', ' ')}</span>
-                </div>
-                <p className="text-slate-400 leading-relaxed text-[11px]">
-                  {api.auth_type === 'none'
-                    ? 'No API key, signature, or token needed. Anyone can query this endpoint immediately without account registration.'
-                    : api.auth_type === 'api_key'
-                    ? 'Requires a free developer API key. Register on the official documentation site and attach the key in your requests.'
-                    : 'Requires OAuth 2.0 authentication credentials.'}
-                </p>
-                <div className="pt-2 border-t border-[#3C4043]/60 flex items-center justify-between text-[11px] font-mono">
-                  <span className="text-slate-400">CORS Support:</span>
-                  <span className={api.cors_supported ? 'text-emerald-400' : 'text-amber-400'}>
-                    {api.cors_supported ? 'Direct Browser Calls Allowed' : 'Proxy Required'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-[11px] font-mono">
-                  <span className="text-slate-400">Transport:</span>
-                  <span className={api.https ? 'text-emerald-400' : 'text-slate-400'}>
-                    {api.https ? 'TLS / HTTPS 1.3' : 'HTTP'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Recommended Production Use Cases */}
-          <div className="bg-[#1F1F1F] p-5 rounded-xl border border-[#3C4043] space-y-3 pt-4">
-            <h3 className="text-xs font-semibold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
-              <Layers className="h-3.5 w-3.5 text-accent" />
-              <span>Recommended Production Use Cases</span>
-            </h3>
-            <ul className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-slate-300">
-              {getApiSpecificUseCases(api).map((useCase, idx) => (
-                <li key={idx} className="bg-[#28292A] p-3 rounded-lg border border-[#3C4043] flex items-start gap-2.5">
-                  <span className="text-[#8AB4F8] font-bold mt-0.5">•</span>
-                  <span className="leading-relaxed">{useCase}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-      )}
-
       {/* Alternative APIs in Same Category */}
       {relatedApis.length > 0 && (
         <section className="space-y-4 pt-6 border-t border-[#3C4043]">
