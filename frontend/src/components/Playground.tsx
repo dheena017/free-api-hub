@@ -52,7 +52,6 @@ import {
 } from 'lucide-react';
 import { logger } from '../utils/logger';
 import { CustomSelect, SelectOption } from './CustomSelect';
-import { ApiDocumentationView } from './ApiDocumentationView';
 
 function getErrorDiagnostics(statusCode: number, errorMessage?: string | null) {
   if (statusCode === 400) {
@@ -277,7 +276,6 @@ export const Playground: React.FC<PlaygroundProps> = ({
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [viewLayout, setViewLayout] = useState<'split' | 'focus' | 'stacked'>('split');
   const [isCurlModalOpen, setIsCurlModalOpen] = useState(false);
-  const [showDocsModal, setShowDocsModal] = useState(false);
 
   // Response Inspector Tabs
   const [activeResponseTab, setActiveResponseTab] = useState<
@@ -708,51 +706,8 @@ export const Playground: React.FC<PlaygroundProps> = ({
         isOpen={isCurlModalOpen}
         onClose={() => setIsCurlModalOpen(false)}
         onImport={handleImportCurl}
+        sampleCurl={getActiveSnippet()}
       />
-
-      {/* 6-Pillar API Docs Modal */}
-      {showDocsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#202124] border border-[#3C4043] rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-            <div className="p-4 border-b border-[#3C4043] flex items-center justify-between bg-[#28292A]">
-              <div className="flex items-center gap-2">
-                <BookOpen className="h-4 w-4 text-[#8AB4F8]" />
-                <h3 className="text-sm font-bold text-white">
-                  {api.name} — Full API Documentation (6 Pillars)
-                </h3>
-              </div>
-              <button
-                onClick={() => setShowDocsModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#303134]"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="p-4 sm:p-6 overflow-y-auto">
-              <ApiDocumentationView
-                api={api}
-                onSelectEndpointForPlayground={(ep, m, p, b) => {
-                  const base = api.base_url.replace(/\/+$/, '');
-                  const resolvedUrl = ep.startsWith('http') ? ep : `${base}${ep.startsWith('/') ? ep : `/${ep}`}`;
-                  setEndpointUrl(resolvedUrl);
-                  setMethod(m);
-                  if (p) {
-                    setParams(Object.entries(p).map(([k, v]) => ({ key: k, value: v })));
-                  }
-                  if (b !== undefined) {
-                    setRequestBody(b);
-                    setActiveParamTab('body');
-                  }
-                  setShowDocsModal(false);
-                  setTimeout(() => {
-                    handleRunTest(resolvedUrl, m, b || '');
-                  }, 50);
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Top Request Section */}
       <div className="bg-[#28292A] rounded-2xl p-4 sm:p-5 border border-[#3C4043] space-y-3.5">
@@ -765,21 +720,6 @@ export const Playground: React.FC<PlaygroundProps> = ({
                 <span>1-Click Scenarios & Presets:</span>
               </span>
               <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (onOpenDocs) {
-                      onOpenDocs();
-                    } else {
-                      setShowDocsModal(true);
-                    }
-                  }}
-                  className="text-[11px] font-mono text-[#8AB4F8] hover:text-[#A8C7FA] flex items-center gap-1 hover:underline transition-colors cursor-pointer"
-                  title="View complete 6-pillar API documentation"
-                >
-                  <BookOpen className="h-3 w-3" />
-                  <span>API Docs (6 Pillars)</span>
-                </button>
                 <button
                   type="button"
                   onClick={() => setIsCurlModalOpen(true)}

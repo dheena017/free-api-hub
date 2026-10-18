@@ -164,14 +164,19 @@ export const HomePage: React.FC = () => {
     news: Newspaper
   };
 
-  const popularQueries = [
-    { label: '🌤️ Weather', query: 'weather' },
-    { label: '💰 Crypto Rates', query: 'crypto' },
-    { label: '🎮 Pokémon API', query: 'pokemon' },
-    { label: '🗺️ Geocoding', query: 'geocoding' },
-    { label: '🧪 Mock Data', query: 'placeholder' },
-    { label: '🤖 AI & ML', query: 'ai' }
-  ];
+  const popularQueries = categories.length > 0
+    ? categories.slice(0, 6).map((c) => ({
+        label: c.name,
+        query: c.slug
+      }))
+    : [
+        { label: 'Weather', query: 'weather' },
+        { label: 'Finance', query: 'finance' },
+        { label: 'Gaming', query: 'gaming' },
+        { label: 'Science', query: 'science' },
+        { label: 'Database', query: 'database' },
+        { label: 'Tools', query: 'developer-tools' }
+      ];
 
   const categoryThemes: Record<string, { iconColor: string; bg: string; border: string }> = {
     'developer-tools': { iconColor: 'text-sky-400', bg: 'bg-sky-500/10', border: 'hover:border-sky-500/50' },
@@ -219,7 +224,9 @@ export const HomePage: React.FC = () => {
         {/* Value Prop Pill */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#8AB4F8]/10 border border-[#8AB4F8]/20 text-[#8AB4F8] text-xs font-medium mb-6">
           <span className="h-2 w-2 rounded-full bg-[#81C995]" />
-          <span>4,000+ Verified Free REST APIs • Zero Credit Card Traps</span>
+          <span>
+            {stats ? `${stats.total_apis.toLocaleString()} Verified Free REST APIs` : '4,000+ Verified Free REST APIs'} • Zero Credit Card Traps
+          </span>
         </div>
 
         {/* Center Brand Logo & Title */}

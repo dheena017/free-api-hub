@@ -6,12 +6,14 @@ interface CurlImportModalProps {
   isOpen: boolean;
   onClose: () => void;
   onImport: (parsed: ParsedCurl) => void;
+  sampleCurl?: string;
 }
 
 export const CurlImportModal: React.FC<CurlImportModalProps> = ({
   isOpen,
   onClose,
-  onImport
+  onImport,
+  sampleCurl
 }) => {
   const [curlText, setCurlText] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +39,8 @@ export const CurlImportModal: React.FC<CurlImportModalProps> = ({
 
   const handleLoadSample = () => {
     setCurlText(
-      `curl -X POST "https://dummyjson.com/products/add" \\\n  -H "Content-Type: application/json" \\\n  -d '{"title": "Noise-Cancelling Headphones", "price": 149.99, "category": "electronics"}'`
+      sampleCurl ||
+      `curl -X GET "https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current_weather=true" \\\n  -H "Accept: application/json"`
     );
     setError(null);
   };

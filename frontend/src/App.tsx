@@ -10,8 +10,9 @@ import { CollectionPage } from './pages/CollectionPage';
 import { StatusPage } from './pages/StatusPage';
 import { SubmitPage } from './pages/SubmitPage';
 import { NotFoundPage } from './pages/NotFoundPage';
-import { fetchApis } from './api/client';
-import { ApiItem } from './types/api';
+import { fetchApis, fetchCategories } from './api/client';
+import { ApiItem, CategorySummary } from './types/api';
+import { CURATED_COLLECTIONS } from './types/collections';
 import { Search, X, ArrowRight, Zap, Star } from 'lucide-react';
 import { ToastProvider } from './utils/useToast';
 import { ThemeProvider } from './utils/ThemeContext';
@@ -25,8 +26,17 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
   const [suggestions, setSuggestions] = useState<ApiItem[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [isSearching, setIsSearching] = useState(false);
+  const [categories, setCategories] = useState<CategorySummary[]>([]);
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen && categories.length === 0) {
+      fetchCategories()
+        .then((cats) => setCategories(cats))
+        .catch(() => {});
+    }
+  }, [isOpen, categories.length]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -205,14 +215,9 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                 Quick Collections
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {[
-                  { label: 'Zero-Auth', path: '/collections/no-auth', desc: 'No Key Required' },
-                  { label: 'CORS-Ready', path: '/collections/cors-enabled', desc: 'Direct Browser' },
-                  { label: 'Ultra Fast', path: '/collections/fast-response', desc: '<120ms Latency' },
-                  { label: 'Open Data', path: '/collections/open-data', desc: 'Public Science/Geo' }
-                ].map((item) => (
+                {CURATED_COLLECTIONS.slice(0, 4).map((item) => (
                   <button
-                    key={item.label}
+                    key={item.id}
                     onClick={() => {
                       navigate(item.path);
                       onClose();
@@ -220,7 +225,7 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                     className="p-2.5 rounded-xl bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] text-left transition-all group cursor-pointer"
                   >
                     <div className="text-xs font-semibold text-white group-hover:text-slate-200">
-                      {item.label}
+                      {item.shortLabel || item.name}
                     </div>
                     <div className="text-[10px] text-slate-400 font-mono mt-0.5">
                       {item.desc}
@@ -232,14 +237,17 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
 
             <div>
               <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider mb-2">
-                Trending Searches
+                Trending Categories
               </div>
               <div className="flex flex-wrap gap-1.5 text-xs">
-                {['weather', 'crypto', 'pokemon', 'geocoding', 'placeholder', 'ai', 'books'].map((tag) => (
+                {(categories.length > 0
+                  ? categories.slice(0, 8).map((c) => c.slug)
+                  : ['weather', 'finance', 'gaming', 'science', 'database', 'developer-tools']
+                ).map((tag) => (
                   <button
                     key={tag}
                     onClick={() => {
-                      navigate(`/explore?q=${encodeURIComponent(tag)}`);
+                      navigate(`/category/${encodeURIComponent(tag)}`);
                       onClose();
                     }}
                     className="px-2.5 py-1 rounded-lg bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] text-slate-300 hover:text-white transition-colors font-mono text-[11px] cursor-pointer"

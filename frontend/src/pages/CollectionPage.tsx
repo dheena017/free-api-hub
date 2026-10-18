@@ -34,6 +34,8 @@ const SORT_OPTIONS: SelectOption[] = [
   { value: 'alphabetical', label: 'A to Z' }
 ];
 
+import { CURATED_COLLECTIONS, getCollectionById } from '../types/collections';
+
 export const CollectionPage: React.FC = () => {
   const { filter } = useParams<{ filter: string }>();
   const [apis, setApis] = useState<ApiItem[]>([]);
@@ -46,60 +48,8 @@ export const CollectionPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const pageSize = 24;
-
-  const collections = [
-    {
-      id: 'no-auth',
-      name: 'No Registration / No Key',
-      tagline: 'Instant Zero-Auth APIs',
-      icon: Zap,
-      description:
-        'These endpoints require absolutely zero accounts, API tokens, or secrets. Perfect for hackathons, student projects, and rapid prototyping without setup friction.'
-    },
-    {
-      id: 'cors-enabled',
-      name: 'CORS-Ready Endpoints',
-      tagline: 'Direct Browser Execution',
-      icon: Globe,
-      description:
-        'These APIs return explicit Access-Control-Allow-Origin headers, meaning you can fetch them straight from client-side vanilla JavaScript or React without needing a proxy server.'
-    },
-    {
-      id: 'fast-response',
-      name: 'Ultra Fast (<120ms)',
-      tagline: 'Lightning Latency',
-      icon: Gauge,
-      description:
-        'Blazing fast response times verified under 120 milliseconds. Ideal for high-throughput mobile apps, autocompletes, and interactive micro-interactions.'
-    },
-    {
-      id: 'open-data',
-      name: 'Public & Open Datasets',
-      tagline: 'Science, Civic & Geodata',
-      icon: Building2,
-      description:
-        'Free governmental, scientific, astronomical, meteorological, and educational repositories with zero licensing restrictions.'
-    },
-    {
-      id: 'mock-data',
-      name: 'Mock & Prototype Data',
-      tagline: 'Realistic Test Fixtures',
-      icon: Database,
-      description:
-        'Ready-made fixtures for users, products, posts, and geographic locations. Ideal for wireframing UI components before backend development starts.'
-    },
-    {
-      id: 'high-uptime',
-      name: 'Ultra High Reliability (99.7%+)',
-      tagline: 'Enterprise Uptime Standards',
-      icon: ShieldCheck,
-      description:
-        'The most dependable free APIs in our entire directory. Each has passed hundreds of automated daily health checks with near-zero downtime.'
-    }
-  ];
-
-  const currentCollection =
-    collections.find((c) => c.id === filter) || collections[0];
+  const currentCollection = getCollectionById(filter);
+  const collections = CURATED_COLLECTIONS;
 
   const loadCollection = async () => {
     setIsLoading(true);

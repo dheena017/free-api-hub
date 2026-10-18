@@ -1,5 +1,6 @@
 import React from 'react';
-import { Search, X, Zap, Globe, ShieldCheck, Database, Gauge, Building2 } from 'lucide-react';
+import { Search, X } from 'lucide-react';
+import { CURATED_COLLECTIONS } from '../types/collections';
 
 interface SearchFilterProps {
   searchTerm: string;
@@ -16,14 +17,11 @@ export const SearchFilter: React.FC<SearchFilterProps> = ({
   onCollectionSelect,
   placeholder = "Search free APIs (e.g. weather, crypto, pokemon)..."
 }) => {
-  const quickFilters = [
-    { id: 'no-auth', label: 'No Key Needed', icon: Zap },
-    { id: 'cors-enabled', label: 'Browser Ready (CORS)', icon: Globe },
-    { id: 'fast-response', label: 'Ultra Fast (<120ms)', icon: Gauge },
-    { id: 'open-data', label: 'Open Datasets', icon: Building2 },
-    { id: 'high-uptime', label: 'High Uptime (99%+)', icon: ShieldCheck },
-    { id: 'mock-data', label: 'Mock & Proto Data', icon: Database },
-  ];
+  const quickFilters = CURATED_COLLECTIONS.map((col) => ({
+    id: col.id,
+    label: col.shortLabel || col.name,
+    icon: col.icon
+  }));
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-3.5">

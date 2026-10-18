@@ -1,9 +1,19 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Heart } from 'lucide-react';
 import { Logo } from './Logo';
+import { fetchCategories } from '../api/client';
+import { CategorySummary } from '../types/api';
 
 export const Footer: React.FC = () => {
+  const [categories, setCategories] = useState<CategorySummary[]>([]);
+
+  useEffect(() => {
+    fetchCategories()
+      .then((cats) => setCategories(cats.slice(0, 6)))
+      .catch(() => {});
+  }, []);
+
   return (
     <footer className="border-t border-[#3C4043] bg-[#1F1F1F] mt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
@@ -35,12 +45,24 @@ export const Footer: React.FC = () => {
           <div>
             <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-3.5 font-mono">Popular Categories</h4>
             <ul className="space-y-2 text-xs text-slate-400">
-              <li><Link to="/category/developer-tools" className="hover:text-[#8AB4F8] transition-colors">Developer Tools & Testing</Link></li>
-              <li><Link to="/category/security" className="hover:text-[#8AB4F8] transition-colors">Security & Auth</Link></li>
-              <li><Link to="/category/devops-ci" className="hover:text-[#8AB4F8] transition-colors">DevOps & CI/CD</Link></li>
-              <li><Link to="/category/cloud-storage" className="hover:text-[#8AB4F8] transition-colors">Cloud & Storage</Link></li>
-              <li><Link to="/category/database" className="hover:text-[#8AB4F8] transition-colors">Databases & BaaS</Link></li>
-              <li><Link to="/category/ai-ml" className="hover:text-[#8AB4F8] transition-colors">AI & Machine Learning</Link></li>
+              {categories.length > 0 ? (
+                categories.map((c) => (
+                  <li key={c.slug}>
+                    <Link to={`/category/${c.slug}`} className="hover:text-[#8AB4F8] transition-colors">
+                      {c.name}
+                    </Link>
+                  </li>
+                ))
+              ) : (
+                <>
+                  <li><Link to="/category/developer-tools" className="hover:text-[#8AB4F8] transition-colors">Developer Tools</Link></li>
+                  <li><Link to="/category/security" className="hover:text-[#8AB4F8] transition-colors">Security</Link></li>
+                  <li><Link to="/category/weather" className="hover:text-[#8AB4F8] transition-colors">Weather</Link></li>
+                  <li><Link to="/category/finance" className="hover:text-[#8AB4F8] transition-colors">Finance</Link></li>
+                  <li><Link to="/category/database" className="hover:text-[#8AB4F8] transition-colors">Database</Link></li>
+                  <li><Link to="/category/ai-ml" className="hover:text-[#8AB4F8] transition-colors">AI & ML</Link></li>
+                </>
+              )}
             </ul>
           </div>
 

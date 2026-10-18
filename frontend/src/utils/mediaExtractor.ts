@@ -245,7 +245,8 @@ export function extractMediaItems(data: unknown, baseUrl?: string): MediaItem[] 
         lower.includes('rickandmortyapi.com/api/character/avatar') ||
         lower.includes('randomfox.ca/images') ||
         lower.includes('i.imgur.com') ||
-        lower.includes('avatars.githubusercontent.com')
+        lower.includes('avatars.githubusercontent.com') ||
+        lower.includes('lh3.googleusercontent.com')
       ) {
         registerMedia(str, 'image', keyPath || 'root', parentKey || 'Media Image', ext ? ext.replace('.', '').toUpperCase() : 'JPG');
       }

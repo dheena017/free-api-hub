@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { validateEndpoint, submitApi, fetchSubmissionStatus } from '../api/client';
+import { validateEndpoint, submitApi, fetchSubmissionStatus, fetchApis } from '../api/client';
 import { ValidationResult, AuthType, PricingTier } from '../types/api';
 import {
   PlusCircle,
@@ -106,37 +106,33 @@ export const SubmitPage: React.FC = () => {
     }
   };
 
-  const handleQuickFill = (preset: 'catfacts' | 'openmeteo') => {
-    if (preset === 'catfacts') {
-      setFormData({
-        name: 'Cat Facts Daily API',
-        category: 'reference',
-        base_url: 'https://catfact.ninja',
-        sample_endpoint: '/fact',
-        documentation_url: 'https://catfact.ninja',
-        auth_type: 'none',
-        pricing_tier: 'open',
-        description: 'Randomized daily feline facts with zero API key requirement.',
-        short_description: 'Randomized daily feline facts with zero API key requirement.',
-        detailed_description: 'Public REST endpoint providing interesting cat facts for educational apps, widgets, and bot automation.'
-      });
-    } else {
-      setFormData({
-        name: 'Open-Meteo Weather API',
-        category: 'weather',
-        base_url: 'https://api.open-meteo.com',
-        sample_endpoint: '/v1/forecast?latitude=52.52&longitude=13.41&current_weather=true',
-        documentation_url: 'https://open-meteo.com/en/docs',
-        auth_type: 'none',
-        pricing_tier: 'open',
-        description: 'Free open-source weather forecast API for developers without keys.',
-        short_description: 'Free open-source weather forecast API for developers without keys.',
-        detailed_description: 'National weather services forecast model data aggregated into high-speed RESTful JSON responses.'
-      });
+  const handleQuickFillFromCatalog = async () => {
+    setIsLookingUp(true);
+    try {
+      const res = await fetchApis({ limit: 12, sort: 'popular' });
+      if (res.items.length > 0) {
+        const item = res.items[Math.floor(Math.random() * res.items.length)];
+        setFormData({
+          name: item.name,
+          category: item.category,
+          base_url: item.base_url,
+          sample_endpoint: item.sample_endpoint,
+          documentation_url: item.documentation_url,
+          auth_type: item.auth_type,
+          pricing_tier: item.pricing_tier,
+          description: item.description,
+          short_description: item.short_description || item.description,
+          detailed_description: item.detailed_description || item.description
+        });
+      }
+    } catch (err) {
+      console.error('Failed to load sample API from catalog:', err);
+    } finally {
+      setIsLookingUp(false);
+      setFieldErrors({});
+      setValidationResult(null);
+      setSubmitError(null);
     }
-    setFieldErrors({});
-    setValidationResult(null);
-    setSubmitError(null);
   };
 
   const validateUrl = (url: string) => {
@@ -481,23 +477,18 @@ export const SubmitPage: React.FC = () => {
           {/* Quick Demo Pre-fill Bar */}
           <div className="bg-[#28292A] rounded-2xl p-4 border border-[#3C4043] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2 text-slate-300">
-              <Zap className="h-4 w-4 text-accent" />
-              <span>Testing the verification pipeline? Load a verified demo payload:</span>
+              <Zap className="h-4 w-4 text-[#8AB4F8]" />
+              <span>Testing the verification pipeline? Load a real sample from our verified catalog:</span>
             </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => handleQuickFill('openmeteo')}
-                className="px-3 py-1.5 rounded-lg bg-[#1F1F1F] hover:bg-[#3C4043] border border-[#3C4043] text-slate-200 text-xs font-mono transition-colors"
+                disabled={isLookingUp}
+                onClick={handleQuickFillFromCatalog}
+                className="px-3 py-1.5 rounded-lg bg-[#1F1F1F] hover:bg-[#3C4043] border border-[#3C4043] text-slate-200 text-xs font-mono transition-colors flex items-center gap-1.5 cursor-pointer"
               >
-                🌤️ Open-Meteo
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickFill('catfacts')}
-                className="px-3 py-1.5 rounded-lg bg-[#1F1F1F] hover:bg-[#3C4043] border border-[#3C4043] text-slate-200 text-xs font-mono transition-colors"
-              >
-                🐱 Cat Facts
+                <Sparkles className="h-3.5 w-3.5 text-[#8AB4F8]" />
+                <span>{isLookingUp ? 'Fetching from Catalog...' : 'Load Catalog Sample'}</span>
               </button>
             </div>
           </div>
