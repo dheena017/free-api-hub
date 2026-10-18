@@ -106,7 +106,7 @@ export const MediaPreviewViewer: React.FC<MediaPreviewViewerProps> = ({
       document.body.removeChild(a);
       URL.revokeObjectURL(blobUrl);
     } catch {
-      window.open(item.url, '_blank');
+      window.open(item.url, '_blank', 'noopener,noreferrer');
     }
   };
 

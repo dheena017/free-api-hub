@@ -1,0 +1,8 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Disallow: /api/v1/proxy
+Disallow: /api/v1/health/check
+Disallow: /api/v1/submit/validate
+
+Sitemap: https://freeapihub.dev/sitemap.xml

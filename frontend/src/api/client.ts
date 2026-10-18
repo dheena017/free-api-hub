@@ -9,30 +9,40 @@ import {
   ValidationResult,
   SubmissionPayload,
   HealthCheckResult,
-  BatchHealthCheckResponse
+  BatchHealthCheckResponse,
+  StatusDashboardResponse
 } from '../types/api';
 import { logger } from '../utils/logger';
 
-// Prefer relative '/api/v1' in development to utilize Vite's dev proxy seamlessly without CORS
+// Prefer relative '/api/v1' by default so that both Vite's dev proxy and production Nginx reverse proxy work seamlessly
 const ENV_BASE = import.meta.env.VITE_API_BASE_URL;
 const BASE_URL = ENV_BASE !== undefined ? ENV_BASE : '';
-const API_PREFIX = BASE_URL ? `${BASE_URL}/api/v1` : '/api/v1';
+const API_PREFIX = BASE_URL ? `${BASE_URL.replace(/\/+$/, '')}/api/v1` : '/api/v1';
 
 async function handleResponseError(res: Response, fallbackMessage: string): Promise<never> {
   let message = fallbackMessage;
   try {
-    const errorJson = await res.json();
-    if (errorJson?.detail) {
-      const detailStr = typeof errorJson.detail === 'string' ? errorJson.detail : JSON.stringify(errorJson.detail);
-      message = `[HTTP ${res.status}] ${detailStr}`;
-    } else if (errorJson?.message) {
-      const msgStr = typeof errorJson.message === 'string' ? errorJson.message : JSON.stringify(errorJson.message);
-      message = `[HTTP ${res.status}] ${msgStr}`;
+    const text = await res.text();
+    if (text) {
+      try {
+        const errorJson = JSON.parse(text);
+        if (errorJson?.detail) {
+          const detailStr = typeof errorJson.detail === 'string' ? errorJson.detail : JSON.stringify(errorJson.detail);
+          message = `[HTTP ${res.status}] ${detailStr}`;
+        } else if (errorJson?.message) {
+          const msgStr = typeof errorJson.message === 'string' ? errorJson.message : JSON.stringify(errorJson.message);
+          message = `[HTTP ${res.status}] ${msgStr}`;
+        } else {
+          message = `[HTTP ${res.status} ${res.statusText || 'Error'}] ${fallbackMessage}`;
+        }
+      } catch {
+        // Plain text error response
+        message = `[HTTP ${res.status}] ${text.slice(0, 200)}`;
+      }
     } else {
       message = `[HTTP ${res.status} ${res.statusText || 'Error'}] ${fallbackMessage}`;
     }
   } catch {
-    // response was not JSON, fallback to HTTP status info
     message = `[HTTP ${res.status} ${res.statusText || 'Error'}] ${fallbackMessage}`;
   }
   throw new Error(message);
@@ -57,21 +67,31 @@ async function loggedFetch<T>(url: string, init?: RequestInit, fallbackErr?: str
     const duration = performance.now() - startTime;
     if (!res.ok) {
       logger.apiErr(method, url, `HTTP ${res.status} ${res.statusText}`, duration);
-      return handleResponseError(res, fallbackErr || `Request failed to ${url}`);
+      return await handleResponseError(res, fallbackErr || `Request failed to ${url}`);
     }
-    const data = await res.json();
+
+    // Safely handle empty (204 No Content, 0-byte body) or non-JSON responses
+    const text = await res.text();
+    let data: any = null;
+    if (text && text.trim().length > 0) {
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = text;
+      }
+    }
+
     logger.apiRes(method, url, res.status, duration, data);
     return data as T;
   } catch (err: unknown) {
     const duration = performance.now() - startTime;
     logger.apiErr(method, url, err, duration);
     if (err instanceof TypeError && err.message.toLowerCase().includes('fetch')) {
-      throw new Error(`Connection Refused: Cannot reach backend API at ${url}. Ensure the Python FastAPI service is active on ${BASE_URL}.`);
+      throw new Error(`Connection Error: Cannot reach backend API at ${url}. Ensure the server is running.`);
     }
     throw err;
   }
 }
-
 
 export interface ApiQueryParams {
   q?: string;
@@ -134,8 +154,8 @@ export async function validateEndpoint(payload: ValidationRequest): Promise<Vali
   }, 'Live endpoint validation service request failed');
 }
 
-export async function submitApi(payload: SubmissionPayload): Promise<{ success: boolean; message: string }> {
-  return loggedFetch<{ success: boolean; message: string }>(`${API_PREFIX}/submit`, {
+export async function submitApi(payload: SubmissionPayload): Promise<{ success: boolean; message: string; submission_id?: string; duplicate?: boolean }> {
+  return loggedFetch<{ success: boolean; message: string; submission_id?: string; duplicate?: boolean }>(`${API_PREFIX}/submit`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -161,18 +181,42 @@ export async function checkBatchHealth(params?: { slugs?: string[]; limit?: numb
   }, 'Batch health probe request failed');
 }
 
-export async function fetchStatusDashboard(params?: { limit?: number; offset?: number }): Promise<{
-  stats: CatalogStats;
-  total: number;
-  endpoints: ApiItem[];
-}> {
+export async function fetchStatusDashboard(params?: { limit?: number; offset?: number }): Promise<StatusDashboardResponse> {
   const query = new URLSearchParams();
   if (params?.limit) query.set('limit', params.limit.toString());
   if (params?.offset) query.set('offset', params.offset.toString());
-  return loggedFetch<{
-    stats: CatalogStats;
-    total: number;
-    endpoints: ApiItem[];
-  }>(`${API_PREFIX}/status-dashboard?${query.toString()}`, undefined, 'Failed to load status dashboard metrics');
+  return loggedFetch<StatusDashboardResponse>(`${API_PREFIX}/status-dashboard?${query.toString()}`, undefined, 'Failed to load status dashboard metrics');
 }
 
+export async function reportApiIssue(
+  slug: string,
+  payload: { issue_type: string; details: string; contact_email?: string }
+): Promise<{ success: boolean; message: string; report?: any }> {
+  return loggedFetch<{ success: boolean; message: string; report?: any }>(
+    `${API_PREFIX}/apis/${encodeURIComponent(slug)}/report`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    },
+    'Failed to submit broken API report'
+  );
+}
+
+export async function fetchSubmissionStatus(submissionId: string): Promise<any> {
+  return loggedFetch<any>(
+    `${API_PREFIX}/submit/status/${encodeURIComponent(submissionId)}`,
+    undefined,
+    `Submission '${submissionId}' not found`
+  );
+}
+
+export async function fetchSubmissionsList(limit: number = 20): Promise<{ total: number; submissions: any[] }> {
+  return loggedFetch<{ total: number; submissions: any[] }>(
+    `${API_PREFIX}/submit/list?limit=${limit}`,
+    undefined,
+    'Failed to fetch community submissions list'
+  );
+}

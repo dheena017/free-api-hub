@@ -195,51 +195,22 @@ export async function ensurePortFree(port, { tag = '', silent = false } = {}) {
   const pids = getPidsOnPort(portNum);
 
   if (pids.length > 0) {
+    const msg = `${tagPrefix}Port ${portNum} is currently in use by process PID(s): ${pids.join(', ')}. Please stop the conflicting process or configure an alternate port.`;
     if (!silent) {
-      console.log(`\x1b[33m${tagPrefix}⚠️  Port ${portNum} is currently in use by process PID(s): ${pids.join(', ')}.\x1b[0m`);
-      console.log(`\x1b[33m${tagPrefix}⚡ Terminating conflicting process to reclaim port ${portNum} (no port shifting allowed)...\x1b[0m`);
+      console.error(`\x1b[31m⚠️  ${msg}\x1b[0m`);
     }
-
-    for (const pid of pids) {
-      killPid(pid);
-    }
-
-    // Wait and verify until port is fully free
-    const maxRetries = 20; // 20 * 100ms = 2.0s max wait
-    for (let i = 0; i < maxRetries; i++) {
-      await new Promise((r) => setTimeout(r, 100));
-      const remaining = getPidsOnPort(portNum);
-      if (remaining.length === 0) {
-        const available = await isPortAvailable(portNum);
-        if (available) {
-          if (!silent) {
-            console.log(`\x1b[32m${tagPrefix}✓ Port ${portNum} successfully freed and locked for this service.\x1b[0m\n`);
-          }
-          return true;
-        }
-      }
-    }
-
-    if (!silent) {
-      console.log(`\x1b[32m${tagPrefix}✓ Port ${portNum} reclaim signal sent. Proceeding to bind...\x1b[0m\n`);
-    }
-    return true;
+    throw new Error(msg);
   }
 
-  // Double check socket bind
   const available = await isPortAvailable(portNum);
   if (!available) {
-    const freshPids = getPidsOnPort(portNum);
-    if (freshPids.length > 0) {
-      if (!silent) {
-        console.log(`\x1b[33m${tagPrefix}⚠️  Port ${portNum} socket is busy by PID(s): ${freshPids.join(', ')}. Terminating...\x1b[0m`);
-      }
-      for (const pid of freshPids) {
-        killPid(pid);
-      }
-      await new Promise((r) => setTimeout(r, 200));
+    const msg = `${tagPrefix}Port ${portNum} is not available for binding.`;
+    if (!silent) {
+      console.error(`\x1b[31m⚠️  ${msg}\x1b[0m`);
     }
+    throw new Error(msg);
   }
 
   return true;
 }
+

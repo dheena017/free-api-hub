@@ -14,6 +14,7 @@ import { fetchApis } from './api/client';
 import { ApiItem } from './types/api';
 import { Search, X, ArrowRight, Zap, Star } from 'lucide-react';
 import { ToastProvider } from './utils/useToast';
+import { ThemeProvider } from './utils/ThemeContext';
 
 // Upgraded Global Search Modal with Live Suggestions & Keyboard Navigation
 const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
@@ -301,29 +302,31 @@ export default function App() {
   }, []);
 
   return (
-    <ToastProvider>
-      <BrowserRouter>
-        <div className="min-h-screen flex flex-col bg-background text-slate-100 font-sans">
-          <Navbar onOpenSearchModal={() => setSearchModalOpen(true)} />
-          <div className="flex-1">
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/explore" element={<ExplorePage />} />
-              <Route path="/api/:slug" element={<ApiDetailPage />} />
-              <Route path="/category/:category" element={<CategoryPage />} />
-              <Route path="/collections/:filter" element={<CollectionPage />} />
-              <Route path="/status" element={<StatusPage />} />
-              <Route path="/submit" element={<SubmitPage />} />
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
+    <ThemeProvider>
+      <ToastProvider>
+        <BrowserRouter>
+          <div className="min-h-screen flex flex-col bg-background text-text-base font-sans transition-colors">
+            <Navbar onOpenSearchModal={() => setSearchModalOpen(true)} />
+            <div className="flex-1">
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/explore" element={<ExplorePage />} />
+                <Route path="/api/:slug" element={<ApiDetailPage />} />
+                <Route path="/category/:category" element={<CategoryPage />} />
+                <Route path="/collections/:filter" element={<CollectionPage />} />
+                <Route path="/status" element={<StatusPage />} />
+                <Route path="/submit" element={<SubmitPage />} />
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </div>
+            <Footer />
+            <GlobalSearchModal
+              isOpen={searchModalOpen}
+              onClose={() => setSearchModalOpen(false)}
+            />
           </div>
-          <Footer />
-          <GlobalSearchModal
-            isOpen={searchModalOpen}
-            onClose={() => setSearchModalOpen(false)}
-          />
-        </div>
-      </BrowserRouter>
-    </ToastProvider>
+        </BrowserRouter>
+      </ToastProvider>
+    </ThemeProvider>
   );
 }

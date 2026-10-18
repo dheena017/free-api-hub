@@ -3,17 +3,44 @@
 @tailwind utilities;
 
 :root {
+  --color-bg: #F8F9FA;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #F1F3F4;
+  --color-surface-hover: #E8EAED;
+  --color-border: #E0E2E6;
+  --color-border-light: #C4C7C5;
+  --color-text: #1F2937;
+  --color-text-muted: #5F6368;
+  color-scheme: light;
+}
+
+html.dark,
+:root.dark {
+  --color-bg: #1F1F1F;
+  --color-surface: #28292A;
+  --color-surface-elevated: #303134;
+  --color-surface-hover: #3C4043;
+  --color-border: #3C4043;
+  --color-border-light: #5F6368;
+  --color-text: #F1F5F9;
+  --color-text-muted: #9AA0A6;
   color-scheme: dark;
 }
 
 html,
 body {
-  color-scheme: dark;
-  background-color: #1F1F1F;
-  color: #F1F5F9;
+  background-color: var(--color-bg);
+  color: var(--color-text);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Accessibility: Visible high-contrast focus rings */
+:focus-visible {
+  outline: 2px solid #8AB4F8;
+  outline-offset: 2px;
 }
 
 /* Hide scrollbars comprehensively across all browsers */
@@ -42,11 +69,11 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(128, 128, 128, 0.25);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(128, 128, 128, 0.45);
 }
 ::-webkit-scrollbar-button {
   display: none !important;
@@ -57,25 +84,26 @@ body {
 /* Consistent Website Flat Panels */
 .glass-panel,
 .glass-panel-glow {
-  background-color: #28292A;
-  border: 1px solid #3C4043;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 1rem;
   box-shadow: none !important;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
 }
 
 .glass-panel:hover,
 .glass-panel-glow:hover {
-  border-color: #5F6368;
+  border-color: var(--color-border-light);
 }
 
-/* Card hover effect without glow */
+/* Card hover effect */
 .api-card-hover {
-  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease, background-color 0.18s ease;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
 }
 .api-card-hover:hover {
   transform: translateY(-2px);
-  border-color: #5F6368;
-  box-shadow: none;
+  border-color: var(--color-border-light);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 /* Fast CSS list performance rendering */

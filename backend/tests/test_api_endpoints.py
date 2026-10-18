@@ -22,6 +22,7 @@ async def async_client():
 
 
 @pytest.mark.asyncio
+@pytest.mark.offline
 class TestApiEndpoints:
     """
     PURPOSE 3: Backend REST API Integration Tests

@@ -688,32 +688,29 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
                     key={preset.id}
                     type="button"
                     onClick={() => handleSelectPreset(preset)}
-                    className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono transition-all border ${
-                      isActive
+                    className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono transition-all border ${isActive
                         ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold border-[#8AB4F8] shadow-sm'
                         : 'bg-[#1F1F1F] text-slate-300 hover:text-white border-[#3C4043] hover:border-[#5F6368] hover:bg-[#303134]'
-                    }`}
+                      }`}
                     title={preset.description}
                   >
                     <span
-                      className={`text-[9px] uppercase font-bold px-1 py-0.2 rounded ${
-                        isActive
+                      className={`text-[9px] uppercase font-bold px-1 py-0.2 rounded ${isActive
                           ? 'bg-[#1F1F1F]/20 text-[#1F1F1F]'
                           : preset.method === 'POST'
-                          ? 'bg-sky-500/10 text-sky-400'
-                          : 'bg-emerald-500/10 text-emerald-400'
-                      }`}
+                            ? 'bg-sky-500/10 text-sky-400'
+                            : 'bg-emerald-500/10 text-emerald-400'
+                        }`}
                     >
                       {preset.method}
                     </span>
                     <span>{preset.label}</span>
                     {preset.badge && (
                       <span
-                        className={`text-[9px] px-1 py-0.2 rounded-full ${
-                          isActive
+                        className={`text-[9px] px-1 py-0.2 rounded-full ${isActive
                             ? 'bg-[#1F1F1F] text-[#8AB4F8]'
                             : 'bg-[#8AB4F8]/15 text-[#8AB4F8]'
-                        }`}
+                          }`}
                       >
                         {preset.badge}
                       </span>
@@ -792,33 +789,30 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
               <button
                 type="button"
                 onClick={() => setActiveParamTab('params')}
-                className={`px-3 py-1 rounded-lg text-xs font-mono transition-colors ${
-                  activeParamTab === 'params'
+                className={`px-3 py-1 rounded-lg text-xs font-mono transition-colors ${activeParamTab === 'params'
                     ? 'bg-[#8AB4F8] text-[#1F1F1F] font-semibold'
                     : 'text-slate-400 hover:text-white'
-                }`}
+                  }`}
               >
                 Query Params {params.length > 0 && `(${params.length})`}
               </button>
               <button
                 type="button"
                 onClick={() => setActiveParamTab('headers')}
-                className={`px-3 py-1 rounded-lg text-xs font-mono transition-colors ${
-                  activeParamTab === 'headers'
+                className={`px-3 py-1 rounded-lg text-xs font-mono transition-colors ${activeParamTab === 'headers'
                     ? 'bg-[#8AB4F8] text-[#1F1F1F] font-semibold'
                     : 'text-slate-400 hover:text-white'
-                }`}
+                  }`}
               >
                 Headers {headers.length > 0 && `(${headers.length})`}
               </button>
               <button
                 type="button"
                 onClick={() => setActiveParamTab('body')}
-                className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-mono transition-colors ${
-                  activeParamTab === 'body'
+                className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-mono transition-colors ${activeParamTab === 'body'
                     ? 'bg-[#8AB4F8] text-[#1F1F1F] font-semibold'
                     : 'text-slate-400 hover:text-white'
-                }`}
+                  }`}
               >
                 <Braces className="h-3 w-3" />
                 <span>Body {requestBody.trim() ? '(JSON)' : ''}</span>
@@ -1013,13 +1007,12 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
 
       {/* Main Response & Snippets Area */}
       <div
-        className={`grid gap-4 transition-all duration-300 ${
-          viewLayout === 'focus'
+        className={`grid gap-4 transition-all duration-300 ${viewLayout === 'focus'
             ? 'grid-cols-1'
             : viewLayout === 'stacked'
-            ? 'grid-cols-1'
-            : 'grid-cols-1 lg:grid-cols-2'
-        }`}
+              ? 'grid-cols-1'
+              : 'grid-cols-1 lg:grid-cols-2'
+          }`}
       >
         {/* Response Payload Inspector */}
         <div className="bg-[#28292A] rounded-2xl border border-[#3C4043] flex flex-col h-[580px] overflow-hidden">
@@ -1034,13 +1027,12 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
               {response && (
                 <div className="flex items-center gap-1.5 ml-1">
                   <span
-                    className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${
-                      response.status_code >= 200 && response.status_code < 300
+                    className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${response.status_code >= 200 && response.status_code < 300
                         ? 'bg-[#81C995]/10 text-[#81C995] border-[#81C995]/30'
                         : response.status_code >= 400
-                        ? 'bg-[#F28B82]/10 text-[#F28B82] border-[#F28B82]/30'
-                        : 'bg-[#FDD663]/10 text-[#FDD663] border-[#FDD663]/30'
-                    }`}
+                          ? 'bg-[#F28B82]/10 text-[#F28B82] border-[#F28B82]/30'
+                          : 'bg-[#FDD663]/10 text-[#FDD663] border-[#FDD663]/30'
+                      }`}
                   >
                     {response.status_code} {response.status_code === 200 ? 'OK' : ''}
                   </span>
@@ -1065,9 +1057,8 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
                 <>
                   <button
                     onClick={() => setIsSearchOpen(!isSearchOpen)}
-                    className={`p-1.5 rounded text-xs transition-colors border border-[#3C4043] ${
-                      isSearchOpen ? 'bg-[#8AB4F8]/20 text-[#8AB4F8]' : 'bg-[#1F1F1F] text-slate-400 hover:text-white'
-                    }`}
+                    className={`p-1.5 rounded text-xs transition-colors border border-[#3C4043] ${isSearchOpen ? 'bg-[#8AB4F8]/20 text-[#8AB4F8]' : 'bg-[#1F1F1F] text-slate-400 hover:text-white'
+                      }`}
                     title="Search in response"
                   >
                     <Search className="h-3 w-3" />
@@ -1097,27 +1088,24 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
               <div className="flex items-center bg-[#1F1F1F] p-0.5 rounded-lg border border-[#3C4043] ml-1">
                 <button
                   onClick={() => setViewLayout('split')}
-                  className={`p-1 rounded transition-colors ${
-                    viewLayout === 'split' ? 'bg-[#8AB4F8] text-[#1F1F1F]' : 'text-slate-400 hover:text-white'
-                  }`}
+                  className={`p-1 rounded transition-colors ${viewLayout === 'split' ? 'bg-[#8AB4F8] text-[#1F1F1F]' : 'text-slate-400 hover:text-white'
+                    }`}
                   title="Side-by-side Split View"
                 >
                   <Columns className="h-3 w-3" />
                 </button>
                 <button
                   onClick={() => setViewLayout('focus')}
-                  className={`p-1 rounded transition-colors ${
-                    viewLayout === 'focus' ? 'bg-[#8AB4F8] text-[#1F1F1F]' : 'text-slate-400 hover:text-white'
-                  }`}
+                  className={`p-1 rounded transition-colors ${viewLayout === 'focus' ? 'bg-[#8AB4F8] text-[#1F1F1F]' : 'text-slate-400 hover:text-white'
+                    }`}
                   title="Full Width Focus View"
                 >
                   <Maximize2 className="h-3 w-3" />
                 </button>
                 <button
                   onClick={() => setViewLayout('stacked')}
-                  className={`p-1 rounded transition-colors ${
-                    viewLayout === 'stacked' ? 'bg-[#8AB4F8] text-[#1F1F1F]' : 'text-slate-400 hover:text-white'
-                  }`}
+                  className={`p-1 rounded transition-colors ${viewLayout === 'stacked' ? 'bg-[#8AB4F8] text-[#1F1F1F]' : 'text-slate-400 hover:text-white'
+                    }`}
                   title="Stacked Top/Bottom View"
                 >
                   <Rows className="h-3 w-3" />
@@ -1131,11 +1119,10 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setActiveResponseTab('json')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                  activeResponseTab === 'json'
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'json'
                     ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
                     : 'text-slate-400 hover:text-white hover:bg-[#303134]'
-                }`}
+                  }`}
               >
                 <Code2 className="h-3 w-3" />
                 <span>JSON</span>
@@ -1143,11 +1130,10 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
 
               <button
                 onClick={() => setActiveResponseTab('preview')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                  activeResponseTab === 'preview'
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'preview'
                     ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
                     : 'text-slate-400 hover:text-white hover:bg-[#303134]'
-                }`}
+                  }`}
               >
                 <Globe className="h-3 w-3" />
                 <span>Web Preview</span>
@@ -1160,11 +1146,10 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
 
               <button
                 onClick={() => setActiveResponseTab('media')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                  activeResponseTab === 'media'
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'media'
                     ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
                     : 'text-slate-400 hover:text-white hover:bg-[#303134]'
-                }`}
+                  }`}
               >
                 <ImageIcon className="h-3 w-3" />
                 <span>Media Preview</span>
@@ -1177,11 +1162,10 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
 
               <button
                 onClick={() => setActiveResponseTab('headers')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                  activeResponseTab === 'headers'
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'headers'
                     ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
                     : 'text-slate-400 hover:text-white hover:bg-[#303134]'
-                }`}
+                  }`}
               >
                 <FileText className="h-3 w-3" />
                 <span>Headers</span>
@@ -1194,11 +1178,10 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
 
               <button
                 onClick={() => setActiveResponseTab('table')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                  activeResponseTab === 'table'
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'table'
                     ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
                     : 'text-slate-400 hover:text-white hover:bg-[#303134]'
-                }`}
+                  }`}
               >
                 <TableIcon className="h-3 w-3" />
                 <span>Structure</span>
@@ -1207,11 +1190,10 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
               {/* TypeScript & Schema Tab */}
               <button
                 onClick={() => setActiveResponseTab('types')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                  activeResponseTab === 'types'
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'types'
                     ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
                     : 'text-slate-400 hover:text-white hover:bg-[#303134]'
-                }`}
+                  }`}
               >
                 <FileCode className="h-3 w-3" />
                 <span>TS Types</span>
@@ -1219,11 +1201,10 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
 
               <button
                 onClick={() => setActiveResponseTab('raw')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                  activeResponseTab === 'raw'
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'raw'
                     ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
                     : 'text-slate-400 hover:text-white hover:bg-[#303134]'
-                }`}
+                  }`}
               >
                 <AlignLeft className="h-3 w-3" />
                 <span>Raw</span>
@@ -1235,17 +1216,15 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
               <div className="flex items-center bg-[#1F1F1F] p-0.5 rounded-lg border border-[#3C4043]">
                 <button
                   onClick={() => setJsonDisplayMode('tree')}
-                  className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors ${
-                    jsonDisplayMode === 'tree' ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold' : 'text-slate-400 hover:text-white'
-                  }`}
+                  className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors ${jsonDisplayMode === 'tree' ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold' : 'text-slate-400 hover:text-white'
+                    }`}
                 >
                   Tree
                 </button>
                 <button
                   onClick={() => setJsonDisplayMode('raw')}
-                  className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors ${
-                    jsonDisplayMode === 'raw' ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold' : 'text-slate-400 hover:text-white'
-                  }`}
+                  className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors ${jsonDisplayMode === 'raw' ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold' : 'text-slate-400 hover:text-white'
+                    }`}
                 >
                   Plain
                 </button>
@@ -1463,21 +1442,19 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
                     <div className="flex items-center gap-1.5 bg-[#28292A] p-0.5 rounded-lg border border-[#3C4043]">
                       <button
                         onClick={() => setTypesDisplayMode('typescript')}
-                        className={`px-2.5 py-1 rounded text-xs font-mono transition-colors ${
-                          typesDisplayMode === 'typescript'
+                        className={`px-2.5 py-1 rounded text-xs font-mono transition-colors ${typesDisplayMode === 'typescript'
                             ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
                             : 'text-slate-400 hover:text-white'
-                        }`}
+                          }`}
                       >
                         TypeScript Interface
                       </button>
                       <button
                         onClick={() => setTypesDisplayMode('schema')}
-                        className={`px-2.5 py-1 rounded text-xs font-mono transition-colors ${
-                          typesDisplayMode === 'schema'
+                        className={`px-2.5 py-1 rounded text-xs font-mono transition-colors ${typesDisplayMode === 'schema'
                             ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
                             : 'text-slate-400 hover:text-white'
-                        }`}
+                          }`}
                       >
                         JSON Schema
                       </button>
@@ -1601,11 +1578,10 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
                   <button
                     key={lang.id}
                     onClick={() => setActiveSnippetLang(lang.id)}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-medium whitespace-nowrap transition-colors ${
-                      activeSnippetLang === lang.id
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-medium whitespace-nowrap transition-colors ${activeSnippetLang === lang.id
                         ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold shadow-sm'
                         : 'text-slate-400 hover:text-white hover:bg-[#303134]'
-                    }`}
+                      }`}
                   >
                     {lang.label}
                   </button>

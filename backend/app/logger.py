@@ -139,6 +139,9 @@ class BackendLogger:
         """
         Formatted logging for HTTP requests handled by FastAPI.
         """
+        from app.security import sanitize_url_for_logging
+        clean_path = sanitize_url_for_logging(path)
+
         method_colors = {
             "GET": f"{BRIGHT_GREEN}{method:<6}{RESET}",
             "POST": f"{BRIGHT_BLUE}{method:<6}{RESET}",
@@ -168,15 +171,15 @@ class BackendLogger:
         badge = f"{BOLD}{MAGENTA}HTTP {RESET}"
         ip_str = f" {GRAY}({client_ip}){RESET}" if client_ip else ""
         time_str = f"{GRAY}{self._timestamp()}{RESET}"
-        self._safe_print(f"{self.PREFIX} {time_str} {badge} {method_str} {WHITE}{path}{RESET} -> {status_str} in {dur_str}{ip_str}")
+        self._safe_print(f"{self.PREFIX} {time_str} {badge} {method_str} {WHITE}{clean_path}{RESET} -> {status_str} in {dur_str}{ip_str}")
 
         level = "ERROR" if status_code >= 500 else ("WARN" if status_code >= 400 else "INFO")
         self._record_event(
             level=level,
             category="HTTP",
-            message=f"{method.upper()} {path} -> {status_code} ({duration_ms:.1f}ms)",
+            message=f"{method.upper()} {clean_path} -> {status_code} ({duration_ms:.1f}ms)",
             method=method.upper(),
-            path=path,
+            path=clean_path,
             status_code=status_code,
             latency_ms=round(duration_ms, 1),
             details={"client_ip": client_ip}
@@ -186,18 +189,21 @@ class BackendLogger:
         """
         Formatted logging for CORS proxy outbound relays.
         """
+        from app.security import sanitize_url_for_logging
+        clean_url = sanitize_url_for_logging(target_url)
+
         badge = f"{BOLD}{BRIGHT_CYAN}PROXY{RESET}"
         status_color = BRIGHT_GREEN if status_code < 400 else (BRIGHT_YELLOW if status_code < 500 else BRIGHT_RED)
         time_str = f"{GRAY}{self._timestamp()}{RESET}"
-        self._safe_print(f"{self.PREFIX} {time_str} {badge} Relay {BOLD}{method}{RESET} {target_url} -> {status_color}{status_code}{RESET} ({latency_ms}ms)")
+        self._safe_print(f"{self.PREFIX} {time_str} {badge} Relay {BOLD}{method}{RESET} {clean_url} -> {status_color}{status_code}{RESET} ({latency_ms}ms)")
 
         level = "ERROR" if status_code >= 500 else ("WARN" if status_code >= 400 else "INFO")
         self._record_event(
             level=level,
             category="PROXY",
-            message=f"Relay {method.upper()} {target_url} -> HTTP {status_code}",
+            message=f"Relay {method.upper()} {clean_url} -> HTTP {status_code}",
             method=method.upper(),
-            path=target_url,
+            path=clean_url,
             status_code=status_code,
             latency_ms=latency_ms
         )

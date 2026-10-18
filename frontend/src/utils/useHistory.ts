@@ -16,8 +16,10 @@ export interface HistoryItem {
 
 export function getStoredHistory(): HistoryItem[] {
   try {
-    const raw = localStorage.getItem(HISTORY_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const raw = typeof window !== 'undefined' && window.localStorage ? window.localStorage.getItem(HISTORY_KEY) : null;
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }
@@ -25,10 +27,12 @@ export function getStoredHistory(): HistoryItem[] {
 
 export function saveStoredHistory(items: HistoryItem[]): void {
   try {
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(items));
-    window.dispatchEvent(new CustomEvent('free_api_history_changed', { detail: items }));
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(HISTORY_KEY, JSON.stringify(items));
+      window.dispatchEvent(new CustomEvent('free_api_history_changed', { detail: items }));
+    }
   } catch (err) {
-    console.error('Failed to save recent history:', err);
+    console.warn('Failed to save recent history to local storage:', err);
   }
 }
 

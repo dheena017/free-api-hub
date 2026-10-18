@@ -9,6 +9,8 @@ export interface HealthInfo {
   last_checked: string;
   last_status_code: number;
   message?: string;
+  observations_count?: number;
+  freshness?: string;
 }
 
 export interface HealthCheckResult {
@@ -22,16 +24,39 @@ export interface HealthCheckResult {
   last_checked: string;
   message: string;
   is_live_tested?: boolean;
+  observations_count?: number;
+  freshness?: string;
 }
 
 export interface BatchHealthCheckResponse {
-  probes_executed: number;
+  probes_executed?: number;
   total_probed: number;
   healthy_count: number;
   degraded_count: number;
   offline_count: number;
   stats: CatalogStats;
   results: HealthCheckResult[];
+}
+
+export interface EndpointStatusItem {
+  id: string;
+  name: string;
+  slug: string;
+  category: string;
+  base_url: string;
+  sample_endpoint: string;
+  status: HealthStatus;
+  uptime_percent: number;
+  avg_latency_ms: number;
+  last_checked: string;
+  last_status_code: number;
+  message?: string;
+}
+
+export interface StatusDashboardResponse {
+  stats: CatalogStats;
+  total: number;
+  endpoints: EndpointStatusItem[];
 }
 
 export interface ApiItem {

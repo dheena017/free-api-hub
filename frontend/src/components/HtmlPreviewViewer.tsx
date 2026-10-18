@@ -95,7 +95,7 @@ export const HtmlPreviewViewer: React.FC<HtmlPreviewViewerProps> = ({
       try {
         const blob = new Blob([processedHtml], { type: 'text/html' });
         const blobUrl = URL.createObjectURL(blob);
-        window.open(blobUrl, '_blank');
+        window.open(blobUrl, '_blank', 'noopener,noreferrer');
       } catch {
         // fallback
       }
@@ -295,7 +295,7 @@ export const HtmlPreviewViewer: React.FC<HtmlPreviewViewerProps> = ({
               key={refreshKey}
               title={metadata?.title || 'Web Page Preview'}
               srcDoc={processedHtml}
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+              sandbox="allow-scripts allow-forms allow-popups"
               className="w-full flex-1 border-none bg-white min-h-[440px]"
             />
           </div>

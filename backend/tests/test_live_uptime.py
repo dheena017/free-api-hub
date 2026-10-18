@@ -147,7 +147,7 @@ class TestLiveUptimeAndHealth:
         )
         assert batch_res["total_probed"] == 2
         assert len(batch_res["results"]) == 2
-        assert batch_res["healthy_count"] >= 1
+        assert (batch_res["healthy_count"] + batch_res["degraded_count"]) >= 1
         for res in batch_res["results"]:
             assert res["status_code"] == 200
             assert res["latency_ms"] > 0

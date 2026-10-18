@@ -189,7 +189,7 @@ export const StatusPage: React.FC = () => {
       );
       setStats(res.stats);
       setLiveProbeBanner({
-        count: res.probes_executed,
+        count: res.probes_executed ?? res.total_probed ?? 0,
         healthy: res.healthy_count,
         degraded: res.degraded_count,
         offline: res.offline_count,

@@ -11,9 +11,13 @@ import {
   Menu,
   X,
   Github,
-  Star
+  Star,
+  Sun,
+  Moon,
+  Monitor
 } from 'lucide-react';
 import { useBookmarks } from '../utils/useBookmarks';
+import { useTheme } from '../utils/ThemeContext';
 import { Logo } from './Logo';
 
 interface NavbarProps {
@@ -24,6 +28,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearchModal }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { bookmarks } = useBookmarks();
+  const { theme, resolvedTheme, toggleTheme, cycleTheme, setTheme } = useTheme();
 
   const navLinks = [
     { label: 'Explore', href: '/explore', icon: Compass },
@@ -33,15 +38,15 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearchModal }) => {
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-[#3C4043] bg-[#1F1F1F]">
+    <header className="sticky top-0 z-40 w-full border-b border-border bg-surface transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand with Custom Logo */}
-        <Link to="/" className="group hover:opacity-90 transition-opacity">
+        <Link to="/" className="group hover:opacity-90 transition-opacity" aria-label="Free API Hub Home">
           <Logo size="md" withText={true} />
         </Link>
 
         {/* Desktop Nav Links */}
-        <nav className="hidden md:flex items-center gap-1.5">
+        <nav className="hidden md:flex items-center gap-1.5" aria-label="Primary Navigation">
           {navLinks.map((link) => {
             const Icon = link.icon;
             const isActive = location.pathname === link.href || (link.href !== '/' && location.pathname.startsWith(link.href.split('/')[1]));
@@ -51,11 +56,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearchModal }) => {
                 to={link.href}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-medium flex items-center gap-2 transition-colors ${
                   isActive
-                    ? 'text-[#8AB4F8] bg-[#8AB4F8]/10 border border-[#8AB4F8]/30 font-semibold'
-                    : 'text-slate-300 hover:text-white hover:bg-[#28292A] border border-transparent'
+                    ? 'text-accent bg-accent/10 border border-accent/30 font-semibold'
+                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated border border-transparent'
                 }`}
               >
-                <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-[#8AB4F8]' : 'text-slate-400'}`} />
+                <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-accent' : 'text-text-muted'}`} />
                 {link.label}
               </Link>
             );
@@ -68,7 +73,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearchModal }) => {
           {bookmarks.length > 0 && (
             <Link
               to="/explore?fav=1"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] text-slate-200 hover:text-white text-xs font-medium transition-colors"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-elevated hover:bg-surface-hover border border-border text-text-base text-xs font-medium transition-colors"
               title="View Bookmarked APIs"
             >
               <Star className="h-3.5 w-3.5 fill-[#FDD663] text-[#FDD663]" />
@@ -79,22 +84,43 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearchModal }) => {
           {onOpenSearchModal && (
             <button
               onClick={onOpenSearchModal}
-              className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#3C4043] bg-[#28292A] hover:bg-[#303134] text-slate-300 hover:text-white text-xs font-mono transition-colors cursor-pointer"
+              className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border bg-surface-elevated hover:bg-surface-hover text-text-muted hover:text-text-base text-xs font-mono transition-colors cursor-pointer"
+              aria-label="Search APIs"
             >
-              <Search className="h-3.5 w-3.5 text-slate-400" />
+              <Search className="h-3.5 w-3.5 text-text-muted" />
               <span>Search APIs...</span>
-              <kbd className="px-1.5 py-0.5 rounded bg-[#1F1F1F] border border-[#3C4043] text-[10px] text-slate-400 font-sans">
+              <kbd className="px-1.5 py-0.5 rounded bg-background border border-border text-[10px] text-text-muted font-sans">
                 Ctrl K
               </kbd>
             </button>
           )}
 
+          {/* Theme Switcher Toggle */}
+          <button
+            onClick={cycleTheme}
+            className="p-2 rounded-full text-text-muted hover:text-text-base hover:bg-surface-elevated transition-colors border border-transparent hover:border-border cursor-pointer relative"
+            title={`Current theme: ${theme.toUpperCase()} (Active: ${resolvedTheme}) — Click to cycle System / Dark / Light`}
+            aria-label={`Current theme: ${theme}. Click to cycle themes.`}
+          >
+            {theme === 'system' ? (
+              <Monitor className="h-4 w-4 text-accent" />
+            ) : resolvedTheme === 'dark' ? (
+              <Moon className="h-4 w-4 text-accent" />
+            ) : (
+              <Sun className="h-4 w-4 text-[#FDD663]" />
+            )}
+            {theme === 'system' && (
+              <span className="absolute bottom-1 right-1 w-1.5 h-1.5 rounded-full bg-accent" />
+            )}
+          </button>
+
           <a
             href="https://github.com"
             target="_blank"
             rel="noreferrer"
-            className="p-2 rounded-full text-slate-400 hover:text-white hover:bg-[#28292A] transition-colors"
+            className="p-2 rounded-full text-text-muted hover:text-text-base hover:bg-surface-elevated transition-colors"
             title="GitHub Repository"
+            aria-label="GitHub Repository"
           >
             <Github className="h-4 w-4" />
           </a>
@@ -102,7 +128,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearchModal }) => {
           {/* Mobile hamburger */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-[#28292A] border border-[#3C4043]"
+            className="md:hidden p-2 rounded-lg text-text-muted hover:text-text-base hover:bg-surface-elevated border border-border"
+            aria-label="Open mobile menu"
           >
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
@@ -111,20 +138,20 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearchModal }) => {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-[#3C4043] bg-[#1F1F1F] px-4 pt-2 pb-4 space-y-1">
+        <div className="md:hidden border-b border-border bg-surface px-4 pt-2 pb-4 space-y-1">
           {onOpenSearchModal && (
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
                 onOpenSearchModal();
               }}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-slate-300 bg-[#28292A] border border-[#3C4043] mb-2"
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-text-muted bg-surface-elevated border border-border mb-2"
             >
               <div className="flex items-center gap-2">
-                <Search className="h-4 w-4 text-slate-400" />
+                <Search className="h-4 w-4 text-text-muted" />
                 <span>Search APIs...</span>
               </div>
-              <span className="text-[10px] text-slate-500 font-mono">Ctrl K</span>
+              <span className="text-[10px] text-text-muted font-mono">Ctrl K</span>
             </button>
           )}
           {navLinks.map((link) => {
@@ -134,9 +161,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearchModal }) => {
                 key={link.label}
                 to={link.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:text-white hover:bg-[#28292A]"
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-text-base hover:text-accent hover:bg-surface-elevated"
               >
-                <Icon className="h-4 w-4 text-[#8AB4F8]" />
+                <Icon className="h-4 w-4 text-accent" />
                 {link.label}
               </Link>
             );
@@ -145,12 +172,49 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearchModal }) => {
             <Link
               to="/explore?fav=1"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-[#FDD663] hover:bg-[#28292A]"
+              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-[#FDD663] hover:bg-surface-elevated"
             >
               <Star className="h-4 w-4 text-[#FDD663] fill-[#FDD663]" />
               <span>Saved APIs ({bookmarks.length})</span>
             </Link>
           )}
+
+          {/* Mobile Theme Selector */}
+          <div className="pt-3 mt-2 border-t border-border flex items-center justify-between px-1">
+            <span className="text-xs font-medium text-text-muted">Theme</span>
+            <div className="flex items-center gap-1 bg-surface-elevated rounded-full p-1 border border-border">
+              <button
+                onClick={() => setTheme('light')}
+                className={`px-2 py-1 rounded-full text-xs flex items-center gap-1 transition-colors ${
+                  theme === 'light' ? 'bg-accent/20 text-accent font-semibold' : 'text-text-muted hover:text-text-base'
+                }`}
+                title="Light Theme"
+              >
+                <Sun className="h-3.5 w-3.5 text-[#FDD663]" />
+                <span>Light</span>
+              </button>
+              <button
+                onClick={() => setTheme('dark')}
+                className={`px-2 py-1 rounded-full text-xs flex items-center gap-1 transition-colors ${
+                  theme === 'dark' ? 'bg-accent/20 text-accent font-semibold' : 'text-text-muted hover:text-text-base'
+                }`}
+                title="Dark Theme"
+              >
+                <Moon className="h-3.5 w-3.5 text-accent" />
+                <span>Dark</span>
+              </button>
+              <button
+                onClick={() => setTheme('system')}
+                className={`px-2 py-1 rounded-full text-xs flex items-center gap-1 transition-colors ${
+                  theme === 'system' ? 'bg-accent/20 text-accent font-semibold' : 'text-text-muted hover:text-text-base'
+                }`}
+                title="System Theme"
+              >
+                <Monitor className="h-3.5 w-3.5 text-accent" />
+                <span>Auto</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </header>

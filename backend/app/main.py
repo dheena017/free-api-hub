@@ -1,26 +1,60 @@
 import time
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.logger import logger
 from app.routes import apis, proxy, health, submissions
+from app.security import SSRFSecurityError, sanitize_url_for_logging
+from app.services import catalog_service
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.success(f"FastAPI Server ready! Listening on port {settings.PORT}")
+    logger.info(f"API endpoints mounted at: {settings.API_V1_STR} | Docs: http://localhost:{settings.PORT}/docs")
+    yield
+    logger.info("FastAPI server shut down successfully.")
+
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
     description="The ultimate verified free-first API search engine and playground backend.",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
-# CORS Middleware setup
+# CORS Middleware setup with configured allowed origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For dev flexibility with Vite
+    allow_origins=settings.get_allowed_origins(),
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
     allow_headers=["*"],
 )
+
+
+# Exception handler for SSRF Security errors
+@app.exception_handler(SSRFSecurityError)
+async def ssrf_security_exception_handler(request: Request, exc: SSRFSecurityError):
+    return JSONResponse(
+        status_code=403,
+        content={"detail": f"Outbound request to the destination address or port is blocked by security policy."}
+    )
+
+
+# Global exception handler to prevent leaking internal traces to untrusted clients
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Internal server error on {request.method} {request.url.path}: {exc}", exc=exc)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error. Please try again later."}
+    )
+
 
 # High-contrast HTTP Request / Response Logging Middleware
 @app.middleware("http")
@@ -33,9 +67,10 @@ async def log_requests(request: Request, call_next):
         query_str = f"?{request.url.query}" if request.url.query else ""
         if not (request.url.path.endswith("/logs") or "/health/logs" in request.url.path):
             try:
+                clean_path = sanitize_url_for_logging(f"{request.url.path}{query_str}")
                 logger.http_request(
                     method=request.method,
-                    path=f"{request.url.path}{query_str}",
+                    path=clean_path,
                     status_code=response.status_code,
                     duration_ms=duration_ms,
                     client_ip=client_ip
@@ -46,26 +81,19 @@ async def log_requests(request: Request, call_next):
     except Exception as exc:
         duration_ms = (time.perf_counter() - start_time) * 1000.0
         try:
-            logger.error(f"Unhandled error on {request.method} {request.url.path}: {exc}", exc=exc)
+            clean_path = sanitize_url_for_logging(request.url.path)
+            logger.error(f"Unhandled error on {request.method} {clean_path}: {exc}", exc=exc)
         except Exception:
             pass
         raise exc
 
-@app.on_event("startup")
-async def startup_event():
-    logger.success(f"FastAPI Server ready! Listening on port {settings.PORT}")
-    logger.info(f"API endpoints mounted at: {settings.API_V1_STR} | Docs: http://localhost:{settings.PORT}/docs")
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    logger.info("FastAPI server shut down successfully.")
 
 # Register routers under prefix
 app.include_router(apis.router, prefix=settings.API_V1_STR)
 app.include_router(proxy.router, prefix=settings.API_V1_STR)
 app.include_router(submissions.router, prefix=settings.API_V1_STR)
 app.include_router(health.router, prefix=settings.API_V1_STR)
-app.include_router(health.router)  # Also mount root /health
+
 
 @app.get("/")
 async def root():
@@ -78,27 +106,32 @@ async def root():
     }
 
 
+# Convenience root health endpoints
+@app.get("/health")
+async def root_health():
+    stats = catalog_service.get_stats()
+    return {
+        "status": "ok",
+        "service": "Free API Hub Backend",
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "total_apis": stats.total_apis,
+        "healthy_apis": stats.healthy_count,
+        "global_uptime_percent": stats.global_uptime_percent,
+        "live_probes_performed": catalog_service.get_probe_count()
+    }
+
+
+@app.get("/health/logs")
+async def root_health_logs(limit: int = 50):
+    entries = logger.get_logs(limit=limit)
+    return {"total": len(entries), "limit": limit, "logs": entries}
+
+
+@app.get("/status-dashboard")
+async def root_status_dashboard(limit: int = 100, offset: int = 0):
+    return catalog_service.get_status_dashboard(limit=limit, offset=offset)
+
+
 if __name__ == "__main__":
     import uvicorn
-    import subprocess
-    import os
-    import sys
-
-    # Free port if running directly via Python to prevent address collision
-    try:
-        if sys.platform == "win32":
-            out = subprocess.check_output("netstat -ano -p tcp", shell=True, text=True)
-            for line in out.splitlines():
-                if f":{settings.PORT} " in line and "LISTENING" in line:
-                    parts = line.strip().split()
-                    pid = int(parts[-1])
-                    if pid != os.getpid() and pid != 0:
-                        subprocess.run(f"taskkill /F /T /PID {pid}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        else:
-            subprocess.run(f"fuser -k {settings.PORT}/tcp", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except Exception:
-        pass
-
     uvicorn.run("app.main:app", host=settings.HOST, port=settings.PORT, reload=True)
-
-

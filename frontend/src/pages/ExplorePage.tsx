@@ -55,6 +55,7 @@ export const ExplorePage: React.FC = () => {
   const qParam = searchParams.get('q') || '';
   const categoryParam = searchParams.get('category') || 'all';
   const authParam = searchParams.get('auth') || 'all';
+  const pricingParam = searchParams.get('pricing') || 'all';
   const sortParam = searchParams.get('sort') || 'popular';
   const pageParam = parseInt(searchParams.get('page') || '1', 10);
   const limitParam = parseInt(searchParams.get('limit') || '24', 10);
@@ -99,6 +100,20 @@ export const ExplorePage: React.FC = () => {
   const currentPage = Math.max(1, pageParam);
   const pageSize = limitParam;
   const offset = (currentPage - 1) * pageSize;
+  const bookmarksKey = favoritesOnly ? bookmarks.join(',') : '';
+
+  // Load categories once on mount
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const catRes = await fetchCategories();
+        setCategories(catRes);
+      } catch (err) {
+        console.error('Failed to load categories:', err);
+      }
+    }
+    loadCategories();
+  }, []);
 
   useEffect(() => {
     async function loadData() {
@@ -106,30 +121,25 @@ export const ExplorePage: React.FC = () => {
       setLoadError(null);
       try {
         if (favoritesOnly && bookmarks.length === 0) {
-          const catRes = await fetchCategories();
           setApis([]);
           setTotalCount(0);
-          setCategories(catRes);
           setIsLoading(false);
           return;
         }
 
-        const [apisRes, catRes] = await Promise.all([
-          fetchApis({
-            q: qParam || undefined,
-            category: categoryParam !== 'all' ? categoryParam : undefined,
-            auth_type: authParam !== 'all' ? authParam : undefined,
-            sort: sortParam,
-            slugs: favoritesOnly ? bookmarks.join(',') : undefined,
-            limit: pageSize,
-            offset: offset
-          }),
-          fetchCategories()
-        ]);
+        const apisRes = await fetchApis({
+          q: qParam || undefined,
+          category: categoryParam !== 'all' ? categoryParam : undefined,
+          auth_type: authParam !== 'all' ? authParam : undefined,
+          pricing_tier: pricingParam !== 'all' ? pricingParam : undefined,
+          sort: sortParam,
+          slugs: favoritesOnly ? bookmarks.join(',') : undefined,
+          limit: pageSize,
+          offset: offset
+        });
 
         setApis(apisRes.items);
         setTotalCount(apisRes.total);
-        setCategories(catRes);
       } catch (err: unknown) {
         console.error('Failed to load explore data:', err);
         setLoadError(err instanceof Error ? err.message : 'Unable to connect to the catalog API server.');
@@ -138,7 +148,7 @@ export const ExplorePage: React.FC = () => {
       }
     }
     loadData();
-  }, [qParam, categoryParam, authParam, sortParam, currentPage, pageSize, retryCount, favoritesOnly, bookmarks]);
+  }, [qParam, categoryParam, authParam, pricingParam, sortParam, currentPage, pageSize, retryCount, favoritesOnly, bookmarksKey]);
 
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
@@ -156,7 +166,7 @@ export const ExplorePage: React.FC = () => {
 
   // Build active filter tags
   const hasActiveFilters = Boolean(
-    qParam || categoryParam !== 'all' || authParam !== 'all' || favoritesOnly || sortParam !== 'popular'
+    qParam || categoryParam !== 'all' || authParam !== 'all' || pricingParam !== 'all' || favoritesOnly || sortParam !== 'popular'
   );
 
   return (
@@ -385,6 +395,15 @@ export const ExplorePage: React.FC = () => {
             </span>
           )}
 
+          {pricingParam !== 'all' && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#1F1F1F] border border-[#3C4043] text-slate-200 text-xs shadow-sm">
+              <span>Pricing: <strong>{pricingParam.replace('_', ' ')}</strong></span>
+              <button onClick={() => updateQuery({ pricing: 'all', page: '1' })} className="text-slate-400 hover:text-white">
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+
           {favoritesOnly && (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#1F1F1F] border border-amber-500/30 text-amber-300 text-xs shadow-sm">
               <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
@@ -406,17 +425,33 @@ export const ExplorePage: React.FC = () => {
           )}
         </div>
 
-        {/* Right: Dropdowns (Auth, Sort, Page Size) */}
-        <div className="flex items-center gap-3 flex-wrap">
+        {/* Right: Dropdowns (Auth, Pricing, Sort, Page Size) */}
+        <div className="flex items-center gap-2.5 flex-wrap">
           {/* Auth filter */}
-          <div className="w-40 sm:w-44">
+          <div className="w-36 sm:w-40">
             <CustomSelect
               value={authParam}
               onChange={(val) => updateQuery({ auth: val, page: '1' })}
               options={[
-                { value: 'all', label: 'All Auth Types' },
-                { value: 'none', label: '⚡ No Key (Open)' },
-                { value: 'api_key', label: '🔑 Free API Key' }
+                { value: 'all', label: 'All Auth' },
+                { value: 'none', label: '⚡ No Key' },
+                { value: 'api_key', label: '🔑 API Key' }
+              ]}
+              size="sm"
+              variant="surface"
+            />
+          </div>
+
+          {/* Pricing filter */}
+          <div className="w-36 sm:w-42">
+            <CustomSelect
+              value={pricingParam}
+              onChange={(val) => updateQuery({ pricing: val, page: '1' })}
+              options={[
+                { value: 'all', label: 'All Pricing' },
+                { value: 'open', label: '100% Free / Open' },
+                { value: 'free_forever', label: 'Free Forever' },
+                { value: 'freemium_no_cc', label: 'Zero CC Required' }
               ]}
               size="sm"
               variant="surface"
@@ -424,7 +459,7 @@ export const ExplorePage: React.FC = () => {
           </div>
 
           {/* Sort */}
-          <div className="w-48 sm:w-52">
+          <div className="w-40 sm:w-48">
             <CustomSelect
               value={sortParam}
               onChange={(val) => updateQuery({ sort: val, page: '1' })}

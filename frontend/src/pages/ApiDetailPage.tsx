@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ApiItem, HealthCheckResult } from '../types/api';
-import { fetchApiBySlug, fetchApis, checkApiHealth } from '../api/client';
+import { fetchApiBySlug, fetchApis, checkApiHealth, reportApiIssue } from '../api/client';
 import { Playground } from '../components/Playground';
 import { ApiCard } from '../components/ApiCard';
 import { LivePingBadge } from '../components/LivePingBadge';
@@ -50,7 +50,8 @@ import {
   Gauge,
   Sliders,
   CheckSquare,
-  Hash
+  Hash,
+  Flag
 } from 'lucide-react';
 import { useHistory } from '../utils/useHistory';
 import { useToast } from '../utils/useToast';
@@ -170,7 +171,7 @@ export const ApiDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const { addHistoryItem } = useHistory();
-  const { success, info } = useToast();
+  const { success, info, error: errorToast } = useToast();
 
   const [api, setApi] = useState<ApiItem | null>(null);
   const [relatedApis, setRelatedApis] = useState<ApiItem[]>([]);
@@ -192,8 +193,45 @@ export const ApiDetailPage: React.FC = () => {
   const [copiedBadgeMd, setCopiedBadgeMd] = useState(false);
   const [copiedBadgeHtml, setCopiedBadgeHtml] = useState(false);
 
+  // Community Broken API Reporting
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportType, setReportType] = useState('offline');
+  const [reportDetails, setReportDetails] = useState('');
+  const [reportEmail, setReportEmail] = useState('');
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+
   const tabsRef = useRef<HTMLDivElement>(null);
   const bookmarked = slug ? isBookmarked(slug) : false;
+
+  useEffect(() => {
+    if (api) {
+      document.title = `${api.name} - Free API Discovery & Playground | Free API Hub`;
+      const meta = document.querySelector('meta[name="description"]');
+      if (meta) {
+        meta.setAttribute('content', api.short_description || api.description);
+      }
+    }
+  }, [api]);
+
+  const handleSubmitReport = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!slug || !reportDetails.trim()) return;
+    setIsSubmittingReport(true);
+    try {
+      const res = await reportApiIssue(slug, {
+        issue_type: reportType,
+        details: reportDetails.trim(),
+        contact_email: reportEmail.trim() || undefined
+      });
+      success('Report Submitted', res.message);
+      setShowReportModal(false);
+      setReportDetails('');
+    } catch (err: unknown) {
+      errorToast('Failed to submit report', err instanceof Error ? err.message : 'Please try again later.');
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
 
   const handleLiveProbe = async () => {
     if (!slug) return;
@@ -654,11 +692,20 @@ export const ApiDetailPage: React.FC = () => {
 
               <button
                 onClick={handleShare}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1F1F1F] hover:bg-[#303134] text-xs font-medium text-slate-200 border border-[#3C4043] transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1F1F1F] hover:bg-[#303134] text-xs font-medium text-slate-200 border border-[#3C4043] transition-colors cursor-pointer"
                 title="Share this API"
               >
                 <Share2 className="h-3.5 w-3.5 text-slate-400" />
                 <span>Share</span>
+              </button>
+
+              <button
+                onClick={() => setShowReportModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1F1F1F] hover:bg-[#303134] text-xs font-medium text-rose-300 hover:text-rose-200 border border-[#3C4043] hover:border-rose-500/40 transition-colors cursor-pointer"
+                title="Report broken endpoint, outdated docs, or paywall"
+              >
+                <Flag className="h-3.5 w-3.5 text-rose-400" />
+                <span>Report Issue</span>
               </button>
             </div>
 
@@ -744,6 +791,12 @@ export const ApiDetailPage: React.FC = () => {
                 <span>Last Verified:</span>
                 <span>{formatTimeAgo(api.health.last_checked)}</span>
               </div>
+              {api.health.observations_count !== undefined && (
+                <div className="flex items-center justify-between text-slate-500 text-[10px]">
+                  <span>Observations:</span>
+                  <span>{api.health.observations_count} checks ({api.health.freshness || 'recent'})</span>
+                </div>
+              )}
             </div>
 
             {api.documentation_url && (
@@ -1236,6 +1289,101 @@ export const ApiDetailPage: React.FC = () => {
                 Done
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Community Broken API Reporting Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[#28292A] border border-[#3C4043] rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative">
+            <div className="flex items-center justify-between pb-3 border-b border-[#3C4043]">
+              <div className="flex items-center gap-2">
+                <Flag className="h-5 w-5 text-rose-400" />
+                <h3 className="text-base font-bold text-white">Report an Issue with {api.name}</h3>
+              </div>
+              <button
+                onClick={() => setShowReportModal(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-[#303134] transition-colors"
+                aria-label="Close dialog"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitReport} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                  Issue Classification
+                </label>
+                <select
+                  value={reportType}
+                  onChange={(e) => setReportType(e.target.value)}
+                  className="w-full bg-[#1F1F1F] border border-[#3C4043] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#8AB4F8]"
+                >
+                  <option value="offline">Service Down / Connection Refused / 5xx</option>
+                  <option value="broken_sample">Broken Sample Endpoint / HTTP 404</option>
+                  <option value="payment_wall">Hidden Paywall / Requires Paid Credit Card</option>
+                  <option value="outdated_docs">Outdated Documentation / Invalid Base URL</option>
+                  <option value="cors_failure">CORS Headers Missing in Browser</option>
+                  <option value="other">Other Catalog Defect</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                  Incident Details & Reproduction Steps <span className="text-rose-400">*</span>
+                </label>
+                <textarea
+                  value={reportDetails}
+                  onChange={(e) => setReportDetails(e.target.value)}
+                  required
+                  rows={4}
+                  placeholder="Describe the failure, error code, or mismatch observed..."
+                  className="w-full bg-[#1F1F1F] border border-[#3C4043] rounded-lg p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#8AB4F8] resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                  Your Contact Email <span className="text-slate-500 text-[11px]">(optional, for verification updates)</span>
+                </label>
+                <input
+                  type="email"
+                  value={reportEmail}
+                  onChange={(e) => setReportEmail(e.target.value)}
+                  placeholder="developer@example.com"
+                  className="w-full bg-[#1F1F1F] border border-[#3C4043] rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#8AB4F8]"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-3 border-t border-[#3C4043]">
+                <button
+                  type="button"
+                  onClick={() => setShowReportModal(false)}
+                  className="px-4 py-2 rounded-xl bg-[#1F1F1F] hover:bg-[#303134] text-xs font-medium text-slate-300 transition-colors border border-[#3C4043]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingReport || !reportDetails.trim()}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 disabled:opacity-50 text-xs font-semibold text-white shadow transition-colors"
+                >
+                  {isSubmittingReport ? (
+                    <>
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                      <span>Submitting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Flag className="h-3.5 w-3.5" />
+                      <span>Submit Report</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

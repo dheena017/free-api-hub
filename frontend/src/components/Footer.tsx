@@ -50,8 +50,8 @@ export const Footer: React.FC = () => {
             <ul className="space-y-2 text-xs text-slate-400">
               <li><Link to="/status" className="hover:text-[#8AB4F8] transition-colors">Live Health Dashboard</Link></li>
               <li><Link to="/submit" className="hover:text-[#8AB4F8] transition-colors">Submit a Free API</Link></li>
-              <li><a href="https://github.com" target="_blank" rel="noreferrer" className="hover:text-[#8AB4F8] transition-colors">GitHub Repository</a></li>
-              <li><a href="http://localhost:8000/docs" target="_blank" rel="noreferrer" className="hover:text-[#8AB4F8] transition-colors">FastAPI Backend Docs</a></li>
+              <li><a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#8AB4F8] transition-colors">GitHub Repository</a></li>
+              <li><a href="/docs" target="_blank" rel="noopener noreferrer" className="hover:text-[#8AB4F8] transition-colors">FastAPI Backend Docs</a></li>
             </ul>
           </div>
         </div>

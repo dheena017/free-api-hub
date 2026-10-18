@@ -6,12 +6,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Free API Hub — Verified Free-First API Search Engine & Playground</title>
     <meta name="description" content="Discover, validate, and test 100% verified free APIs right in your browser. Live uptime monitoring, interactive playground, and instant code generation." />
+    <link rel="canonical" href="https://freeapihub.dev/" />
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://freeapihub.dev/" />
+    <meta property="og:title" content="Free API Hub — Verified Free-First API Discovery & Playground" />
+    <meta property="og:description" content="Discover, validate, and test 100% verified free APIs right in your browser. Real-time uptime monitoring, interactive playground, and code snippets." />
+    <meta property="og:image" content="/logo.png" />
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Free API Hub — Verified Free-First API Discovery & Playground" />
+    <meta name="twitter:description" content="Discover, validate, and test 100% verified free APIs right in your browser." />
+    <meta name="twitter:image" content="/logo.png" />
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Dynamic Theme Color Meta -->
+    <meta name="theme-color" content="#1F1F1F" />
+    <!-- Instant anti-flicker theme loader -->
+    <script>
+      (function() {
+        try {
+          var key = 'free_api_hub_theme';
+          var stored = localStorage.getItem(key);
+          var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var isDark = stored === 'dark' || (!stored && prefersDark) || (stored === 'system' && prefersDark);
+          var root = document.documentElement;
+          if (isDark) {
+            root.classList.add('dark');
+            root.classList.remove('light');
+            root.setAttribute('data-theme', 'dark');
+            root.style.colorScheme = 'dark';
+          } else {
+            root.classList.add('light');
+            root.classList.remove('dark');
+            root.setAttribute('data-theme', 'light');
+            root.style.colorScheme = 'light';
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
-  <body class="bg-[#1F1F1F] text-[#E8EAED] min-h-screen selection:bg-accent selection:text-[#1F1F1F] font-sans antialiased">
+  <body class="bg-background text-text-base min-h-screen selection:bg-accent selection:text-[#1F1F1F] font-sans antialiased">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

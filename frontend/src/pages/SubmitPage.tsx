@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { validateEndpoint, submitApi } from '../api/client';
+import { validateEndpoint, submitApi, fetchSubmissionStatus } from '../api/client';
 import { ValidationResult, AuthType, PricingTier } from '../types/api';
 import {
   PlusCircle,
@@ -10,7 +10,13 @@ import {
   ShieldAlert,
   Send,
   Loader2,
-  Zap
+  Zap,
+  Search,
+  Clock,
+  Copy,
+  Check,
+  FileText,
+  ExternalLink
 } from 'lucide-react';
 import { CustomSelect, SelectOption } from '../components/CustomSelect';
 
@@ -74,6 +80,31 @@ export const SubmitPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Tab & Tracking State
+  const [pageTab, setPageTab] = useState<'submit' | 'track'>('submit');
+  const [lastSubmittedId, setLastSubmittedId] = useState<string | null>(null);
+  const [copiedSubId, setCopiedSubId] = useState(false);
+  const [lookupId, setLookupId] = useState('');
+  const [isLookingUp, setIsLookingUp] = useState(false);
+  const [lookupResult, setLookupResult] = useState<any | null>(null);
+  const [lookupError, setLookupError] = useState<string | null>(null);
+
+  const handleLookup = async (idToLookup?: string) => {
+    const targetId = (idToLookup || lookupId).trim();
+    if (!targetId) return;
+    setIsLookingUp(true);
+    setLookupError(null);
+    try {
+      const data = await fetchSubmissionStatus(targetId);
+      setLookupResult(data);
+    } catch (err: unknown) {
+      setLookupResult(null);
+      setLookupError(err instanceof Error ? err.message : 'Submission not found or invalid ID');
+    } finally {
+      setIsLookingUp(false);
+    }
+  };
 
   const handleQuickFill = (preset: 'catfacts' | 'openmeteo') => {
     if (preset === 'catfacts') {
@@ -215,7 +246,7 @@ export const SubmitPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      await submitApi({
+      const res = await submitApi({
         name: formData.name.trim(),
         category: formData.category,
         base_url: formData.base_url.trim(),
@@ -225,6 +256,9 @@ export const SubmitPage: React.FC = () => {
         pricing_tier: formData.pricing_tier,
         description: formData.short_description.trim() || formData.description.trim()
       });
+      if (res.submission_id) {
+        setLastSubmittedId(res.submission_id);
+      }
       setSubmissionSuccess(true);
       setFieldErrors({});
     } catch (err: unknown) {
@@ -242,42 +276,205 @@ export const SubmitPage: React.FC = () => {
           <PlusCircle className="h-4 w-4" />
           <span>Community Directory Pipeline</span>
         </div>
-        <h1 className="text-3xl font-extrabold text-white">Submit a Free API</h1>
+        <h1 className="text-3xl font-extrabold text-white">Community API Hub</h1>
         <p className="text-xs text-slate-400 max-w-xl leading-relaxed">
-          Help expand the world's most reliable free API catalog. To maintain our zero-broken-links guarantee, every submission must be pre-validated live before being queued for automated bot monitoring.
+          Help expand the world's most reliable free API catalog. Submissions undergo pre-flight live validation and persistent automated health verification.
         </p>
       </div>
 
-      {submissionSuccess ? (
-        <div className="bg-[#28292A] rounded-2xl p-8 border border-[#3C4043] text-center space-y-4">
+      {/* Tabs */}
+      <div className="flex border-b border-[#3C4043] gap-6">
+        <button
+          onClick={() => setPageTab('submit')}
+          className={`pb-3 text-xs font-semibold flex items-center gap-2 border-b-2 transition-colors ${
+            pageTab === 'submit'
+              ? 'border-[#8AB4F8] text-[#8AB4F8]'
+              : 'border-transparent text-slate-400 hover:text-white'
+          }`}
+        >
+          <PlusCircle className="h-4 w-4" />
+          <span>Submit an API</span>
+        </button>
+        <button
+          onClick={() => setPageTab('track')}
+          className={`pb-3 text-xs font-semibold flex items-center gap-2 border-b-2 transition-colors ${
+            pageTab === 'track'
+              ? 'border-[#8AB4F8] text-[#8AB4F8]'
+              : 'border-transparent text-slate-400 hover:text-white'
+          }`}
+        >
+          <Clock className="h-4 w-4" />
+          <span>Track Submission Status</span>
+        </button>
+      </div>
+
+      {pageTab === 'track' ? (
+        <div className="bg-[#28292A] rounded-2xl p-6 sm:p-8 border border-[#3C4043] space-y-6">
+          <div className="space-y-1">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <Search className="h-5 w-5 text-[#8AB4F8]" />
+              <span>Lookup Submission by ID</span>
+            </h2>
+            <p className="text-xs text-slate-400">
+              Enter your tracking identifier (e.g. <span className="font-mono text-slate-300">sub_...</span>) to check automated moderation and catalog intake status.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="text"
+              value={lookupId}
+              onChange={(e) => setLookupId(e.target.value)}
+              placeholder="sub_xxxxxxxxxxxx"
+              className="flex-1 bg-[#1F1F1F] border border-[#3C4043] rounded-lg px-3 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-[#8AB4F8]"
+            />
+            <button
+              onClick={() => handleLookup()}
+              disabled={isLookingUp || !lookupId.trim()}
+              className="px-4 py-2 bg-[#8AB4F8] hover:bg-[#A8C7FA] disabled:opacity-50 text-xs font-semibold text-[#1F1F1F] rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              {isLookingUp ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+              <span>{isLookingUp ? 'Checking...' : 'Check Status'}</span>
+            </button>
+          </div>
+
+          {lookupError && (
+            <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              <span>{lookupError}</span>
+            </div>
+          )}
+
+          {lookupResult && (
+            <div className="p-5 rounded-xl bg-[#1F1F1F] border border-[#3C4043] space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#3C4043]">
+                <div>
+                  <div className="text-[11px] font-mono uppercase text-slate-400">Tracking Reference</div>
+                  <div className="text-sm font-mono font-bold text-white">{lookupResult.id}</div>
+                </div>
+                <div>
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
+                      lookupResult.status === 'approved'
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                        : lookupResult.status === 'rejected'
+                        ? 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+                        : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                    }`}
+                  >
+                    <Clock className="h-3 w-3" />
+                    <span>
+                      {lookupResult.status === 'pending_review'
+                        ? 'In Queue (Pending Review)'
+                        : lookupResult.status.toUpperCase()}
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div>
+                  <span className="text-slate-400">API Name:</span>
+                  <p className="font-semibold text-white mt-0.5">{lookupResult.name}</p>
+                </div>
+                <div>
+                  <span className="text-slate-400">Category:</span>
+                  <p className="font-mono text-slate-200 mt-0.5">{lookupResult.category}</p>
+                </div>
+                <div>
+                  <span className="text-slate-400">Base URL:</span>
+                  <p className="font-mono text-[#8AB4F8] mt-0.5 truncate">{lookupResult.base_url}</p>
+                </div>
+                <div>
+                  <span className="text-slate-400">Sample Path:</span>
+                  <p className="font-mono text-slate-300 mt-0.5">{lookupResult.sample_endpoint}</p>
+                </div>
+                <div>
+                  <span className="text-slate-400">Submission Timestamp:</span>
+                  <p className="text-slate-300 mt-0.5 font-mono">{new Date(lookupResult.created_at).toLocaleString()}</p>
+                </div>
+                <div>
+                  <span className="text-slate-400">Automated Bot Validation:</span>
+                  <p className="text-emerald-400 mt-0.5 font-semibold">Verified Live (HTTP 200 OK)</p>
+                </div>
+              </div>
+
+              {lookupResult.review_notes && (
+                <div className="p-3 bg-[#28292A] rounded-lg border border-[#3C4043] text-xs space-y-1">
+                  <span className="font-medium text-slate-300">Moderation Notes:</span>
+                  <p className="text-slate-400">{lookupResult.review_notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      ) : submissionSuccess ? (
+        <div className="bg-[#28292A] rounded-2xl p-8 border border-[#3C4043] text-center space-y-5">
           <div className="h-12 w-12 rounded-full bg-[#1F1F1F] border border-[#3C4043] text-emerald-400 flex items-center justify-center mx-auto">
             <CheckCircle2 className="h-6 w-6" />
           </div>
-          <h2 className="text-xl font-bold text-white">API Successfully Submitted!</h2>
-          <p className="text-xs text-slate-300 max-w-md mx-auto">
-            Your endpoint has been placed into our automated verification queue. Once verified by our daily health bot, it will appear publicly in the directory.
-          </p>
-          <button
-            onClick={() => {
-              setSubmissionSuccess(false);
-              setValidationResult(null);
-              setFormData({
-                name: '',
-                category: 'weather',
-                base_url: '',
-                sample_endpoint: '',
-                documentation_url: '',
-                auth_type: 'none',
-                pricing_tier: 'open',
-                description: '',
-                short_description: '',
-                detailed_description: ''
-              });
-            }}
-            className="px-4 py-2 rounded-lg bg-[#303134] border border-[#3C4043] text-xs text-[#8AB4F8] hover:bg-[#3C4043] font-medium transition-colors"
-          >
-            Submit Another API
-          </button>
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold text-white">API Successfully Submitted!</h2>
+            <p className="text-xs text-slate-300 max-w-md mx-auto">
+              Your endpoint has been placed into our automated verification queue. Once verified by our daily health bot, it will appear publicly in the directory.
+            </p>
+          </div>
+
+          {lastSubmittedId && (
+            <div className="max-w-md mx-auto p-3.5 bg-[#1F1F1F] rounded-xl border border-[#3C4043] flex items-center justify-between gap-3 text-left">
+              <div>
+                <span className="text-[10px] font-mono text-slate-400 uppercase">Your Tracking Reference</span>
+                <div className="text-xs font-mono font-bold text-[#8AB4F8]">{lastSubmittedId}</div>
+              </div>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(lastSubmittedId);
+                  setCopiedSubId(true);
+                  setTimeout(() => setCopiedSubId(false), 2000);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#28292A] hover:bg-[#3C4043] border border-[#3C4043] text-xs font-medium text-slate-200 transition-colors"
+              >
+                {copiedSubId ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                <span>{copiedSubId ? 'Copied' : 'Copy'}</span>
+              </button>
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            {lastSubmittedId && (
+              <button
+                onClick={() => {
+                  setLookupId(lastSubmittedId);
+                  setPageTab('track');
+                  handleLookup(lastSubmittedId);
+                }}
+                className="px-4 py-2 rounded-lg bg-[#8AB4F8] hover:bg-[#A8C7FA] text-xs font-semibold text-[#1F1F1F] transition-colors"
+              >
+                Track This Submission
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setSubmissionSuccess(false);
+                setValidationResult(null);
+                setFormData({
+                  name: '',
+                  category: 'weather',
+                  base_url: '',
+                  sample_endpoint: '',
+                  documentation_url: '',
+                  auth_type: 'none',
+                  pricing_tier: 'open',
+                  description: '',
+                  short_description: '',
+                  detailed_description: ''
+                });
+              }}
+              className="px-4 py-2 rounded-lg bg-[#303134] border border-[#3C4043] text-xs text-slate-200 hover:text-white hover:bg-[#3C4043] font-medium transition-colors"
+            >
+              Submit Another API
+            </button>
+          </div>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">

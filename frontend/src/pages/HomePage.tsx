@@ -111,7 +111,7 @@ export const HomePage: React.FC = () => {
       }
     }
     loadFeatured();
-  }, [featuredTab, bookmarks]);
+  }, [featuredTab, featuredTab === 'saved' ? bookmarks.join(',') : '']);
 
   const handleSearchSubmit = (value: string) => {
     if (value.trim()) {
