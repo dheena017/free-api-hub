@@ -15,7 +15,7 @@ const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac'];
 
 const IMAGE_KEY_REGEX = /(image|avatar|poster|thumbnail|photo|picture|banner|flag|icon|logo|sprite|img_url|pic|screenshot|art|cover|download_url|floof|primaryimage|additionalimages)/i;
 const VIDEO_KEY_REGEX = /(video|mp4|webm|stream|clip|trailer|movie|film|recording|screencast|embedpath|embed_path|embedurl|videourl)/i;
-const AUDIO_KEY_REGEX = /(audio|sound|song|track|podcast|voice|mp3|preview_url)/i;
+const AUDIO_KEY_REGEX = /(audio|sound|song|track|podcast|voice|mp3|preview_url|previewurl|stream_url|streamurl)/i;
 
 function cleanUrl(raw: string): string {
   return raw.trim().replace(/^["']|["']$/g, '');
