@@ -10,34 +10,20 @@ html,
 body {
   color-scheme: dark;
   background-color: #1F1F1F;
-  color: #E8EAED;
+  color: #F1F5F9;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
 }
 
-/* Custom flat scrollbar for dark theme */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #1F1F1F;
-}
-::-webkit-scrollbar-thumb {
-  background: #3C4043;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #4D5156;
-}
-
-/* Cross-browser scrollbar hiding for horizontal pill carousels */
+/* Hide scrollbars comprehensively across all browsers */
 .no-scrollbar::-webkit-scrollbar,
 .scrollbar-none::-webkit-scrollbar,
 [data-no-scrollbar]::-webkit-scrollbar {
   display: none !important;
   width: 0 !important;
   height: 0 !important;
+  background: transparent !important;
   -webkit-appearance: none !important;
 }
 .no-scrollbar,
@@ -47,27 +33,52 @@ body {
   scrollbar-width: none !important;
 }
 
-/* Clean Google-style card panels */
-.glass-panel,
-.glass-panel-glow {
-  background-color: #28292A;
+/* Custom sleek translucent scrollbar for default scroll */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Modern Glass & Glow Panels */
+.glass-panel {
+  background: rgba(40, 41, 42, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid #3C4043;
   border-radius: 1rem;
-  box-shadow: none !important;
 }
 
-.glass-panel:hover {
-  border-color: #4D5156;
+.glass-panel-glow {
+  background: rgba(40, 41, 42, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(138, 180, 248, 0.35);
+  box-shadow: 0 0 30px rgba(138, 180, 248, 0.08);
 }
 
-/* Smooth Interactive Card Hover */
+/* Card hover effect */
 .api-card-hover {
-  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease, background-color 0.18s ease;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
-
 .api-card-hover:hover {
-  transform: translateY(-2px);
-  border-color: #5F6368;
+  transform: translateY(-3px);
+  border-color: rgba(138, 180, 248, 0.5);
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.6), 0 0 20px -5px rgba(138, 180, 248, 0.15);
 }
 
 /* Fast CSS list performance rendering */

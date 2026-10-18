@@ -33,7 +33,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearchModal }) => {
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-[#3C4043] bg-[#1F1F1F]/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-40 w-full border-b border-[#3C4043] bg-[#1F1F1F]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand with Custom Logo */}
         <Link to="/" className="group hover:opacity-90 transition-opacity">
@@ -51,11 +51,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearchModal }) => {
                 to={link.href}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-medium flex items-center gap-2 transition-colors ${
                   isActive
-                    ? 'text-[#8AB4F8] bg-[#8AB4F8]/15 border border-[#8AB4F8]/30 font-semibold'
-                    : 'text-slate-300 hover:text-white hover:bg-[#28292A]'
+                    ? 'text-[#8AB4F8] bg-[#8AB4F8]/10 border border-[#8AB4F8]/30 font-semibold'
+                    : 'text-slate-300 hover:text-white hover:bg-[#28292A] border border-transparent'
                 }`}
               >
-                <Icon className="h-3.5 w-3.5" />
+                <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-[#8AB4F8]' : 'text-slate-400'}`} />
                 {link.label}
               </Link>
             );
@@ -68,10 +68,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearchModal }) => {
           {bookmarks.length > 0 && (
             <Link
               to="/explore?fav=1"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 hover:text-amber-200 text-xs font-medium transition-colors"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] text-slate-200 hover:text-white text-xs font-medium transition-colors"
               title="View Bookmarked APIs"
             >
-              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+              <Star className="h-3.5 w-3.5 fill-[#FDD663] text-[#FDD663]" />
               <span>Saved ({bookmarks.length})</span>
             </Link>
           )}
@@ -79,11 +79,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearchModal }) => {
           {onOpenSearchModal && (
             <button
               onClick={onOpenSearchModal}
-              className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#3C4043] bg-[#28292A] hover:bg-[#303134] text-slate-300 hover:text-white text-xs font-mono transition-colors"
+              className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#3C4043] bg-[#28292A] hover:bg-[#303134] text-slate-300 hover:text-white text-xs font-mono transition-colors cursor-pointer"
             >
               <Search className="h-3.5 w-3.5 text-slate-400" />
               <span>Search APIs...</span>
-              <kbd className="px-1.5 py-0.5 rounded bg-[#1F1F1F] border border-[#3C4043] text-[10px] text-slate-400">
+              <kbd className="px-1.5 py-0.5 rounded bg-[#1F1F1F] border border-[#3C4043] text-[10px] text-slate-400 font-sans">
                 Ctrl K
               </kbd>
             </button>
@@ -111,14 +111,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearchModal }) => {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-[#3C4043] bg-[#28292A] px-4 pt-2 pb-4 space-y-1">
+        <div className="md:hidden border-b border-[#3C4043] bg-[#1F1F1F] px-4 pt-2 pb-4 space-y-1">
           {onOpenSearchModal && (
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
                 onOpenSearchModal();
               }}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-slate-300 bg-[#1F1F1F] border border-[#3C4043] mb-2"
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-slate-300 bg-[#28292A] border border-[#3C4043] mb-2"
             >
               <div className="flex items-center gap-2">
                 <Search className="h-4 w-4 text-slate-400" />
@@ -134,7 +134,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearchModal }) => {
                 key={link.label}
                 to={link.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:text-white hover:bg-[#303134]"
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:text-white hover:bg-[#28292A]"
               >
                 <Icon className="h-4 w-4 text-[#8AB4F8]" />
                 {link.label}
@@ -145,9 +145,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearchModal }) => {
             <Link
               to="/explore?fav=1"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-amber-300 hover:bg-[#303134]"
+              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-[#FDD663] hover:bg-[#28292A]"
             >
-              <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
+              <Star className="h-4 w-4 text-[#FDD663] fill-[#FDD663]" />
               <span>Saved APIs ({bookmarks.length})</span>
             </Link>
           )}

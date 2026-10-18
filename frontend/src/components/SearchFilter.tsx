@@ -26,48 +26,59 @@ export const SearchFilter: React.FC<SearchFilterProps> = ({
   ];
 
   return (
-    <div className="w-full max-w-2xl mx-auto space-y-4">
-      {/* Clean Rounded-Full Search Bar */}
-      <div className="relative flex items-center shadow-sm">
-        <div className="absolute left-4.5 text-slate-400 pointer-events-none">
-          <Search className="h-5 w-5" />
+    <div className="w-full max-w-2xl mx-auto space-y-3.5">
+      {/* Sleek Command-Bar Style Search Input */}
+      <div className="relative group">
+        <div className="relative flex items-center bg-[#28292A] border border-[#3C4043] focus-within:border-[#8AB4F8] rounded-2xl transition-colors">
+          <div className="pl-4 text-slate-400 group-focus-within:text-[#8AB4F8] transition-colors pointer-events-none">
+            <Search className="h-5 w-5" />
+          </div>
+          
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder={placeholder}
+            className="w-full pl-3.5 pr-20 py-4 bg-transparent text-white placeholder-slate-400 text-sm sm:text-base outline-none font-medium"
+          />
+
+          <div className="absolute right-3.5 flex items-center gap-1.5">
+            {searchTerm ? (
+              <button
+                type="button"
+                onClick={() => onSearchChange('')}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#303134] transition-colors"
+                title="Clear search"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            ) : (
+              <kbd className="hidden sm:inline-flex items-center gap-0.5 px-2 py-0.5 text-[11px] font-mono text-slate-400 bg-[#1F1F1F] border border-[#3C4043] rounded-md">
+                <span>Ctrl</span>
+                <span>K</span>
+              </kbd>
+            )}
+          </div>
         </div>
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder={placeholder}
-          className="w-full pl-12 pr-12 py-3.5 rounded-full bg-[#28292A] hover:bg-[#303134] focus:bg-[#303134] border border-[#3C4043] focus:border-[#5F6368] text-white placeholder-slate-400 text-sm transition-all outline-none"
-        />
-        {searchTerm && (
-          <button
-            onClick={() => onSearchChange('')}
-            className="absolute right-4 text-slate-400 hover:text-white p-1 rounded-full transition-colors"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        )}
       </div>
 
-      {/* Clean Friendly Filter Chips */}
-      <div
-        className="flex items-center justify-start sm:justify-center gap-2 overflow-x-auto pb-1 text-xs scrollbar-none"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-      >
+      {/* Clean Quick Filter Pills with No Scrollbar */}
+      <div className="flex items-center justify-start sm:justify-center gap-2 overflow-x-auto pb-1 text-xs no-scrollbar">
         {quickFilters.map((qf) => {
           const Icon = qf.icon;
           const isSelected = activeCollection === qf.id;
           return (
             <button
               key={qf.id}
+              type="button"
               onClick={() => onCollectionSelect(isSelected ? '' : qf.id)}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border transition-colors whitespace-nowrap text-xs font-medium ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all duration-150 whitespace-nowrap text-xs font-medium cursor-pointer ${
                 isSelected
-                  ? 'bg-accent/20 border-accent text-accent font-semibold'
-                  : 'bg-[#28292A] border-[#3C4043] text-slate-300 hover:bg-[#3C4043] hover:text-white'
+                  ? 'bg-[#8AB4F8]/15 border-[#8AB4F8] text-[#8AB4F8] font-semibold'
+                  : 'bg-[#28292A] border-[#3C4043] text-slate-300 hover:bg-[#303134] hover:border-[#8AB4F8] hover:text-white'
               }`}
             >
-              <Icon className="h-3.5 w-3.5" />
+              <Icon className={`h-3.5 w-3.5 ${isSelected ? 'text-[#8AB4F8]' : 'text-slate-400'}`} />
               <span>{qf.label}</span>
             </button>
           );

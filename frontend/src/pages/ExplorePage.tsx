@@ -105,29 +105,30 @@ export const ExplorePage: React.FC = () => {
       setIsLoading(true);
       setLoadError(null);
       try {
+        if (favoritesOnly && bookmarks.length === 0) {
+          const catRes = await fetchCategories();
+          setApis([]);
+          setTotalCount(0);
+          setCategories(catRes);
+          setIsLoading(false);
+          return;
+        }
+
         const [apisRes, catRes] = await Promise.all([
           fetchApis({
             q: qParam || undefined,
             category: categoryParam !== 'all' ? categoryParam : undefined,
             auth_type: authParam !== 'all' ? authParam : undefined,
             sort: sortParam,
+            slugs: favoritesOnly ? bookmarks.join(',') : undefined,
             limit: pageSize,
             offset: offset
           }),
           fetchCategories()
         ]);
 
-        let items = apisRes.items;
-        let total = apisRes.total;
-
-        // If client-side favorite filtering is requested
-        if (favoritesOnly) {
-          items = items.filter((item) => bookmarks.includes(item.slug));
-          total = items.length;
-        }
-
-        setApis(items);
-        setTotalCount(total);
+        setApis(apisRes.items);
+        setTotalCount(apisRes.total);
         setCategories(catRes);
       } catch (err: unknown) {
         console.error('Failed to load explore data:', err);
@@ -169,7 +170,7 @@ export const ExplorePage: React.FC = () => {
             </h1>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-[#8AB4F8]/10 text-[#8AB4F8] border border-[#8AB4F8]/25 shadow-sm">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              {totalCount.toLocaleString()} Verified APIs
+              {favoritesOnly ? `${totalCount.toLocaleString()} Saved APIs` : `${totalCount.toLocaleString()} Verified APIs`}
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
@@ -384,6 +385,16 @@ export const ExplorePage: React.FC = () => {
             </span>
           )}
 
+          {favoritesOnly && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#1F1F1F] border border-amber-500/30 text-amber-300 text-xs shadow-sm">
+              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+              <span>Saved Bookmarks</span>
+              <button onClick={() => updateQuery({ fav: '0', page: '1' })} className="text-slate-400 hover:text-white" title="Show all APIs">
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+
           {hasActiveFilters && (
             <button
               onClick={handleResetFilters}
@@ -558,10 +569,14 @@ export const ExplorePage: React.FC = () => {
         ) : (
           <div className="bg-[#28292A] rounded-2xl p-12 text-center border border-[#3C4043] space-y-4">
             <FilterX className="h-10 w-10 text-slate-500 mx-auto" />
-            <h3 className="text-base font-semibold text-white">No matching APIs found</h3>
+            <h3 className="text-base font-semibold text-white">
+              {favoritesOnly && bookmarks.length === 0 ? "No Saved APIs" : "No matching APIs found"}
+            </h3>
             <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
-              {favoritesOnly
+              {favoritesOnly && bookmarks.length === 0
                 ? "You haven't bookmarked any APIs yet. Click the star icon on any card to save it here for fast access!"
+                : favoritesOnly
+                ? "None of your saved APIs match the current query or category filter. Try clearing filters to see all your saved APIs."
                 : "Try typing a different keyword, clearing specific filters, or choosing 'All Categories'."}
             </p>
             <div className="pt-1">

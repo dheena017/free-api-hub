@@ -117,7 +117,7 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-black/75 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-black/80 backdrop-blur-md"
       onClick={onClose}
     >
       <div
@@ -126,7 +126,7 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
       >
         {/* Search Input Bar */}
         <div className="flex items-center gap-3 p-4 border-b border-[#3C4043]">
-          <Search className="h-5 w-5 text-accent flex-shrink-0" />
+          <Search className="h-5 w-5 text-[#8AB4F8] flex-shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -134,16 +134,16 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDownInInput}
             placeholder="Type API name, tag, or topic (e.g. weather, crypto, pokemon)..."
-            className="flex-1 bg-transparent text-sm text-white placeholder-slate-400 outline-none"
+            className="flex-1 bg-transparent text-sm sm:text-base text-white placeholder-slate-400 outline-none font-medium"
           />
           {isSearching && (
-            <div className="animate-spin rounded-full h-4 w-4 border-2 border-accent border-t-transparent flex-shrink-0" />
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#8AB4F8] border-t-transparent flex-shrink-0" />
           )}
           {query && (
             <button
               type="button"
               onClick={() => setQuery('')}
-              className="p-1 rounded-lg text-slate-400 hover:text-white"
+              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#303134]"
             >
               <X className="h-4 w-4" />
             </button>
@@ -152,7 +152,7 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
 
         {/* Live Suggestions List */}
         {suggestions.length > 0 && (
-          <div className="max-h-80 overflow-y-auto divide-y divide-[#3C4043]/50 p-2">
+          <div className="max-h-80 overflow-y-auto divide-y divide-[#3C4043] p-2">
             <div className="px-3 py-1.5 text-[11px] font-mono text-slate-400 uppercase tracking-wider">
               Matching Endpoints
             </div>
@@ -164,18 +164,18 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                   onClick={() => handleSelectApi(item.slug)}
                   className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-colors ${
                     isSelected
-                      ? 'bg-[#3C4043] text-white'
-                      : 'hover:bg-[#303134] text-slate-200'
+                      ? 'bg-[#303134] text-white'
+                      : 'hover:bg-[#303134]/60 text-slate-200'
                   }`}
                 >
                   <div className="min-w-0 flex-1 pr-3">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-sm text-white">{item.name}</span>
-                      <span className="text-[10px] font-mono uppercase text-slate-400 px-1.5 py-0.2 rounded bg-[#1F1F1F] border border-[#3C4043]">
+                      <span className="text-[10px] font-mono uppercase text-slate-300 px-1.5 py-0.5 rounded bg-[#1F1F1F] border border-[#3C4043]">
                         {item.category}
                       </span>
                       {item.auth_type === 'none' && (
-                        <span className="text-[10px] text-emerald-400 font-mono flex items-center gap-0.5">
+                        <span className="text-[10px] text-[#81C995] font-mono flex items-center gap-0.5">
                           <Zap className="h-2.5 w-2.5" />
                           <span>No Key</span>
                         </span>
@@ -187,8 +187,8 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                   </div>
 
                   <div className="flex items-center gap-2 text-xs font-mono text-slate-400 flex-shrink-0">
-                    <span>{item.health.avg_latency_ms}ms</span>
-                    <ArrowRight className="h-3.5 w-3.5 text-accent" />
+                    <span className="text-[#81C995] font-semibold">{item.health.avg_latency_ms}ms</span>
+                    <ArrowRight className="h-3.5 w-3.5 text-[#8AB4F8]" />
                   </div>
                 </div>
               );
@@ -216,7 +216,7 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                       navigate(item.path);
                       onClose();
                     }}
-                    className="p-2.5 rounded-xl bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] text-left transition-colors group"
+                    className="p-2.5 rounded-xl bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] hover:border-[#8AB4F8]/50 text-left transition-all group cursor-pointer"
                   >
                     <div className="text-xs font-semibold text-white group-hover:text-[#8AB4F8]">
                       {item.label}
@@ -241,7 +241,7 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                       navigate(`/explore?q=${encodeURIComponent(tag)}`);
                       onClose();
                     }}
-                    className="px-2.5 py-1 rounded-lg bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] text-slate-300 hover:text-white transition-colors font-mono text-[11px]"
+                    className="px-2.5 py-1 rounded-lg bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] text-slate-300 hover:text-white transition-colors font-mono text-[11px] cursor-pointer"
                   >
                     #{tag}
                   </button>
@@ -279,7 +279,7 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
           {query.trim() && (
             <button
               onClick={handleExploreAll}
-              className="text-accent hover:underline font-medium inline-flex items-center gap-1"
+              className="text-[#8AB4F8] hover:underline font-medium inline-flex items-center gap-1"
             >
               <span>Explore all in directory</span>
               <ArrowRight className="h-3 w-3" />

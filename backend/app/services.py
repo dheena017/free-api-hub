@@ -61,11 +61,17 @@ class CatalogService:
         pricing_tier: Optional[str] = None,
         collection: Optional[str] = None,
         status: Optional[str] = None,
+        slugs: Optional[List[str]] = None,
         sort: Optional[str] = "popular",
         limit: int = 50,
         offset: int = 0
     ) -> Tuple[List[ApiItem], int]:
         results = self._apis
+
+        # Filter by specific slugs (e.g. for saved / bookmarked APIs)
+        if slugs is not None:
+            slug_set = {s.lower().strip() for s in slugs if s and s.strip()}
+            results = [a for a in results if a.slug.lower() in slug_set or a.id.lower() in slug_set]
 
         # Filter by collection
         if collection:
@@ -409,13 +415,24 @@ class CatalogService:
             )
 
         try:
+            # Handle request body serialization
+            body_bytes = None
+            if req.body is not None:
+                if isinstance(req.body, str):
+                    body_bytes = req.body.encode("utf-8")
+                elif isinstance(req.body, (dict, list)):
+                    body_bytes = json.dumps(req.body).encode("utf-8")
+                    headers.setdefault("Content-Type", "application/json")
+                else:
+                    body_bytes = str(req.body).encode("utf-8")
+
             async with httpx.AsyncClient(timeout=settings.PROXY_TIMEOUT_SECONDS, follow_redirects=True) as client:
                 response = await client.request(
                     method=req.method.upper(),
                     url=req.url,
                     headers=headers,
                     params=req.params or {},
-                    content=req.body if req.body else None
+                    content=body_bytes
                 )
                 latency = int((time.perf_counter() - start_time) * 1000)
 
@@ -425,10 +442,10 @@ class CatalogService:
                 except Exception:
                     data = response.text
 
-                # Sanitize response headers
+                # Sanitize response headers (omit cookies, keep all diagnostic and payload headers)
                 clean_headers = {
                     k: v for k, v in response.headers.items()
-                    if k.lower() in ("content-type", "server", "date", "content-length", "x-rate-limit-remaining")
+                    if not k.lower().startswith("set-cookie")
                 }
 
                 error_msg = None

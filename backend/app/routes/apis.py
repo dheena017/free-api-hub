@@ -13,10 +13,12 @@ async def list_apis(
     pricing_tier: Optional[str] = Query(None, description="Filter by pricing tier (open, free_forever, freemium_no_cc)"),
     collection: Optional[str] = Query(None, description="Filter by curated collection (no-auth, cors-enabled, mock-data)"),
     status: Optional[str] = Query(None, description="Filter by health status (healthy, degraded, offline)"),
+    slugs: Optional[str] = Query(None, description="Comma-separated list of API slugs to filter by"),
     sort: Optional[str] = Query("popular", description="Sort order: popular, latency, uptime, alphabetical"),
     limit: int = Query(50, ge=1, le=500),
     offset: int = Query(0, ge=0)
 ):
+    slug_list = [s.strip() for s in slugs.split(",") if s.strip()] if slugs else None
     items, total = catalog_service.search_apis(
         q=q,
         category=category,
@@ -24,6 +26,7 @@ async def list_apis(
         pricing_tier=pricing_tier,
         collection=collection,
         status=status,
+        slugs=slug_list,
         sort=sort,
         limit=limit,
         offset=offset

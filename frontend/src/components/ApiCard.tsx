@@ -49,24 +49,30 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
       );
     }
     return (
-      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#1F1F1F] text-slate-300 border border-[#3C4043]">
+      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
         Free Key
       </span>
     );
   };
 
+  const getLatencyColor = (ms: number) => {
+    if (ms <= 150) return 'text-[#81C995]';
+    if (ms <= 300) return 'text-[#8AB4F8]';
+    return 'text-[#FDD663]';
+  };
+
   if (viewMode === 'compact') {
     return (
-      <div className="bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] hover:border-[#4D5156] rounded-xl px-4 py-3 flex items-center justify-between gap-4 transition-all group">
+      <div className="bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] rounded-xl px-4 py-3 flex items-center justify-between gap-4 transition-all group shadow-sm">
         <div className="flex items-center gap-3.5 min-w-0 flex-1">
           <button
             onClick={handleToggleBookmark}
             title={bookmarked ? 'Remove from Saved' : 'Save API'}
-            className="p-1 rounded-lg hover:bg-[#3C4043] transition-colors text-slate-400 hover:text-amber-400"
+            className="p-1 rounded-lg hover:bg-[#1F1F1F] transition-colors text-slate-400 hover:text-[#FDD663]"
           >
             <Star
               className={`h-4 w-4 ${
-                bookmarked ? 'text-amber-400 fill-amber-400' : ''
+                bookmarked ? 'text-[#FDD663] fill-[#FDD663]' : ''
               }`}
             />
           </button>
@@ -75,11 +81,11 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
             <div className="flex items-center gap-2 flex-wrap">
               <Link
                 to={`/api/${api.slug}`}
-                className="font-bold text-sm text-white group-hover:text-accent transition-colors truncate"
+                className="font-bold text-sm text-white group-hover:text-[#8AB4F8] transition-colors truncate"
               >
                 {api.name}
               </Link>
-              <span className="text-[10px] uppercase font-mono text-slate-400 px-1.5 py-0.2 rounded bg-[#1F1F1F] border border-[#3C4043]">
+              <span className="text-[10px] uppercase font-mono text-slate-300 px-1.5 py-0.5 rounded bg-[#1F1F1F] border border-[#3C4043]">
                 {api.category}
               </span>
               {getAuthBadge()}
@@ -97,8 +103,10 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
               uptimePercent={api.health.uptime_percent}
               pulse={api.health.status === 'healthy'}
             />
-            <span className="text-slate-500">•</span>
-            <span>{api.health.avg_latency_ms}ms</span>
+            <span className="text-[#3C4043]">•</span>
+            <span className={getLatencyColor(api.health.avg_latency_ms)}>
+              {api.health.avg_latency_ms}ms
+            </span>
           </div>
 
           <button
@@ -107,7 +115,7 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
             className="p-1.5 rounded-lg bg-[#1F1F1F] hover:bg-[#3C4043] text-slate-300 hover:text-white border border-[#3C4043] transition-colors"
           >
             {copied ? (
-              <Check className="h-3.5 w-3.5 text-emerald-400" />
+              <Check className="h-3.5 w-3.5 text-[#81C995]" />
             ) : (
               <Copy className="h-3.5 w-3.5" />
             )}
@@ -126,7 +134,7 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
   }
 
   return (
-    <div className="bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] rounded-2xl p-5 flex flex-col justify-between transition-all group relative shadow-sm hover:shadow-md h-full">
+    <div className="bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] hover:border-[#8AB4F8]/50 rounded-2xl p-5 flex flex-col justify-between transition-all duration-200 group relative shadow-md hover:shadow-xl hover:shadow-[#8AB4F8]/5 hover:-translate-y-1 h-full">
       <div>
         {/* Top meta tags */}
         <div className="flex items-center justify-between gap-2 mb-3">
@@ -136,7 +144,7 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
             </span>
             {getAuthBadge()}
             {api.cors_supported && (
-              <span className="text-[10px] text-sky-400 font-mono px-1.5 py-0.5 rounded bg-sky-500/10 border border-sky-500/20" title="CORS Enabled - callable directly from browser">
+              <span className="text-[10px] text-[#8AB4F8] font-mono px-2 py-0.5 rounded bg-[#8AB4F8]/10 border border-[#8AB4F8]/20" title="CORS Enabled - callable directly from browser">
                 CORS
               </span>
             )}
@@ -146,21 +154,21 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
             <button
               onClick={handleToggleBookmark}
               title={bookmarked ? 'Saved to bookmarks' : 'Add to bookmarks'}
-              className="p-1.5 rounded-lg hover:bg-[#3C4043] text-slate-400 hover:text-amber-400 transition-colors"
+              className="p-1.5 rounded-lg hover:bg-[#1F1F1F] text-slate-400 hover:text-[#FDD663] transition-colors"
             >
               <Star
                 className={`h-4 w-4 ${
-                  bookmarked ? 'text-amber-400 fill-amber-400' : ''
+                  bookmarked ? 'text-[#FDD663] fill-[#FDD663]' : ''
                 }`}
               />
             </button>
             <button
               onClick={handleCopyEndpoint}
               title="Copy endpoint URL"
-              className="p-1.5 rounded-lg hover:bg-[#3C4043] text-slate-400 hover:text-white transition-colors"
+              className="p-1.5 rounded-lg hover:bg-[#1F1F1F] text-slate-400 hover:text-white transition-colors"
             >
               {copied ? (
-                <Check className="h-3.5 w-3.5 text-emerald-400" />
+                <Check className="h-3.5 w-3.5 text-[#81C995]" />
               ) : (
                 <Copy className="h-3.5 w-3.5" />
               )}
@@ -170,15 +178,15 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
 
         {/* Title */}
         <Link to={`/api/${api.slug}`} className="block">
-          <h3 className="text-base font-bold text-white group-hover:text-accent transition-colors flex items-center justify-between">
-            <span>{api.name}</span>
-            <ArrowRight className="h-4 w-4 text-slate-500 group-hover:text-accent transition-transform group-hover:translate-x-0.5" />
+          <h3 className="text-base font-bold text-white group-hover:text-[#8AB4F8] transition-colors flex items-center justify-between">
+            <span className="line-clamp-1">{api.name}</span>
+            <ArrowRight className="h-4 w-4 text-slate-500 group-hover:text-[#8AB4F8] transition-transform group-hover:translate-x-1 flex-shrink-0 ml-2" />
           </h3>
         </Link>
 
         {/* Short Description */}
         <p
-          className="mt-2 text-xs text-slate-300 line-clamp-2 leading-relaxed min-h-[2.5rem]"
+          className="mt-2 text-xs text-slate-400 group-hover:text-slate-300 line-clamp-2 leading-relaxed min-h-[2.5rem]"
           title={api.short_description || api.description}
         >
           {api.short_description || api.description}
@@ -190,7 +198,7 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
             {api.tags.slice(0, 3).map((tag) => (
               <span
                 key={tag}
-                className="text-[10px] font-mono text-slate-400 bg-[#1F1F1F] px-1.5 py-0.5 rounded border border-[#3C4043]/60"
+                className="text-[10px] font-mono text-slate-400 bg-[#1F1F1F] px-2 py-0.5 rounded border border-[#3C4043]"
               >
                 #{tag}
               </span>
@@ -205,15 +213,17 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
       </div>
 
       {/* Footer bar */}
-      <div className="mt-5 pt-3 border-t border-[#3C4043] flex items-center justify-between text-xs">
+      <div className="mt-5 pt-3.5 border-t border-[#3C4043] flex items-center justify-between text-xs">
         <div className="flex items-center gap-2 text-slate-400 font-mono flex-wrap">
           <LivePingBadge
             status={api.health.status}
             uptimePercent={api.health.uptime_percent}
             pulse={api.health.status === 'healthy'}
           />
-          <span className="text-slate-500">•</span>
-          <span className="text-slate-300">{api.health.avg_latency_ms}ms</span>
+          <span className="text-[#3C4043]">•</span>
+          <span className={`font-semibold ${getLatencyColor(api.health.avg_latency_ms)}`}>
+            {api.health.avg_latency_ms}ms
+          </span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -222,7 +232,7 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
               href={api.documentation_url}
               target="_blank"
               rel="noreferrer"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#3C4043] transition-colors"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#1F1F1F] transition-colors"
               title="Official Documentation"
             >
               <ExternalLink className="h-3.5 w-3.5" />
@@ -230,7 +240,7 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
           )}
           <Link
             to={`/api/${api.slug}`}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#8AB4F8]/10 hover:bg-[#8AB4F8]/20 border border-[#8AB4F8]/30 text-xs font-semibold text-accent hover:text-white transition-colors"
+            className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-[#8AB4F8]/10 hover:bg-[#8AB4F8]/20 border border-[#8AB4F8]/30 text-xs font-semibold text-[#8AB4F8] hover:text-[#A8C7FA] transition-colors"
           >
             <span>Playground</span>
           </Link>

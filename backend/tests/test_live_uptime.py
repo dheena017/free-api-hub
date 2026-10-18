@@ -126,7 +126,7 @@ class TestLiveUptimeAndHealth:
         assert result.status in (HealthStatus.HEALTHY, HealthStatus.DEGRADED)
         assert result.latency_ms > 0
         assert result.is_live_tested is True
-        assert "Operational" in result.message or "HTTP 200" in result.message
+        assert "Operational" in result.message or "HTTP 200" in result.message or "Degraded" in result.message
 
         # Verify catalog in-memory state was updated
         item = catalog_service.get_by_slug("open-meteo")

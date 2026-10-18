@@ -8,6 +8,7 @@
     "frontend": "node ../scripts/run-frontend.js",
     "backend": "node ../scripts/run-backend.js",
     "build": "tsc && vite build",
+    "test": "node --test tests/*.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

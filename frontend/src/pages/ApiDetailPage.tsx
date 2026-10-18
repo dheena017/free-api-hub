@@ -7,10 +7,9 @@ import { ApiCard } from '../components/ApiCard';
 import { LivePingBadge } from '../components/LivePingBadge';
 import { useBookmarks } from '../utils/useBookmarks';
 import {
-  generateCurlSnippet,
-  generateJsSnippet,
-  generatePythonSnippet,
-  generateGoSnippet,
+  SUPPORTED_LANGUAGES,
+  SnippetLanguage,
+  generateSnippetForLanguage,
   formatLatencyBadge
 } from '../utils/codeSnippets';
 import {
@@ -151,7 +150,7 @@ export const ApiDetailPage: React.FC = () => {
   const [probeResult, setProbeResult] = useState<HealthCheckResult | null>(null);
   const [probeError, setProbeError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'playground' | 'snippets' | 'architecture'>('playground');
-  const [snippetLang, setSnippetLang] = useState<'curl' | 'js' | 'python' | 'go'>('curl');
+  const [snippetLang, setSnippetLang] = useState<SnippetLanguage>('curl');
   const [copiedSnippet, setCopiedSnippet] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
 
@@ -319,14 +318,13 @@ export const ApiDetailPage: React.FC = () => {
 
   const latencyBadge = formatLatencyBadge(api.health.avg_latency_ms);
   const targetUrl = `${api.base_url}${api.sample_endpoint}`;
-
-  // Generated code snippets
-  const snippets = {
-    curl: generateCurlSnippet(targetUrl, api.method || 'GET'),
-    js: generateJsSnippet(targetUrl, api.method || 'GET'),
-    python: generatePythonSnippet(targetUrl, api.method || 'GET'),
-    go: generateGoSnippet(targetUrl, api.method || 'GET')
-  };
+  const activeSnippetCode = generateSnippetForLanguage(
+    snippetLang,
+    targetUrl,
+    api.method || 'GET',
+    api.default_headers || {},
+    api.default_params || {}
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -607,18 +605,18 @@ export const ApiDetailPage: React.FC = () => {
             </div>
 
             {/* Language tabs */}
-            <div className="flex items-center gap-1.5 bg-[#1F1F1F] p-1 rounded-xl border border-[#3C4043]">
-              {(['curl', 'js', 'python', 'go'] as const).map((lang) => (
+            <div className="flex items-center gap-1.5 bg-[#1F1F1F] p-1 rounded-xl border border-[#3C4043] overflow-x-auto max-w-full">
+              {SUPPORTED_LANGUAGES.map((lang) => (
                 <button
-                  key={lang}
-                  onClick={() => setSnippetLang(lang)}
-                  className={`px-3 py-1 rounded-lg text-xs font-mono font-medium transition-colors ${
-                    snippetLang === lang
+                  key={lang.id}
+                  onClick={() => setSnippetLang(lang.id)}
+                  className={`px-3 py-1 rounded-lg text-xs font-mono font-medium whitespace-nowrap transition-colors ${
+                    snippetLang === lang.id
                       ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold shadow-sm'
-                      : 'text-slate-400 hover:text-white'
+                      : 'text-slate-400 hover:text-white hover:bg-[#303134]'
                   }`}
                 >
-                  {lang === 'js' ? 'JavaScript' : lang.toUpperCase()}
+                  {lang.label}
                 </button>
               ))}
             </div>
@@ -626,16 +624,16 @@ export const ApiDetailPage: React.FC = () => {
 
           <div className="relative">
             <pre className="bg-[#1F1F1F] rounded-xl p-4 text-xs font-mono text-slate-200 overflow-x-auto border border-[#3C4043] leading-relaxed">
-              {snippets[snippetLang]}
+              {activeSnippetCode}
             </pre>
             <button
-              onClick={() => handleCopySnippet(snippets[snippetLang])}
+              onClick={() => handleCopySnippet(activeSnippetCode)}
               className="absolute top-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#28292A] hover:bg-[#3C4043] text-xs font-medium text-slate-200 border border-[#3C4043] transition-colors"
             >
               {copiedSnippet ? (
                 <>
-                  <Check className="h-3.5 w-3.5 text-emerald-400" />
-                  <span className="text-emerald-400">Copied!</span>
+                  <Check className="h-3.5 w-3.5 text-[#81C995]" />
+                  <span className="text-[#81C995]">Copied!</span>
                 </>
               ) : (
                 <>

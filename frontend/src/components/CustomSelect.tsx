@@ -186,7 +186,7 @@ export function CustomSelect<T extends string = string>({
   const variantStyles = {
     default: 'bg-[#1F1F1F] border-[#3C4043] text-slate-100 hover:border-[#5F6368] focus:border-[#8AB4F8]',
     surface: 'bg-[#28292A] border-[#3C4043] text-slate-100 hover:border-[#5F6368] focus:border-[#8AB4F8]',
-    glass: 'bg-[#28292A]/90 backdrop-blur-md border-[#3C4043] text-slate-100 hover:border-[#5F6368] focus:border-[#8AB4F8]'
+    glass: 'bg-[#28292A] border-[#3C4043] text-slate-100 hover:border-[#5F6368] focus:border-[#8AB4F8]'
   };
 
   return (
@@ -212,12 +212,12 @@ export function CustomSelect<T extends string = string>({
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        className={`w-full flex items-center justify-between border font-normal transition-all duration-150 outline-none select-none ${
+        className={`w-full flex items-center justify-between border font-normal transition-colors duration-150 outline-none select-none ${
           sizeStyles[size]
         } ${variantStyles[variant]} ${
-          error ? '!border-rose-500 ring-1 ring-rose-500/30' : ''
+          error ? '!border-[#F28B82]' : ''
         } ${
-          isOpen ? 'border-[#8AB4F8] ring-1 ring-[#8AB4F8]/30 shadow-md' : ''
+          isOpen ? 'border-[#8AB4F8]' : ''
         } ${
           disabled ? 'opacity-50 cursor-not-allowed bg-[#1F1F1F]/50' : 'cursor-pointer'
         }`}
@@ -247,8 +247,7 @@ export function CustomSelect<T extends string = string>({
       {/* Dropdown Menu Popover */}
       {isOpen && (
         <div
-          className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} z-50 mt-1.5 w-full min-w-[200px] bg-[#28292A] border border-[#3C4043] rounded-xl shadow-2xl py-1.5 overflow-hidden animate-in fade-in-0 zoom-in-95 duration-100 ${menuClassName}`}
-          style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.6)' }}
+          className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} z-50 mt-1.5 w-full min-w-[200px] bg-[#28292A] border border-[#3C4043] rounded-xl py-1.5 overflow-hidden animate-in fade-in-0 duration-100 ${menuClassName}`}
         >
           {/* Optional Search Filter */}
           {searchable && (

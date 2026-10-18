@@ -72,9 +72,17 @@ export function useHistory() {
     setHistory([]);
   }, []);
 
+  const removeHistoryItem = useCallback((slug: string) => {
+    const current = getStoredHistory();
+    const updated = current.filter((item) => item.slug !== slug);
+    saveStoredHistory(updated);
+    setHistory(updated);
+  }, []);
+
   return {
     history,
     addHistoryItem,
+    removeHistoryItem,
     clearHistory,
     count: history.length
   };
