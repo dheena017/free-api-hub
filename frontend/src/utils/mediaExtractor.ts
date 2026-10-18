@@ -13,8 +13,8 @@ const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bm
 const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.mov', '.mkv', '.m4v', '.m3u8'];
 const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac'];
 
-const IMAGE_KEY_REGEX = /(image|avatar|poster|thumbnail|photo|picture|banner|flag|icon|logo|sprite|img_url|pic|screenshot|art|cover)/i;
-const VIDEO_KEY_REGEX = /(video|mp4|webm|stream|clip|trailer|movie|film|recording|screencast)/i;
+const IMAGE_KEY_REGEX = /(image|avatar|poster|thumbnail|photo|picture|banner|flag|icon|logo|sprite|img_url|pic|screenshot|art|cover|download_url|floof|primaryimage|additionalimages)/i;
+const VIDEO_KEY_REGEX = /(video|mp4|webm|stream|clip|trailer|movie|film|recording|screencast|embedpath|embed_path|embedurl|videourl)/i;
 const AUDIO_KEY_REGEX = /(audio|sound|song|track|podcast|voice|mp3|preview_url)/i;
 
 function cleanUrl(raw: string): string {
@@ -66,6 +66,18 @@ function parseVimeoEmbed(url: string): string | null {
       if (id && /^\d+$/.test(id)) {
         return `https://player.vimeo.com/video/${id}`;
       }
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+function parsePeerTubeEmbed(url: string): string | null {
+  try {
+    if (url.includes('/videos/embed/')) return url;
+    if (url.includes('/videos/watch/')) {
+      return url.replace('/videos/watch/', '/videos/embed/');
     }
   } catch {
     // ignore
@@ -204,8 +216,9 @@ export function extractMediaItems(data: unknown, baseUrl?: string): MediaItem[] 
       const ext = getUrlExtension(str);
       const ytEmbed = parseYouTubeEmbed(str);
       const vimeoEmbed = parseVimeoEmbed(str);
+      const peertubeEmbed = parsePeerTubeEmbed(str);
 
-      // 1. YouTube / Vimeo Video Embed
+      // 1. YouTube / Vimeo / PeerTube Video Embed
       if (ytEmbed) {
         registerMedia(str, 'video', keyPath || 'root', parentKey || 'YouTube Video', 'YouTube', ytEmbed);
         return;
@@ -213,6 +226,11 @@ export function extractMediaItems(data: unknown, baseUrl?: string): MediaItem[] 
 
       if (vimeoEmbed) {
         registerMedia(str, 'video', keyPath || 'root', parentKey || 'Vimeo Video', 'Vimeo', vimeoEmbed);
+        return;
+      }
+
+      if (peertubeEmbed) {
+        registerMedia(str, 'video', keyPath || 'root', parentKey || 'PeerTube Video', 'PeerTube', peertubeEmbed);
         return;
       }
 
@@ -234,16 +252,24 @@ export function extractMediaItems(data: unknown, baseUrl?: string): MediaItem[] 
         return;
       }
 
-      // 5. Hostname heuristics (known image CDNs)
+      // 5. Hostname heuristics (known image & video CDNs)
       const lower = str.toLowerCase();
       if (
         lower.includes('images.unsplash.com') ||
         lower.includes('images.dog.ceo') ||
         lower.includes('cdn.thecatapi.com') ||
         lower.includes('thecatapi.com/img') ||
+        lower.includes('cdn2.thedogapi.com') ||
+        lower.includes('picsum.photos') ||
+        lower.includes('images-assets.nasa.gov') ||
+        lower.includes('staticflickr.com') ||
+        lower.includes('images.metmuseum.org') ||
+        lower.includes('randomfox.ca') ||
+        lower.includes('random.dog') ||
+        lower.includes('random-d.uk') ||
+        lower.includes('upload.wikimedia.org') ||
         lower.includes('raw.githubusercontent.com/pokeapi') ||
         lower.includes('rickandmortyapi.com/api/character/avatar') ||
-        lower.includes('randomfox.ca/images') ||
         lower.includes('i.imgur.com') ||
         lower.includes('avatars.githubusercontent.com') ||
         lower.includes('lh3.googleusercontent.com')
