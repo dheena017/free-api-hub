@@ -99,3 +99,19 @@ async def status_dashboard(
     Dedicated typed endpoint returning real-time status dashboard statistics and endpoint states.
     """
     return catalog_service.get_status_dashboard(limit=limit, offset=offset)
+
+
+@router.post("/health/run-daily-check")
+async def trigger_daily_health_check(
+    batch_size: int = Query(50, ge=1, le=200)
+) -> Dict[str, Any]:
+    """
+    Trigger daily existence and health verification run across catalog APIs.
+    Authentically probes endpoints and records results to persistent history.
+    """
+    from app.workers.health_checker import run_daily_health_check
+    result = await run_daily_health_check(batch_size=batch_size)
+    catalog_service._load_health_history()
+    catalog_service._apply_health_from_history()
+    return result
+

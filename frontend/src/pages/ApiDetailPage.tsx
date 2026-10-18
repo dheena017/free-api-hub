@@ -40,99 +40,19 @@ import { useHistory } from '../utils/useHistory';
 import { useToast } from '../utils/useToast';
 import { generatePostmanCollection, generateHttpFileSnippet, downloadFile } from '../utils/exporter';
 
-const getApiSpecificUseCases = (api: ApiItem): string[] => {
-  const nameLower = api.name.toLowerCase();
-  const tags = api.tags || [];
-
-  if (nameLower.includes('icon') || tags.includes('iconfinder') || tags.includes('icons')) {
-    return [
-      'Search and download SVG and vector icons inside graphic design tools',
-      'Dynamic icon pickers and symbol search in website builders and CMS editors',
-      'Custom user avatar generation and UI symbology rendering'
-    ];
+const getApiUseCases = (api: ApiItem): string[] => {
+  if (api.use_cases && api.use_cases.length > 0) {
+    return api.use_cases;
   }
-
-  if (nameLower.includes('pokemon') || nameLower.includes('pokeapi') || tags.includes('pokemon')) {
-    return [
-      'Pokédex companion web apps and team building battle simulators',
-      'Character stat calculators, evolution chain visualizers, and damage formulas',
-      'Interactive trivia games, drafting simulators, and Pokémon game wikis'
-    ];
-  }
-
-  if (nameLower.includes('weather') || api.category === 'weather') {
-    return [
-      'Real-time localized meteorological forecasts and weather alert widgets',
-      'Long-term climate data analysis and solar/wind energy generation modeling',
-      'Outdoor travel itinerary planning and agricultural irrigation scheduling'
-    ];
-  }
-
-  if (nameLower.includes('book') || api.category === 'education-books' || tags.includes('books')) {
-    return [
-      'Digital library catalogues, ISBN lookups, and reading progress trackers',
-      'Automated academic citation generation and bibliographic referencing',
-      'Personalized literature recommendations and author bibliography databases'
-    ];
-  }
-
-  if (api.category === 'art-design' || nameLower.includes('museum') || nameLower.includes('art')) {
-    return [
-      'High-resolution artwork galleries and digital museum curation platforms',
-      'Color palette extraction, historical artifact lookups, and art education',
-      'Design asset management and creative canvas vector graphics integration'
-    ];
-  }
-
-  if (api.category === 'finance') {
-    return [
-      'Live foreign exchange rate converters and multi-currency checkout feeds',
-      'Portfolio valuation dashboards and automated stock market tracking',
-      'Financial risk modeling and historical economic indicator analysis'
-    ];
-  }
-
-  if (api.category === 'crypto-web3') {
-    return [
-      'Decentralized token price tickers and cryptocurrency market analytics',
-      'Crypto wallet balance tracking and blockchain transaction monitors',
-      'Web3 DeFi protocol yield dashboards and gas price estimators'
-    ];
-  }
-
-  if (api.category === 'geography') {
-    return [
-      'Address autocomplete, postal geocoding, and reverse coordinate lookups',
-      'Interactive geospatial mapping, boundary polygons, and travel routing',
-      'Location-aware proximity search for local events and amenities'
-    ];
-  }
-
-  if (api.category === 'health-medical') {
-    return [
-      'Clinical reference lookups, dosage calculators, and drug interaction checks',
-      'Personal health informatics dashboards and medical directory search',
-      'Fitness telemetry tracking and nutrition ingredient analysis'
-    ];
-  }
-
-  if (api.category === 'developer-tools') {
-    return [
-      'Mock API endpoint responses for rapid frontend staging and prototyping',
-      'Automated CI/CD integration testing and regression validation suites',
-      'Developer sandboxes, offline test suites, and schema verification'
-    ];
-  }
-
   return [
     `Direct integration into applications consuming ${api.name} data`,
     `Automated querying of ${api.sample_endpoint} for dynamic content feeds`,
-    `Client-side widgets and developer tools in the ${api.category} domain`
+    `Client-side widgets and developer tools in the ${api.category.replace('-', ' ')} domain`
   ];
 };
 
-function formatTimeAgo(isoString?: string): string {
-  if (!isoString) return 'recently';
+function formatTimeAgo(isoString?: string | null): string {
+  if (!isoString) return 'awaiting daily check';
   try {
     const diffMs = Date.now() - new Date(isoString).getTime();
     const diffSec = Math.floor(diffMs / 1000);
@@ -604,21 +524,29 @@ export const ApiDetailPage: React.FC = () => {
             {/* Uptime SLA Meter */}
             <div className="space-y-1.5 pt-1">
               <div className="flex items-center justify-between text-[11px] font-mono text-text-muted">
-                <span>30-Day Uptime SLA:</span>
-                <span className="text-text-base font-semibold">{api.health.uptime_percent}%</span>
+                <span>Verified SLA Uptime:</span>
+                <span className="text-text-base font-semibold">
+                  {api.health.uptime_percent != null ? `${api.health.uptime_percent}%` : 'Pending Check'}
+                </span>
               </div>
-              <div className="w-full h-1.5 bg-surface rounded-full overflow-hidden border border-border">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${
-                    api.health.uptime_percent >= 99
-                      ? 'bg-emerald-400'
-                      : api.health.uptime_percent >= 95
-                      ? 'bg-amber-400'
-                      : 'bg-rose-400'
-                  }`}
-                  style={{ width: `${Math.min(100, Math.max(0, api.health.uptime_percent))}%` }}
-                />
-              </div>
+              {api.health.uptime_percent != null ? (
+                <div className="w-full h-1.5 bg-surface rounded-full overflow-hidden border border-border">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      api.health.uptime_percent >= 99
+                        ? 'bg-emerald-400'
+                        : api.health.uptime_percent >= 95
+                        ? 'bg-amber-400'
+                        : 'bg-rose-400'
+                    }`}
+                    style={{ width: `${Math.min(100, Math.max(0, api.health.uptime_percent))}%` }}
+                  />
+                </div>
+              ) : (
+                <div className="text-[10px] text-text-muted">
+                  Click 'Live Probe' above to run an instant verification check.
+                </div>
+              )}
             </div>
 
             <div className="text-[11px] font-mono text-text-muted pt-2 border-t border-border space-y-1.5">
@@ -632,12 +560,14 @@ export const ApiDetailPage: React.FC = () => {
                 <span>Status Code:</span>
                 <span
                   className={`px-1.5 py-0.5 rounded border font-semibold ${
-                    api.health.last_status_code >= 200 && api.health.last_status_code < 400
+                    api.health.last_status_code && api.health.last_status_code >= 200 && api.health.last_status_code < 400
                       ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                      : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                      : api.health.last_status_code
+                      ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                      : 'bg-slate-500/10 text-slate-400 border-slate-500/30'
                   }`}
                 >
-                  {api.health.last_status_code ? `HTTP ${api.health.last_status_code}` : '0 (Failed)'}
+                  {api.health.last_status_code ? `HTTP ${api.health.last_status_code}` : 'Pending Probe'}
                 </span>
               </div>
               <div className="flex items-center justify-between text-text-muted text-[10px]">
@@ -736,6 +666,24 @@ export const ApiDetailPage: React.FC = () => {
             ))}
           </div>
 
+          {/* Key Capabilities & Features */}
+          {api.features && api.features.length > 0 && (
+            <div className="bg-surface-elevated/40 p-4 rounded-xl border border-border space-y-2.5">
+              <h4 className="text-xs font-semibold text-text-base uppercase tracking-wider font-mono flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                <span>Key Capabilities & Features</span>
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-text-muted">
+                {api.features.map((feat, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+                    <span className="leading-snug">{feat}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Recommended Production Use Cases */}
           <div className="bg-surface-elevated/40 p-4 rounded-xl border border-border space-y-3 pt-3.5">
             <h4 className="text-xs font-semibold text-text-base uppercase tracking-wider font-mono flex items-center gap-1.5">
@@ -743,7 +691,7 @@ export const ApiDetailPage: React.FC = () => {
               <span>Recommended Production Use Cases</span>
             </h4>
             <ul className="space-y-2 text-xs text-text-muted">
-              {getApiSpecificUseCases(api).map((useCase, idx) => (
+              {getApiUseCases(api).map((useCase, idx) => (
                 <li key={idx} className="flex items-start gap-2">
                   <span className="text-accent font-bold mt-0.5">•</span>
                   <span className="leading-relaxed">{useCase}</span>
@@ -805,6 +753,19 @@ export const ApiDetailPage: React.FC = () => {
                     Requests require an active API key. Attach your token via HTTP headers (e.g. <code className="text-accent font-mono">x-api-key: YOUR_KEY</code>) or as a query parameter. Keys can be acquired from the provider's developer dashboard.
                   </p>
                 )}
+              </div>
+
+              {/* Rate Limit and Quota info directly from data */}
+              <div className="p-4 bg-surface-elevated/40 rounded-xl border border-border space-y-2">
+                <div className="font-semibold text-text-base flex items-center gap-1.5 font-mono uppercase text-[11px]">
+                  <Zap className="h-4 w-4 text-amber-400" />
+                  <span>Rate Limit & Quotas</span>
+                </div>
+                <p className="text-text-muted leading-relaxed">
+                  {api.rate_limit || (api.auth_type === 'none'
+                    ? 'Fair usage policy applies. Recommended maximum throughput: 60 requests/minute to respect upstream resources.'
+                    : 'Developer tier: Consult official documentation for tier-specific limits.')}
+                </p>
               </div>
 
               <div className="p-4 bg-surface-elevated/40 rounded-xl border border-border space-y-2">

@@ -1,14 +1,14 @@
 export type AuthType = 'none' | 'api_key' | 'oauth';
 export type PricingTier = 'open' | 'free_forever' | 'freemium_no_cc';
-export type HealthStatus = 'healthy' | 'degraded' | 'offline';
+export type HealthStatus = 'healthy' | 'degraded' | 'offline' | 'untested';
 
 export interface HealthInfo {
   status: HealthStatus;
-  uptime_percent: number;
-  avg_latency_ms: number;
-  last_checked: string;
-  last_status_code: number;
-  message?: string;
+  uptime_percent?: number | null;
+  avg_latency_ms?: number | null;
+  last_checked?: string | null;
+  last_status_code?: number | null;
+  message?: string | null;
   observations_count?: number;
   freshness?: string;
 }
@@ -20,7 +20,7 @@ export interface HealthCheckResult {
   status: HealthStatus;
   status_code: number;
   latency_ms: number;
-  uptime_percent: number;
+  uptime_percent?: number | null;
   last_checked: string;
   message: string;
   is_live_tested?: boolean;
@@ -46,10 +46,10 @@ export interface EndpointStatusItem {
   base_url: string;
   sample_endpoint: string;
   status: HealthStatus;
-  uptime_percent: number;
-  avg_latency_ms: number;
-  last_checked: string;
-  last_status_code: number;
+  uptime_percent?: number | null;
+  avg_latency_ms?: number | null;
+  last_checked?: string | null;
+  last_status_code?: number | null;
   message?: string;
 }
 
@@ -57,6 +57,18 @@ export interface StatusDashboardResponse {
   stats: CatalogStats;
   total: number;
   endpoints: EndpointStatusItem[];
+}
+
+export interface EndpointItem {
+  id?: string;
+  name: string;
+  path: string;
+  method?: string;
+  description?: string;
+  params?: Record<string, string>;
+  headers?: Record<string, string>;
+  body?: string;
+  badge?: string;
 }
 
 export interface ApiItem {
@@ -79,6 +91,11 @@ export interface ApiItem {
   health: HealthInfo;
   default_params?: Record<string, string>;
   default_headers?: Record<string, string>;
+  endpoints?: EndpointItem[];
+  use_cases?: string[];
+  features?: string[];
+  rate_limit?: string;
+  sample_response?: unknown;
 }
 
 export interface ApiListResponse {
@@ -101,6 +118,7 @@ export interface CatalogStats {
   healthy_count: number;
   degraded_count?: number;
   offline_count?: number;
+  untested_count?: number;
   avg_latency_ms: number;
   global_uptime_percent: number;
   total_checks_today: number;

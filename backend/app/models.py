@@ -16,14 +16,15 @@ class HealthStatus(str, Enum):
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     OFFLINE = "offline"
+    UNTESTED = "untested"
 
 class HealthInfo(BaseModel):
-    status: HealthStatus = HealthStatus.HEALTHY
-    uptime_percent: float = Field(default=99.9, ge=0.0, le=100.0)
-    avg_latency_ms: int = Field(default=120, ge=0)
-    last_checked: str = Field(default="2026-10-17T12:00:00Z")
-    last_status_code: int = Field(default=200)
-    message: Optional[str] = Field(default=None)
+    status: HealthStatus = HealthStatus.UNTESTED
+    uptime_percent: Optional[float] = Field(default=None, ge=0.0, le=100.0)
+    avg_latency_ms: Optional[int] = Field(default=None, ge=0)
+    last_checked: Optional[str] = Field(default=None)
+    last_status_code: Optional[int] = Field(default=None)
+    message: Optional[str] = Field(default="Awaiting live verification probe")
 
 class HealthCheckResult(BaseModel):
     slug: str
@@ -32,13 +33,25 @@ class HealthCheckResult(BaseModel):
     status: HealthStatus
     status_code: int
     latency_ms: int
-    uptime_percent: float
+    uptime_percent: Optional[float] = None
     last_checked: str
     message: str
     is_live_tested: bool = True
 
     def __getitem__(self, item: str) -> Any:
         return getattr(self, item)
+
+
+class EndpointItem(BaseModel):
+    id: Optional[str] = None
+    name: str
+    path: str
+    method: str = "GET"
+    description: Optional[str] = None
+    params: Optional[Dict[str, str]] = Field(default_factory=dict)
+    headers: Optional[Dict[str, str]] = Field(default_factory=dict)
+    body: Optional[str] = None
+    badge: Optional[str] = None
 
 
 class ApiItem(BaseModel):
@@ -61,6 +74,12 @@ class ApiItem(BaseModel):
     health: HealthInfo = Field(default_factory=HealthInfo)
     default_params: Optional[Dict[str, str]] = Field(default_factory=dict)
     default_headers: Optional[Dict[str, str]] = Field(default_factory=dict)
+    endpoints: Optional[List[EndpointItem]] = Field(default_factory=list)
+    use_cases: Optional[List[str]] = Field(default_factory=list)
+    features: Optional[List[str]] = Field(default_factory=list)
+    rate_limit: Optional[str] = Field(default=None)
+    sample_response: Optional[Any] = Field(default=None)
+
 
 class ApiListResponse(BaseModel):
     total: int
@@ -80,6 +99,7 @@ class CatalogStats(BaseModel):
     healthy_count: int
     degraded_count: int = 0
     offline_count: int = 0
+    untested_count: int = 0
     avg_latency_ms: int
     global_uptime_percent: float
     total_checks_today: int
@@ -92,10 +112,10 @@ class EndpointStatusItem(BaseModel):
     base_url: str
     sample_endpoint: str
     status: HealthStatus
-    uptime_percent: float
-    avg_latency_ms: int
-    last_checked: str
-    last_status_code: int
+    uptime_percent: Optional[float] = None
+    avg_latency_ms: Optional[int] = None
+    last_checked: Optional[str] = None
+    last_status_code: Optional[int] = None
     message: Optional[str] = None
 
 class StatusDashboardResponse(BaseModel):

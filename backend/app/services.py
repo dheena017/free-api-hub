@@ -53,6 +53,47 @@ class CatalogService:
         self._load_reports()
         self._load_health_history()
 
+    def _apply_health_from_history(self) -> None:
+        """Applies authentic recorded health observations to APIs."""
+        if not self._health_history or not self._apis:
+            return
+
+        obs_by_slug: Dict[str, List[Dict[str, Any]]] = {}
+        for obs in self._health_history:
+            s = str(obs.get("slug", "")).lower().strip()
+            if s:
+                obs_by_slug.setdefault(s, []).append(obs)
+
+        for api in self._apis:
+            slug = api.slug.lower().strip()
+            if slug in obs_by_slug:
+                observations = obs_by_slug[slug]
+                latest = observations[-1]
+
+                healthy_runs = sum(1 for o in observations if o.get("status") == "healthy")
+                degraded_runs = sum(1 for o in observations if o.get("status") == "degraded")
+                uptime = round((healthy_runs + (degraded_runs * 0.5)) / len(observations) * 100.0, 1)
+
+                valid_latencies = [o.get("latency_ms", 0) for o in observations if 0 < o.get("latency_ms", 0) < 9000]
+                avg_lat = int(sum(valid_latencies) / len(valid_latencies)) if valid_latencies else latest.get("latency_ms", 120)
+
+                status_str = latest.get("status", "healthy")
+                if status_str == "healthy":
+                    status_enum = HealthStatus.HEALTHY
+                elif status_str == "degraded":
+                    status_enum = HealthStatus.DEGRADED
+                elif status_str == "offline":
+                    status_enum = HealthStatus.OFFLINE
+                else:
+                    status_enum = HealthStatus.UNTESTED
+
+                api.health.status = status_enum
+                api.health.uptime_percent = uptime
+                api.health.avg_latency_ms = avg_lat
+                api.health.last_checked = latest.get("timestamp")
+                api.health.last_status_code = latest.get("status_code", 200)
+                api.health.message = f"Live Verified (HTTP {api.health.last_status_code} in {api.health.avg_latency_ms}ms)"
+
     def _load_reports(self) -> None:
         if os.path.exists(self.reports_path):
             try:
@@ -124,6 +165,7 @@ class CatalogService:
                 self._health_history = []
         else:
             self._health_history = []
+        self._apply_health_from_history()
 
     def _record_health_observation(self, slug: str, status: str, status_code: int, latency_ms: int) -> None:
         """Persists a live health observation with timestamp."""
@@ -192,9 +234,9 @@ class CatalogService:
             elif c in ("mock-data", "mock", "prototyping"):
                 results = [a for a in results if "mock-data" in a.tags or a.category == "developer-tools"]
             elif c in ("high-uptime", "uptime"):
-                results = [a for a in results if a.health.uptime_percent >= 99.7]
+                results = [a for a in results if a.health.uptime_percent is not None and a.health.uptime_percent >= 99.0]
             elif c in ("fast-response", "ultra-fast", "low-latency"):
-                results = [a for a in results if a.health.avg_latency_ms < 120]
+                results = [a for a in results if a.health.avg_latency_ms is not None and a.health.avg_latency_ms < 150]
             elif c in ("open-data", "public-data"):
                 results = [a for a in results if a.category in ("open-data", "science", "geography") or "open-data" in a.tags]
 
@@ -225,7 +267,7 @@ class CatalogService:
 
             norm_sort = (sort or "popular").lower().strip()
             if norm_sort == "popular":
-                scored_results.sort(key=lambda item: (item[0], item[1].health.uptime_percent, -item[1].health.avg_latency_ms), reverse=True)
+                scored_results.sort(key=lambda item: (item[0], item[1].health.uptime_percent or 0.0, -(item[1].health.avg_latency_ms or 99999)), reverse=True)
                 results = [item[1] for item in scored_results]
             else:
                 results = [item[1] for item in scored_results]
@@ -254,13 +296,13 @@ class CatalogService:
         norm_sort = (sort or "popular").lower().strip()
         if not (q and norm_sort == "popular"):
             if norm_sort == "latency":
-                results = sorted(results, key=lambda a: a.health.avg_latency_ms)
+                results = sorted(results, key=lambda a: a.health.avg_latency_ms if a.health.avg_latency_ms is not None else 99999)
             elif norm_sort == "uptime":
-                results = sorted(results, key=lambda a: a.health.uptime_percent, reverse=True)
+                results = sorted(results, key=lambda a: a.health.uptime_percent if a.health.uptime_percent is not None else 0.0, reverse=True)
             elif norm_sort == "alphabetical":
                 results = sorted(results, key=lambda a: a.name.lower())
             else:
-                results = sorted(results, key=lambda a: (a.health.uptime_percent, -a.health.avg_latency_ms), reverse=True)
+                results = sorted(results, key=lambda a: (a.health.uptime_percent or 0.0, -(a.health.avg_latency_ms or 99999)), reverse=True)
 
         total = len(results)
         bounded_limit = max(1, min(limit, 500))
@@ -297,6 +339,8 @@ class CatalogService:
             "food-drink": {"name": "Food, Dining & Recipes", "icon": "Utensils", "desc": "Recipe collections, wine pairings, nutritional databases, and restaurant menus."},
             "education-books": {"name": "Books, Education & Libraries", "icon": "BookOpen", "desc": "ISBN registries, university catalogs, open dictionaries, and encyclopedia feeds."},
             "weather": {"name": "Weather & Climate", "icon": "CloudSun", "desc": "Real-time forecast, atmospheric records, and historical climate tracking."},
+            "sports": {"name": "Sports & Athletics", "icon": "Trophy", "desc": "Live match scores, athletic league tables, fixtures, and player statistics."},
+            "animals": {"name": "Animals & Pets", "icon": "PawPrint", "desc": "Canine breeds, feline trivia, wildlife conservation, and animal rescue directories."},
             "social-news": {"name": "News, Journalism & Social", "icon": "Newspaper", "desc": "Headlines, RSS aggregators, community forums, and social telemetry."},
             "open-data": {"name": "Open Data & Demographics", "icon": "Building2", "desc": "Government census databases, patent filings, and public demographic records."},
             "entertainment": {"name": "Entertainment & Culture", "icon": "Sparkles", "desc": "Interactive trivia, pop culture quotes, jokes, and digital entertainment."},
@@ -341,8 +385,13 @@ class CatalogService:
         healthy_count = sum(1 for a in self._apis if a.health.status == HealthStatus.HEALTHY)
         degraded_count = sum(1 for a in self._apis if a.health.status == HealthStatus.DEGRADED)
         offline_count = sum(1 for a in self._apis if a.health.status == HealthStatus.OFFLINE)
-        avg_latency = int(sum(a.health.avg_latency_ms for a in self._apis) / total)
-        avg_uptime = round(sum(a.health.uptime_percent for a in self._apis) / total, 2)
+        untested_count = sum(1 for a in self._apis if a.health.status == HealthStatus.UNTESTED)
+
+        tested_latency = [a.health.avg_latency_ms for a in self._apis if a.health.avg_latency_ms is not None]
+        avg_latency = int(sum(tested_latency) / len(tested_latency)) if tested_latency else 0
+
+        tested_uptime = [a.health.uptime_percent for a in self._apis if a.health.uptime_percent is not None]
+        avg_uptime = round(sum(tested_uptime) / len(tested_uptime), 2) if tested_uptime else 100.0
 
         # Reflect actual timestamped observations performed today
         today_prefix = time.strftime("%Y-%m-%d", time.gmtime())
@@ -357,6 +406,7 @@ class CatalogService:
             healthy_count=healthy_count,
             degraded_count=degraded_count,
             offline_count=offline_count,
+            untested_count=untested_count,
             avg_latency_ms=avg_latency,
             global_uptime_percent=avg_uptime,
             total_checks_today=total_checks

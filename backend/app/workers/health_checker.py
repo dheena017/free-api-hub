@@ -4,7 +4,7 @@ import os
 import sys
 import time
 import httpx
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 # Ensure project root is in path when executed directly
 backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -12,101 +12,185 @@ if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 
 from app.config import settings
+from app.logger import logger
 
-async def ping_endpoint(client: httpx.AsyncClient, api: Dict[str, Any]) -> Dict[str, Any]:
-    full_url = api["base_url"].rstrip("/") + "/" + api["sample_endpoint"].lstrip("/")
-    start_time = time.perf_counter()
-    headers = {"User-Agent": "Free-API-Hub-HealthChecker/1.0"}
-    
-    # Include default headers if present
-    if "default_headers" in api and isinstance(api["default_headers"], dict):
-        headers.update(api["default_headers"])
+async def ping_endpoint(client: httpx.AsyncClient, api: Dict[str, Any], semaphore: asyncio.Semaphore) -> Dict[str, Any]:
+    async with semaphore:
+        base_url = api.get("base_url", "").rstrip("/")
+        sample_endpoint = api.get("sample_endpoint", "").lstrip("/")
+        full_url = f"{base_url}/{sample_endpoint}" if sample_endpoint else base_url
+        
+        start_time = time.perf_counter()
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Free-API-Hub-DailyHealthChecker/1.0",
+            "Accept": "application/json, text/plain, */*"
+        }
+        
+        if "default_headers" in api and isinstance(api["default_headers"], dict):
+            headers.update(api["default_headers"])
+
+        try:
+            response = await client.get(full_url, headers=headers, timeout=8.0, follow_redirects=True)
+            latency = int((time.perf_counter() - start_time) * 1000)
+            status_code = response.status_code
+            is_healthy = 200 <= status_code < 400
+        except httpx.TimeoutException:
+            latency = 8000
+            status_code = 0
+            is_healthy = False
+        except httpx.ConnectError:
+            latency = 9999
+            status_code = 0
+            is_healthy = False
+        except Exception:
+            latency = 9999
+            status_code = 0
+            is_healthy = False
+
+        # Status classification
+        if is_healthy:
+            if latency < 2000:
+                health_status = "healthy"
+                message = f"Operational (HTTP {status_code} in {latency}ms)"
+            else:
+                health_status = "degraded"
+                message = f"Degraded - High Latency ({latency}ms)"
+        elif status_code in (429, 403):
+            health_status = "degraded"
+            message = f"Degraded (HTTP {status_code} - Throttled or Auth Required)"
+        else:
+            health_status = "offline"
+            message = f"Offline (HTTP {status_code} - Connection Refused / 404)"
+
+        now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        return {
+            "slug": api.get("slug", ""),
+            "name": api.get("name", ""),
+            "target_url": full_url,
+            "status": health_status,
+            "status_code": status_code,
+            "latency_ms": latency if latency < 9999 else 0,
+            "last_checked": now_iso,
+            "message": message
+        }
+
+async def run_daily_health_check(
+    data_path: str = settings.DATA_FILE_PATH,
+    history_path: str = settings.HEALTH_HISTORY_FILE_PATH,
+    batch_size: int = 100,
+    max_concurrency: int = 10
+) -> Dict[str, Any]:
+    """
+    Performs authentic network probes to verify which APIs genuinely exist and are operational.
+    Records real observations with timestamps into health_history.json.
+    """
+    logger.info(f"Starting scheduled daily API existence and health check ({data_path})")
+    if not os.path.exists(data_path):
+        logger.warning(f"Data file {data_path} not found.")
+        return {"error": "Catalog data file not found"}
 
     try:
-        response = await client.get(full_url, headers=headers, timeout=10.0, follow_redirects=True)
-        latency = int((time.perf_counter() - start_time) * 1000)
-        status_code = response.status_code
-        is_healthy = status_code < 400
-    except Exception as ex:
-        latency = 9999
-        status_code = 0
-        is_healthy = False
+        with open(data_path, "r", encoding="utf-8") as f:
+            apis = json.load(f)
+    except Exception as e:
+        logger.error(f"Failed to read catalog data: {e}")
+        return {"error": str(e)}
 
-    # Status classification
-    if is_healthy and latency < 2000:
-        health_status = "healthy"
-    elif is_healthy and latency >= 2000:
-        health_status = "degraded"
-    elif status_code in (429, 403):
-        health_status = "degraded"
-    else:
-        health_status = "offline"
+    # Load existing history
+    observations = []
+    if os.path.exists(history_path):
+        try:
+            with open(history_path, "r", encoding="utf-8") as f:
+                observations = json.load(f)
+        except Exception:
+            observations = []
 
-    # Rolling uptime calculation
-    current_health = api.get("health", {})
-    prev_uptime = current_health.get("uptime_percent", 99.9)
-    # Smooth update: 95% weight on history, 5% on current probe
-    probe_score = 100.0 if is_healthy else 0.0
-    new_uptime = round(prev_uptime * 0.95 + probe_score * 0.05, 1)
-
-    prev_latency = current_health.get("avg_latency_ms", latency)
-    new_latency = int(prev_latency * 0.8 + (latency if latency < 9999 else prev_latency) * 0.2)
-
-    return {
-        "status": health_status,
-        "uptime_percent": max(0.0, min(100.0, new_uptime)),
-        "avg_latency_ms": new_latency,
-        "last_checked": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "last_status_code": status_code,
-        "message": f"Operational (HTTP {status_code})" if is_healthy else f"Degraded/Offline (HTTP {status_code})"
-    }
-
-async def run_health_checks(data_path: str = settings.DATA_FILE_PATH):
-    print(f"[{time.strftime('%X')}] Starting automated health check across catalog: {data_path}")
-    if not os.path.exists(data_path):
-        print(f"Data file {data_path} not found.")
-        return
-
-    with open(data_path, "r", encoding="utf-8") as f:
-        apis = json.load(f)
-
-    async with httpx.AsyncClient(limits=httpx.Limits(max_connections=10)) as client:
-        tasks = [ping_endpoint(client, api) for api in apis]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-
+    semaphore = asyncio.Semaphore(max_concurrency)
     healthy_count = 0
     degraded_count = 0
     offline_count = 0
+    probed_results = []
 
-    for i, res in enumerate(results):
-        if isinstance(res, dict):
-            apis[i]["health"] = res
-            status = res["status"]
-            if status == "healthy":
+    # Target up to batch_size APIs per run to respect upstream rate limits smoothly
+    target_apis = apis[:batch_size] if batch_size > 0 else apis
+
+    async with httpx.AsyncClient(limits=httpx.Limits(max_connections=max_concurrency)) as client:
+        tasks = [ping_endpoint(client, api, semaphore) for api in target_apis]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+    for res in results:
+        if isinstance(res, dict) and res.get("slug"):
+            probed_results.append(res)
+            st = res.get("status")
+            if st == "healthy":
                 healthy_count += 1
-            elif status == "degraded":
+            elif st == "degraded":
                 degraded_count += 1
             else:
                 offline_count += 1
 
-    with open(data_path, "w", encoding="utf-8") as f:
-        json.dump(apis, f, indent=2)
+            observations.append({
+                "slug": res["slug"],
+                "timestamp": res["last_checked"],
+                "status": res["status"],
+                "status_code": res["status_code"],
+                "latency_ms": res["latency_ms"]
+            })
 
-    print(
-        f"[{time.strftime('%X')}] Health check complete! "
-        f"🟢 Healthy: {healthy_count} | 🟡 Degraded: {degraded_count} | 🔴 Offline: {offline_count}"
+    # Keep latest 10,000 observations
+    if len(observations) > 10000:
+        observations = observations[-10000:]
+
+    try:
+        os.makedirs(os.path.dirname(history_path), exist_ok=True)
+        with open(history_path, "w", encoding="utf-8") as f:
+            json.dump(observations, f, indent=2)
+    except Exception as e:
+        logger.error(f"Failed to write health history: {e}")
+
+    logger.success(
+        f"Daily health verification complete! Probed: {len(probed_results)} | "
+        f"Operational: {healthy_count} | Degraded: {degraded_count} | Offline: {offline_count}"
     )
 
-async def main_loop(interval_seconds: int = 86400):
+    return {
+        "status": "completed",
+        "timestamp": now_iso,
+        "probed_count": len(probed_results),
+        "healthy_count": healthy_count,
+        "degraded_count": degraded_count,
+        "offline_count": offline_count
+    }
+
+async def daily_health_check_loop(interval_seconds: int = 86400):
+    """
+    Background worker loop that triggers real health checks once every 24 hours.
+    """
+    logger.info(f"Daily health check daemon started (Interval: {interval_seconds}s)")
     while True:
         try:
-            await run_health_checks()
+            # Run check on catalog
+            await run_daily_health_check(batch_size=50)
+            
+            # If backend catalog service is available, reload in-memory state
+            try:
+                from app.services import catalog_service
+                catalog_service._load_health_history()
+                catalog_service._apply_health_from_history()
+            except Exception:
+                pass
+        except asyncio.CancelledError:
+            logger.info("Daily health check daemon stopping on shutdown.")
+            break
         except Exception as e:
-            print(f"Error during health check loop: {e}")
+            logger.error(f"Error in daily health check loop: {e}")
+            
         await asyncio.sleep(interval_seconds)
 
 if __name__ == "__main__":
     if "--loop" in sys.argv:
-        asyncio.run(main_loop())
+        asyncio.run(daily_health_check_loop())
     else:
-        asyncio.run(run_health_checks())
+        asyncio.run(run_daily_health_check(batch_size=50))

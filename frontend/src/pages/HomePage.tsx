@@ -44,7 +44,9 @@ import {
   Clock,
   Trash2,
   X,
-  Activity
+  Activity,
+  Trophy,
+  PawPrint
 } from 'lucide-react';
 import { SkeletonGrid } from '../components/SkeletonCard';
 import { useHistory } from '../utils/useHistory';
@@ -157,6 +159,8 @@ export const HomePage: React.FC = () => {
     'food-drink': Utensils,
     'education-books': BookOpen,
     weather: CloudSun,
+    sports: Trophy,
+    animals: PawPrint,
     'social-news': Newspaper,
     'open-data': Building2,
     entertainment: Sparkles,
@@ -543,8 +547,65 @@ export const HomePage: React.FC = () => {
         )}
       </section>
 
+      {/* Comprehensive Categories Directory Grid */}
+      <section id="categories-directory" className="max-w-6xl mx-auto px-4 sm:px-6 pt-6">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+          <div>
+            <div className="inline-flex items-center gap-1.5 text-xs font-mono text-[#8AB4F8] uppercase tracking-wider mb-1">
+              <Layers className="h-3.5 w-3.5" />
+              <span>Full Category Index</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              Explore by API Category
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-400 mt-1">
+              Discover verified free APIs across {categories.length} organized developer domains
+            </p>
+          </div>
+          <Link
+            to="/explore"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#8AB4F8] hover:underline self-start sm:self-auto"
+          >
+            <span>View All in Directory</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {categories.map((cat) => {
+            const Icon = categoryIcons[cat.slug] || Code2;
+            return (
+              <Link
+                key={cat.slug}
+                to={`/category/${cat.slug}`}
+                className="p-4 rounded-2xl bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] transition-all group flex flex-col justify-between space-y-3"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="h-10 w-10 rounded-xl bg-[#1F1F1F] border border-[#3C4043] flex items-center justify-center text-[#8AB4F8] group-hover:scale-105 transition-transform flex-shrink-0">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-[#1F1F1F] border border-[#3C4043] text-slate-300 group-hover:text-white">
+                    {cat.count} APIs
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white group-hover:text-[#8AB4F8] transition-colors">
+                    {cat.name}
+                  </h3>
+                  {cat.description && (
+                    <p className="text-xs text-slate-400 line-clamp-2 mt-1 leading-relaxed">
+                      {cat.description}
+                    </p>
+                  )}
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
       {/* Feature Differentiators Grid */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-4">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-8">
         <div className="text-center max-w-2xl mx-auto mb-10">
           <div className="inline-flex items-center gap-1.5 text-xs font-mono text-slate-400 uppercase tracking-wider mb-1">
             <span>Why Developers Choose Us</span>

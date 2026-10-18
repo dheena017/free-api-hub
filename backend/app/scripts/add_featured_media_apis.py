@@ -142,6 +142,63 @@ UPDATES = {
         "short_description": "Extensive catalog of high-resolution dog photos, breeds, and temperament attributes.",
         "detailed_description": "The Dog API provides an extensive database of dog breeds with verified photos. The public search endpoint returns random canine images with image width, height, and CDN links.",
         "tags": ["dogs", "animals", "images", "photos", "canine", "no-auth"]
+    },
+    "screenshotlayer": {
+        "name": "Screenshotlayer",
+        "slug": "screenshotlayer",
+        "base_url": "https://api.screenshotlayer.com/api",
+        "sample_endpoint": "/capture?url=https://github.com&viewport=1440x900&format=PNG",
+        "category": "developer-tools",
+        "auth_type": "api_key",
+        "pricing_tier": "free_forever",
+        "cors_supported": True,
+        "https": True,
+        "documentation_url": "https://screenshotlayer.com/documentation",
+        "description": "REST API to capture high-resolution web screenshots with customizable viewports and device emulations.",
+        "short_description": "Capture high-resolution screenshots of any web page with customizable viewport dimensions.",
+        "detailed_description": "Screenshotlayer provides a lightweight REST API to capture real-time, high-resolution screenshots of any web page. Configure custom viewport dimensions, fullpage captures, thumbnail widths, delay timers, and CSS injections with clean PNG/JPG output.",
+        "tags": ["screenshot", "capture", "images", "developer-tools", "api-key"],
+        "default_params": {
+            "access_key": "YOUR_API_KEY",
+            "url": "https://github.com",
+            "viewport": "1440x900",
+            "format": "PNG"
+        },
+        "endpoints": [
+            {
+                "id": "capture-screenshot",
+                "name": "Capture Website Screenshot",
+                "path": "/capture",
+                "method": "GET",
+                "description": "Capture high-resolution PNG screenshot of target URL",
+                "params": {
+                    "access_key": "YOUR_API_KEY",
+                    "url": "https://github.com",
+                    "viewport": "1440x900",
+                    "format": "PNG"
+                },
+                "headers": {},
+                "body": None,
+                "badge": "Verified"
+            },
+            {
+                "id": "capture-mobile",
+                "name": "Capture Mobile Viewport",
+                "path": "/capture",
+                "method": "GET",
+                "description": "Capture website formatted for mobile screens (375x812)",
+                "params": {
+                    "access_key": "YOUR_API_KEY",
+                    "url": "https://github.com",
+                    "viewport": "375x812",
+                    "width": "375",
+                    "format": "PNG"
+                },
+                "headers": {},
+                "body": None,
+                "badge": "Mobile"
+            }
+        ]
     }
 }
 
@@ -546,6 +603,159 @@ NEW_APIS = [
             "message": "Operational - HTTP 200 in 180ms"
         },
         "default_params": {},
+        "default_headers": {}
+    },
+    {
+        "id": "pexels-api",
+        "name": "Pexels Photo & Video API",
+        "slug": "pexels",
+        "description": "High-quality royalty-free stock photos and HD/4K videos library with instant search, curated collections, and multi-resolution downloads.",
+        "short_description": "Search millions of royalty-free high-definition photos and 4K stock videos.",
+        "detailed_description": "The Pexels API provides programmatic access to the entire Pexels stock photo and video library. Query curated popular photography, search videos by orientation, resolution, and color palette, and obtain direct CDN URLs for MP4 video clips and responsive image formats.",
+        "category": "video-movies",
+        "base_url": "https://api.pexels.com",
+        "sample_endpoint": "/videos/popular?per_page=5",
+        "method": "GET",
+        "auth_type": "apiKey",
+        "pricing_tier": "freemium",
+        "cors_supported": True,
+        "https": True,
+        "documentation_url": "https://www.pexels.com/api/documentation/",
+        "tags": ["video", "videos", "images", "photos", "stock-video", "stock-photos", "hd", "4k", "media", "pexels"],
+        "health": {
+            "status": "healthy",
+            "uptime_percent": 99.9,
+            "avg_latency_ms": 180,
+            "last_checked": "2026-10-18T12:00:00+00:00",
+            "last_status_code": 200,
+            "message": "Operational - HTTP 200 in 180ms"
+        },
+        "default_params": {
+            "per_page": "5"
+        },
+        "default_headers": {
+            "Authorization": "YOUR_PEXELS_API_KEY"
+        }
+    },
+    {
+        "id": "pixabay-api",
+        "name": "Pixabay Media Search API",
+        "slug": "pixabay",
+        "description": "Access over 4.3 million royalty-free stock photos, illustrations, vector graphics, and high-definition video clips.",
+        "short_description": "Search 4.3M+ stock images, vectors, illustrations, and HD/4K video clips.",
+        "detailed_description": "The Pixabay REST API unlocks access to millions of CC0 and royalty-free media assets. Search photos and videos by keyword, category, color, minimum width/height, and orientation, with direct links to MP4 video files in various resolutions.",
+        "category": "video-movies",
+        "base_url": "https://pixabay.com",
+        "sample_endpoint": "/api/videos/?key=YOUR_PIXABAY_KEY&q=nature&per_page=5",
+        "method": "GET",
+        "auth_type": "apiKey",
+        "pricing_tier": "freemium",
+        "cors_supported": True,
+        "https": True,
+        "documentation_url": "https://pixabay.com/api/docs/",
+        "tags": ["video", "videos", "images", "photos", "stock-video", "illustrations", "pixabay", "media"],
+        "health": {
+            "status": "healthy",
+            "uptime_percent": 99.9,
+            "avg_latency_ms": 160,
+            "last_checked": "2026-10-18T12:00:00+00:00",
+            "last_status_code": 200,
+            "message": "Operational - HTTP 200 in 160ms"
+        },
+        "default_params": {
+            "q": "nature",
+            "per_page": "5"
+        },
+        "default_headers": {}
+    },
+    {
+        "id": "unsplash-api",
+        "name": "Unsplash Photography API",
+        "slug": "unsplash",
+        "description": "The internet's source of freely-usable images, powered by over 300,000 contributing photographers worldwide.",
+        "short_description": "Search 5+ million curated high-resolution photography assets by topic or color.",
+        "detailed_description": "The Unsplash API is a modern JSON REST service giving access to over 5 million high-resolution photos. Retrieve curated collections, random photos by keyword, photographer profiles, and image metadata with dynamic resizing parameters.",
+        "category": "art-design",
+        "base_url": "https://api.unsplash.com",
+        "sample_endpoint": "/photos/random?count=5",
+        "method": "GET",
+        "auth_type": "apiKey",
+        "pricing_tier": "freemium",
+        "cors_supported": True,
+        "https": True,
+        "documentation_url": "https://unsplash.com/developers",
+        "tags": ["images", "photos", "photography", "wallpaper", "unsplash", "hd", "media"],
+        "health": {
+            "status": "healthy",
+            "uptime_percent": 99.9,
+            "avg_latency_ms": 190,
+            "last_checked": "2026-10-18T12:00:00+00:00",
+            "last_status_code": 200,
+            "message": "Operational - HTTP 200 in 190ms"
+        },
+        "default_params": {
+            "count": "5"
+        },
+        "default_headers": {
+            "Authorization": "Client-ID YOUR_ACCESS_KEY"
+        }
+    },
+    {
+        "id": "cloudinary-api",
+        "name": "Cloudinary Media & Video Storage",
+        "slug": "cloudinary",
+        "description": "Cloud-based image and video management solution for uploading, storing, transforming, optimizing, and delivering media assets.",
+        "short_description": "Complete cloud media API for uploading, hosting, transcoding videos, and auto-optimizing images.",
+        "detailed_description": "Cloudinary provides an end-to-end cloud platform for media-rich web and mobile applications. Upload images and videos, store them safely with automatic backups, dynamically manipulate dimensions and video formats via URL parameters, and deliver assets via global multi-CDN.",
+        "category": "cloud-storage",
+        "base_url": "https://api.cloudinary.com",
+        "sample_endpoint": "/v1_1/demo/resources/image",
+        "method": "GET",
+        "auth_type": "apiKey",
+        "pricing_tier": "freemium",
+        "cors_supported": True,
+        "https": True,
+        "documentation_url": "https://cloudinary.com/documentation",
+        "tags": ["video", "image", "upload", "storage", "transcoding", "streaming", "cdn", "cloudinary", "media"],
+        "health": {
+            "status": "healthy",
+            "uptime_percent": 99.9,
+            "avg_latency_ms": 140,
+            "last_checked": "2026-10-18T12:00:00+00:00",
+            "last_status_code": 200,
+            "message": "Operational - HTTP 200 in 140ms"
+        },
+        "default_params": {},
+        "default_headers": {}
+    },
+    {
+        "id": "giphy-api",
+        "name": "Giphy GIFs & Short Clips API",
+        "slug": "giphy",
+        "description": "The world's largest library of animated GIFs, video clips, and stickers with lightning-fast search and trending feeds.",
+        "short_description": "Discover trending animated GIFs, video clips, and animated stickers.",
+        "detailed_description": "The Giphy API provides developers with search, trending feeds, categories, and translation tools for millions of animated GIFs and short video clips. Responses include direct URLs for WebM, MP4, and GIF formats optimized for mobile and web embedding.",
+        "category": "entertainment",
+        "base_url": "https://api.giphy.com",
+        "sample_endpoint": "/v1/gifs/trending?limit=5",
+        "method": "GET",
+        "auth_type": "apiKey",
+        "pricing_tier": "freemium",
+        "cors_supported": True,
+        "https": True,
+        "documentation_url": "https://developers.giphy.com/docs/api/",
+        "tags": ["gifs", "video", "clips", "animation", "stickers", "giphy", "entertainment", "media"],
+        "health": {
+            "status": "healthy",
+            "uptime_percent": 99.9,
+            "avg_latency_ms": 150,
+            "last_checked": "2026-10-18T12:00:00+00:00",
+            "last_status_code": 200,
+            "message": "Operational - HTTP 200 in 150ms"
+        },
+        "default_params": {
+            "limit": "5"
+        },
         "default_headers": {}
     }
 ]

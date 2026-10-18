@@ -70,6 +70,30 @@ function generateDynamicPayload(api: ApiItem, params: Record<string, string>): s
  * Eliminates all static/hardcoded slug entries so all 4,000+ catalog APIs are fully supported.
  */
 export function getEndpointPresets(api: ApiItem): EndpointPreset[] {
+  // 1. Data-First: If structured endpoints exist directly in catalog data, prioritize them!
+  if (api.endpoints && api.endpoints.length > 0) {
+    return api.endpoints.map((ep, idx) => {
+      const rawPath = ep.path.startsWith('/') ? ep.path : `/${ep.path}`;
+      const { params: extractedParams } = extractParamsFromEndpoint(rawPath);
+      const mergedParams = {
+        ...extractedParams,
+        ...(ep.params || {})
+      };
+
+      return {
+        id: ep.id || `curated-${idx}`,
+        label: ep.name,
+        description: ep.description || `${ep.method || 'GET'} ${rawPath}`,
+        method: ep.method || 'GET',
+        endpoint: rawPath,
+        params: Object.keys(mergedParams).length > 0 ? mergedParams : undefined,
+        headers: ep.headers && Object.keys(ep.headers).length > 0 ? ep.headers : (api.default_headers && Object.keys(api.default_headers).length > 0 ? api.default_headers : undefined),
+        body: ep.body,
+        badge: ep.badge || (idx === 0 ? 'Verified' : undefined)
+      };
+    });
+  }
+
   const presets: EndpointPreset[] = [];
   const rawSample = api.sample_endpoint || '/';
   const formattedSample = rawSample.startsWith('/') ? rawSample : `/${rawSample}`;

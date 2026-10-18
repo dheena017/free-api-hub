@@ -55,7 +55,8 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
     );
   };
 
-  const getLatencyColor = (ms: number) => {
+  const getLatencyColor = (ms?: number | null) => {
+    if (!ms) return 'text-slate-500';
     if (ms <= 150) return 'text-[#81C995]';
     if (ms <= 300) return 'text-[#8AB4F8]';
     return 'text-[#FDD663]';
@@ -100,13 +101,17 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
           <div className="hidden sm:flex items-center gap-2 font-mono text-slate-400">
             <LivePingBadge
               status={api.health.status}
-              uptimePercent={api.health.uptime_percent}
+              uptimePercent={api.health.uptime_percent ?? undefined}
               pulse={false}
             />
-            <span className="text-[#3C4043]">•</span>
-            <span className={getLatencyColor(api.health.avg_latency_ms)}>
-              {api.health.avg_latency_ms}ms
-            </span>
+            {api.health.avg_latency_ms != null && (
+              <>
+                <span className="text-[#3C4043]">•</span>
+                <span className={getLatencyColor(api.health.avg_latency_ms)}>
+                  {api.health.avg_latency_ms}ms
+                </span>
+              </>
+            )}
           </div>
 
           <button
@@ -217,13 +222,17 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
         <div className="flex items-center gap-2 text-slate-400 font-mono flex-wrap">
           <LivePingBadge
             status={api.health.status}
-            uptimePercent={api.health.uptime_percent}
+            uptimePercent={api.health.uptime_percent ?? undefined}
             pulse={false}
           />
-          <span className="text-[#3C4043]">•</span>
-          <span className={`font-semibold ${getLatencyColor(api.health.avg_latency_ms)}`}>
-            {api.health.avg_latency_ms}ms
-          </span>
+          {api.health.avg_latency_ms != null && (
+            <>
+              <span className="text-[#3C4043]">•</span>
+              <span className={`font-semibold ${getLatencyColor(api.health.avg_latency_ms)}`}>
+                {api.health.avg_latency_ms}ms
+              </span>
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-2">

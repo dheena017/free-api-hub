@@ -75,8 +75,10 @@ function parseQueryParams(url: string): Record<string, string> {
   return params;
 }
 
-export function formatLatencyBadge(latencyMs: number): { label: string; colorClass: string } {
-  if (latencyMs < 150) {
+export function formatLatencyBadge(latencyMs?: number | null): { label: string; colorClass: string } {
+  if (latencyMs == null || latencyMs <= 0) {
+    return { label: 'Untested', colorClass: 'text-slate-400 bg-slate-500/10 border-slate-500/30' };
+  } else if (latencyMs < 150) {
     return { label: `${latencyMs}ms (Blazing)`, colorClass: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' };
   } else if (latencyMs < 400) {
     return { label: `${latencyMs}ms (Good)`, colorClass: 'text-sky-400 bg-sky-500/10 border-sky-500/30' };

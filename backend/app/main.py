@@ -10,11 +10,21 @@ from app.security import SSRFSecurityError, sanitize_url_for_logging
 from app.services import catalog_service
 
 
+import asyncio
+from app.workers.health_checker import daily_health_check_loop
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.success(f"FastAPI Server ready! Listening on port {settings.PORT}")
     logger.info(f"API endpoints mounted at: {settings.API_V1_STR} | Docs: http://localhost:{settings.PORT}/docs")
+    daily_task = asyncio.create_task(daily_health_check_loop())
     yield
+    daily_task.cancel()
+    try:
+        await daily_task
+    except asyncio.CancelledError:
+        pass
     logger.info("FastAPI server shut down successfully.")
 
 

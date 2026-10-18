@@ -3,7 +3,7 @@ import { HealthStatus } from '../types/api';
 
 interface LivePingBadgeProps {
   status: HealthStatus;
-  uptimePercent?: number;
+  uptimePercent?: number | null;
   showText?: boolean;
   pulse?: boolean;
   label?: string;
@@ -31,6 +31,11 @@ export const LivePingBadge: React.FC<LivePingBadgeProps> = ({
     dotColor = 'bg-rose-500';
     textColor = 'text-rose-400';
     label = customLabel || 'Offline';
+  } else if (status === 'untested') {
+    ringColor = 'bg-slate-500';
+    dotColor = 'bg-slate-400';
+    textColor = 'text-slate-400';
+    label = customLabel || 'Untested';
   }
 
   return (
@@ -40,7 +45,7 @@ export const LivePingBadge: React.FC<LivePingBadgeProps> = ({
       </span>
       {showText && (
         <span className={`text-xs font-medium font-mono ${textColor}`}>
-          {uptimePercent !== undefined ? `${uptimePercent}% Uptime` : label}
+          {uptimePercent != null ? `${uptimePercent}% Uptime` : label}
         </span>
       )}
     </div>

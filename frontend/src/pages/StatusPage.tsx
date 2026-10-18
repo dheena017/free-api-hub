@@ -41,8 +41,8 @@ const PAGE_SIZE_OPTIONS: SelectOption[] = [
   { value: '100', label: '100 per page' }
 ];
 
-function formatLastChecked(dateStr?: string): string {
-  if (!dateStr) return 'Recently verified';
+function formatLastChecked(dateStr?: string | null): string {
+  if (!dateStr) return 'Awaiting daily check';
   try {
     const d = new Date(dateStr);
     const now = Date.now();
@@ -60,7 +60,7 @@ export const StatusPage: React.FC = () => {
   const [stats, setStats] = useState<CatalogStats | null>(null);
   const [endpoints, setEndpoints] = useState<ApiItem[]>([]);
   const [totalEndpoints, setTotalEndpoints] = useState<number>(0);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'healthy' | 'degraded' | 'offline'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'healthy' | 'degraded' | 'offline' | 'untested'>('all');
   const [statusSort, setStatusSort] = useState<'uptime' | 'latency' | 'name'>('uptime');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -436,6 +436,21 @@ export const StatusPage: React.FC = () => {
               🔴 Offline ({stats?.offline_count ?? 0})
             </button>
           ) : null}
+          {(stats?.untested_count || 0) > 0 || statusFilter === 'untested' ? (
+            <button
+              onClick={() => {
+                setStatusFilter('untested');
+                setCurrentPage(1);
+              }}
+              className={`px-3 py-1.5 rounded-lg font-medium transition-colors border ${
+                statusFilter === 'untested'
+                  ? 'bg-slate-400 text-[#1F1F1F] font-bold border-slate-400'
+                  : 'bg-[#1F1F1F] text-slate-400 border-[#3C4043] hover:bg-[#303134]'
+              }`}
+            >
+              ⚪ Untested ({stats?.untested_count ?? 0})
+            </button>
+          ) : null}
         </div>
 
         {/* Right Search, Page Size & Sort */}
@@ -528,12 +543,14 @@ export const StatusPage: React.FC = () => {
                         </span>
                         <span
                           className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
-                            ep.health.last_status_code >= 200 && ep.health.last_status_code < 400
+                            ep.health.last_status_code && ep.health.last_status_code >= 200 && ep.health.last_status_code < 400
                               ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                              : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                              : ep.health.last_status_code
+                              ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                              : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
                           }`}
                         >
-                          HTTP {ep.health.last_status_code || 200}
+                          {ep.health.last_status_code ? `HTTP ${ep.health.last_status_code}` : 'Pending Probe'}
                         </span>
                       </div>
                       <div className="text-xs font-mono text-slate-400 truncate mt-1">
@@ -547,13 +564,15 @@ export const StatusPage: React.FC = () => {
                     {/* Visual uptime tick bars */}
                     <div
                       className="hidden lg:flex items-center gap-1"
-                      title={`Uptime: ${ep.health.uptime_percent}% • Status: ${ep.health.status} • Checked ${formatLastChecked(ep.health.last_checked)}`}
+                      title={`Uptime: ${ep.health.uptime_percent != null ? `${ep.health.uptime_percent}%` : 'Untested'} • Status: ${ep.health.status} • Checked ${formatLastChecked(ep.health.last_checked)}`}
                     >
                       {Array.from({ length: 12 }).map((_, idx) => (
                         <div
                           key={idx}
                           className={`w-1.5 h-5 rounded-sm transition-colors ${
-                            ep.health.status === 'offline' && idx >= 9
+                            ep.health.status === 'untested'
+                              ? 'bg-slate-700/50'
+                              : ep.health.status === 'offline' && idx >= 9
                               ? 'bg-rose-500'
                               : ep.health.status === 'degraded' && idx >= 10
                               ? 'bg-amber-400'
@@ -564,9 +583,11 @@ export const StatusPage: React.FC = () => {
                     </div>
 
                     <div className="text-right font-mono">
-                      <div className="text-white font-bold">{ep.health.uptime_percent}%</div>
+                      <div className="text-white font-bold">
+                        {ep.health.uptime_percent != null ? `${ep.health.uptime_percent}%` : '--'}
+                      </div>
                       <div className={`text-[11px] ${latency.colorClass.split(' ')[0]}`}>
-                        {ep.health.avg_latency_ms}ms
+                        {ep.health.avg_latency_ms != null ? `${ep.health.avg_latency_ms}ms` : 'Untested'}
                       </div>
                       <div className="text-[10px] text-slate-400">
                         {formatLastChecked(ep.health.last_checked)}
