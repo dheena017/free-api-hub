@@ -258,17 +258,17 @@ export const HomePage: React.FC = () => {
               <button
                 key={item.query}
                 onClick={() => navigate(`/explore?q=${encodeURIComponent(item.query)}`)}
-                className="px-2.5 py-1 rounded-full bg-slate-900/60 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition-all text-[11px] cursor-pointer"
+                className="px-2.5 py-1 rounded-full bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] text-slate-300 hover:text-white transition-all text-[11px] cursor-pointer"
               >
                 {item.label}
               </button>
             ))}
             <button
               onClick={handleSurpriseMe}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] text-slate-300 hover:text-white transition-all text-[11px] font-medium cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] text-slate-300 hover:text-white transition-all text-[11px] font-medium cursor-pointer"
               title="Test a surprise random API"
             >
-              <Dices className="h-3 w-3 text-[#8AB4F8]" />
+              <Dices className="h-3 w-3 text-slate-400" />
               <span>Surprise Me</span>
             </button>
           </div>
@@ -278,20 +278,15 @@ export const HomePage: React.FC = () => {
         <div className="mt-12 grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-2.5 max-w-5xl mx-auto">
           {categories.slice(0, 10).map((cat) => {
             const Icon = categoryIcons[cat.slug] || Code2;
-            const theme = categoryThemes[cat.slug] || {
-              iconColor: 'text-sky-400',
-              bg: 'bg-sky-500/10',
-              border: 'hover:border-sky-500/50'
-            };
 
             return (
               <Link
                 key={cat.slug}
                 to={`/category/${cat.slug}`}
-                className={`flex flex-col items-center justify-center gap-2 p-3 rounded-2xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 ${theme.border} group transition-all duration-200 hover:-translate-y-1 hover:shadow-lg`}
+                className="flex flex-col items-center justify-center gap-2 p-3 rounded-2xl bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] group transition-all duration-150"
                 title={`${cat.name} (${cat.count} APIs)`}
               >
-                <div className={`h-10 w-10 rounded-xl ${theme.bg} flex items-center justify-center ${theme.iconColor} group-hover:scale-110 transition-transform`}>
+                <div className="h-10 w-10 rounded-xl bg-[#1F1F1F] border border-[#3C4043] flex items-center justify-center text-slate-300 group-hover:text-white transition-colors">
                   <Icon className="h-5 w-5" />
                 </div>
                 <span className="text-xs font-semibold text-slate-300 group-hover:text-white transition-colors text-center truncate w-full">
@@ -308,9 +303,8 @@ export const HomePage: React.FC = () => {
         <div className="relative overflow-hidden rounded-3xl bg-[#28292A] border border-[#3C4043] p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-6 border-b border-[#3C4043]">
             <div className="flex items-center gap-3">
-              <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
+              <span className="relative flex h-2.5 w-2.5 items-center justify-center">
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
               </span>
               <div>
                 <span className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
@@ -327,7 +321,7 @@ export const HomePage: React.FC = () => {
 
             <Link
               to="/status"
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 text-xs font-mono text-sky-400 hover:text-white transition-all self-start sm:self-auto group"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] text-xs font-mono text-slate-300 hover:text-white transition-all self-start sm:self-auto group"
             >
               <span>View Real-Time Probe Log</span>
               <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
@@ -336,10 +330,10 @@ export const HomePage: React.FC = () => {
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {/* Stat 1 */}
-            <div className="bg-slate-950/40 border border-slate-800/60 rounded-2xl p-4 sm:p-5 relative overflow-hidden group hover:border-slate-700 transition-colors">
+            <div className="bg-[#1F1F1F] border border-[#3C4043] hover:border-[#5F6368] rounded-2xl p-4 sm:p-5 relative overflow-hidden group transition-colors">
               <div className="text-xs text-slate-400 font-medium mb-1 flex items-center justify-between">
                 <span>Verified Endpoints</span>
-                <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">Indexed</span>
+                <span className="text-[10px] font-mono text-[#81C995] bg-[#81C995]/10 px-1.5 py-0.5 rounded">Indexed</span>
               </div>
               <div className="text-3xl sm:text-4xl font-black font-mono text-white tracking-tight">
                 {stats?.total_apis ? stats.total_apis.toLocaleString() : '4,045'}+
@@ -350,12 +344,12 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* Stat 2 */}
-            <div className="bg-slate-950/40 border border-slate-800/60 rounded-2xl p-4 sm:p-5 relative overflow-hidden group hover:border-slate-700 transition-colors">
+            <div className="bg-[#1F1F1F] border border-[#3C4043] hover:border-[#5F6368] rounded-2xl p-4 sm:p-5 relative overflow-hidden group transition-colors">
               <div className="text-xs text-slate-400 font-medium mb-1 flex items-center justify-between">
                 <span>Verified Uptime</span>
-                <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">24h SLA</span>
+                <span className="text-[10px] font-mono text-[#81C995] bg-[#81C995]/10 px-1.5 py-0.5 rounded">24h SLA</span>
               </div>
-              <div className="text-3xl sm:text-4xl font-black font-mono text-emerald-400 tracking-tight">
+              <div className="text-3xl sm:text-4xl font-black font-mono text-[#81C995] tracking-tight">
                 {stats?.global_uptime_percent || '99.79'}%
               </div>
               {/* Mini visual uptime bars */}
@@ -363,7 +357,7 @@ export const HomePage: React.FC = () => {
                 {[...Array(14)].map((_, i) => (
                   <span
                     key={i}
-                    className="h-2 flex-1 rounded-sm bg-emerald-500/70 hover:bg-emerald-400 transition-colors"
+                    className="h-2 flex-1 rounded-sm bg-[#81C995]/70 hover:bg-[#81C995] transition-colors"
                     title="Probe Successful"
                   />
                 ))}
@@ -371,12 +365,12 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* Stat 3 */}
-            <div className="bg-slate-950/40 border border-slate-800/60 rounded-2xl p-4 sm:p-5 relative overflow-hidden group hover:border-slate-700 transition-colors">
+            <div className="bg-[#1F1F1F] border border-[#3C4043] hover:border-[#5F6368] rounded-2xl p-4 sm:p-5 relative overflow-hidden group transition-colors">
               <div className="text-xs text-slate-400 font-medium mb-1 flex items-center justify-between">
                 <span>Average Response</span>
-                <span className="text-[10px] font-mono text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded">Global</span>
+                <span className="text-[10px] font-mono text-slate-300 bg-[#303134] px-1.5 py-0.5 rounded">Global</span>
               </div>
-              <div className="text-3xl sm:text-4xl font-black font-mono text-sky-400 tracking-tight">
+              <div className="text-3xl sm:text-4xl font-black font-mono text-slate-100 tracking-tight">
                 {stats?.avg_latency_ms || '127'}ms
               </div>
               <div className="text-[11px] text-slate-500 mt-2 font-mono">
@@ -385,10 +379,10 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* Stat 4 */}
-            <div className="bg-slate-950/40 border border-slate-800/60 rounded-2xl p-4 sm:p-5 relative overflow-hidden group hover:border-slate-700 transition-colors">
+            <div className="bg-[#1F1F1F] border border-[#3C4043] hover:border-[#5F6368] rounded-2xl p-4 sm:p-5 relative overflow-hidden group transition-colors">
               <div className="text-xs text-slate-400 font-medium mb-1 flex items-center justify-between">
                 <span>Credit Cards</span>
-                <span className="text-[10px] font-mono text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded">Guaranteed</span>
+                <span className="text-[10px] font-mono text-slate-300 bg-[#303134] px-1.5 py-0.5 rounded">Guaranteed</span>
               </div>
               <div className="text-3xl sm:text-4xl font-black font-mono text-white tracking-tight">
                 $0
@@ -404,10 +398,10 @@ export const HomePage: React.FC = () => {
       {/* Recently Viewed APIs Shelf */}
       {history.length > 0 && (
         <section className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 shadow-sm">
-            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
+          <div className="bg-[#28292A] border border-[#3C4043] rounded-2xl p-5">
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#3C4043]">
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-sky-400" />
+                <Clock className="h-4 w-4 text-slate-400" />
                 <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
                   Recently Viewed APIs ({history.length})
                 </h3>
@@ -426,16 +420,16 @@ export const HomePage: React.FC = () => {
               {history.map((item) => (
                 <div
                   key={item.slug}
-                  className="flex-shrink-0 flex items-center gap-2 pl-3 pr-2 py-2 rounded-xl bg-slate-950/50 hover:bg-slate-800/70 border border-slate-800 hover:border-sky-500/40 transition-all group"
+                  className="flex-shrink-0 flex items-center gap-2 pl-3 pr-2 py-2 rounded-xl bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] transition-all group"
                 >
                   <Link
                     to={`/api/${item.slug}`}
                     className="flex items-center gap-2"
                   >
-                    <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 group-hover:text-white border border-slate-700/50">
+                    <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-[#28292A] text-slate-300 group-hover:text-white border border-[#3C4043]">
                       {item.category.split('-')[0]}
                     </span>
-                    <span className="text-xs font-semibold text-slate-200 group-hover:text-sky-300 transition-colors whitespace-nowrap">
+                    <span className="text-xs font-semibold text-slate-200 group-hover:text-white transition-colors whitespace-nowrap">
                       {item.name}
                     </span>
                   </Link>
@@ -471,7 +465,7 @@ export const HomePage: React.FC = () => {
 
           <Link
             to="/explore"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-xs font-semibold text-sky-400 hover:text-white transition-all self-start sm:self-auto group"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] text-xs font-semibold text-slate-200 hover:text-white transition-all self-start sm:self-auto group"
           >
             <span>Browse all {stats?.total_apis ? stats.total_apis.toLocaleString() : '4,045'} APIs</span>
             <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
@@ -534,7 +528,7 @@ export const HomePage: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className="p-12 text-center bg-slate-900/60 rounded-2xl border border-slate-800 text-sm text-slate-400">
+          <div className="p-12 text-center bg-[#28292A] rounded-2xl border border-[#3C4043] text-sm text-slate-400">
             {featuredTab === 'saved'
               ? 'No bookmarked APIs found yet. Click the star icon on any card to save it!'
               : 'No APIs found in this category.'}
@@ -545,7 +539,7 @@ export const HomePage: React.FC = () => {
       {/* Feature Differentiators Grid */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-4">
         <div className="text-center max-w-2xl mx-auto mb-10">
-          <div className="inline-flex items-center gap-1.5 text-xs font-mono text-sky-400 uppercase tracking-wider mb-1">
+          <div className="inline-flex items-center gap-1.5 text-xs font-mono text-slate-400 uppercase tracking-wider mb-1">
             <span>Why Developers Choose Us</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
@@ -557,41 +551,41 @@ export const HomePage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <div className="bg-[#28292A] p-6 rounded-2xl border border-[#3C4043] hover:border-[#8AB4F8] space-y-3 transition-colors group">
-            <div className="h-10 w-10 rounded-xl bg-[#81C995]/10 border border-[#81C995]/30 text-[#81C995] flex items-center justify-center">
+          <div className="bg-[#28292A] hover:bg-[#303134] p-6 rounded-2xl border border-[#3C4043] hover:border-[#5F6368] space-y-3 transition-colors group">
+            <div className="h-10 w-10 rounded-xl bg-[#1F1F1F] border border-[#3C4043] text-[#81C995] flex items-center justify-center">
               <ShieldCheck className="h-5 w-5" />
             </div>
-            <h3 className="text-sm font-bold text-white group-hover:text-[#8AB4F8] transition-colors">Zero Credit Card Traps</h3>
+            <h3 className="text-sm font-bold text-white group-hover:text-slate-200 transition-colors">Zero Credit Card Traps</h3>
             <p className="text-xs text-slate-400 leading-relaxed">
               Every indexed endpoint is genuinely free forever or has an open tier without entering financial information.
             </p>
           </div>
 
-          <div className="bg-[#28292A] p-6 rounded-2xl border border-[#3C4043] hover:border-[#8AB4F8] space-y-3 transition-colors group">
-            <div className="h-10 w-10 rounded-xl bg-[#8AB4F8]/10 border border-[#8AB4F8]/30 text-[#8AB4F8] flex items-center justify-center">
+          <div className="bg-[#28292A] hover:bg-[#303134] p-6 rounded-2xl border border-[#3C4043] hover:border-[#5F6368] space-y-3 transition-colors group">
+            <div className="h-10 w-10 rounded-xl bg-[#1F1F1F] border border-[#3C4043] text-slate-300 flex items-center justify-center">
               <Play className="h-5 w-5" />
             </div>
-            <h3 className="text-sm font-bold text-white group-hover:text-[#8AB4F8] transition-colors">Live In-Browser Playground</h3>
+            <h3 className="text-sm font-bold text-white group-hover:text-slate-200 transition-colors">Live In-Browser Playground</h3>
             <p className="text-xs text-slate-400 leading-relaxed">
               Send live HTTP requests straight from your browser. Inspect status codes, latency, headers, and formatted JSON payloads.
             </p>
           </div>
 
-          <div className="bg-[#28292A] p-6 rounded-2xl border border-[#3C4043] hover:border-[#8AB4F8] space-y-3 transition-colors group">
-            <div className="h-10 w-10 rounded-xl bg-[#FDD663]/10 border border-[#FDD663]/30 text-[#FDD663] flex items-center justify-center">
+          <div className="bg-[#28292A] hover:bg-[#303134] p-6 rounded-2xl border border-[#3C4043] hover:border-[#5F6368] space-y-3 transition-colors group">
+            <div className="h-10 w-10 rounded-xl bg-[#1F1F1F] border border-[#3C4043] text-[#FDD663] flex items-center justify-center">
               <Zap className="h-5 w-5" />
             </div>
-            <h3 className="text-sm font-bold text-white group-hover:text-[#8AB4F8] transition-colors">Automated Health Probes</h3>
+            <h3 className="text-sm font-bold text-white group-hover:text-slate-200 transition-colors">Automated Health Probes</h3>
             <p className="text-xs text-slate-400 leading-relaxed">
               Our automated daemon periodically pings every single endpoint. Dead or deprecated APIs are pruned to avoid broken code.
             </p>
           </div>
 
-          <div className="bg-[#28292A] p-6 rounded-2xl border border-[#3C4043] hover:border-[#8AB4F8] space-y-3 transition-colors group">
-            <div className="h-10 w-10 rounded-xl bg-[#8AB4F8]/10 border border-[#8AB4F8]/30 text-[#8AB4F8] flex items-center justify-center">
+          <div className="bg-[#28292A] hover:bg-[#303134] p-6 rounded-2xl border border-[#3C4043] hover:border-[#5F6368] space-y-3 transition-colors group">
+            <div className="h-10 w-10 rounded-xl bg-[#1F1F1F] border border-[#3C4043] text-slate-300 flex items-center justify-center">
               <Code2 className="h-5 w-5" />
             </div>
-            <h3 className="text-sm font-bold text-white group-hover:text-[#8AB4F8] transition-colors">Ready Code Snippets</h3>
+            <h3 className="text-sm font-bold text-white group-hover:text-slate-200 transition-colors">Ready Code Snippets</h3>
             <p className="text-xs text-slate-400 leading-relaxed">
               Copy pre-tested code snippets for cURL, JavaScript fetch, Python requests, Node.js, and Go with 1 click.
             </p>

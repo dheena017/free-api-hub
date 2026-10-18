@@ -1,15 +1,21 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ApiItem, ProxyResponse } from '../types/api';
 import { executeProxy } from '../api/client';
 import {
   SUPPORTED_LANGUAGES,
   SnippetLanguage,
   generateSnippetForLanguage,
-  buildFullUrl,
-  formatLatencyBadge
+  buildFullUrl
 } from '../utils/codeSnippets';
 import { extractMediaItems } from '../utils/mediaExtractor';
 import { MediaPreviewViewer } from './MediaPreviewViewer';
+import { HtmlPreviewViewer } from './HtmlPreviewViewer';
+import { JsonTreeViewer } from './JsonTreeViewer';
+import { CurlImportModal } from './CurlImportModal';
+import { RequestHistoryBar, HistoryItem } from './RequestHistoryBar';
+import { getEndpointPresets, EndpointPreset } from '../utils/endpointPresets';
+import { generateTypeScriptTypes, generateJsonSchema } from '../utils/typeGenerator';
+import { ParsedCurl } from '../utils/curlParser';
 import {
   Play,
   Copy,
@@ -18,7 +24,6 @@ import {
   Clock,
   Database,
   Terminal,
-  Layers,
   AlertCircle,
   ExternalLink,
   HelpCircle,
@@ -32,9 +37,16 @@ import {
   FileText,
   AlignLeft,
   Sparkles,
-  RefreshCw,
   Braces,
-  ShieldAlert
+  ShieldAlert,
+  Maximize2,
+  Minimize2,
+  Columns,
+  Rows,
+  FileCode,
+  Zap,
+  ArrowRight,
+  Globe
 } from 'lucide-react';
 import { logger } from '../utils/logger';
 import { CustomSelect, SelectOption } from './CustomSelect';
@@ -144,45 +156,6 @@ function getErrorDiagnostics(statusCode: number, errorMessage?: string | null) {
       ]
     };
   }
-  if (statusCode === 502) {
-    return {
-      title: 'Bad Gateway (HTTP 502)',
-      badge: 'Upstream Proxy Failure',
-      badgeColor: 'bg-[#F28B82]/10 text-[#F28B82] border-[#F28B82]/30',
-      description: 'The remote gateway or reverse proxy received an invalid response from the upstream origin server.',
-      tips: [
-        'The third-party API service is experiencing internal network or DNS routing issues.',
-        'Check third-party status monitors (e.g. status.io or incident boards).',
-        'Retry after the upstream provider restores service.'
-      ]
-    };
-  }
-  if (statusCode === 503) {
-    return {
-      title: 'Service Unavailable (HTTP 503)',
-      badge: 'Service Offline',
-      badgeColor: 'bg-[#F28B82]/10 text-[#F28B82] border-[#F28B82]/30',
-      description: 'The remote API server is currently unable to handle the request due to maintenance or overload.',
-      tips: [
-        'The external provider may be in planned maintenance mode.',
-        'The remote service capacity is temporarily exhausted.',
-        'Wait 1-2 minutes and test the endpoint again.'
-      ]
-    };
-  }
-  if (statusCode === 504) {
-    return {
-      title: 'Gateway Timeout (HTTP 504)',
-      badge: 'Upstream Timeout',
-      badgeColor: 'bg-[#F28B82]/10 text-[#F28B82] border-[#F28B82]/30',
-      description: 'The target endpoint timed out (10s threshold). The server is taking too long to respond.',
-      tips: [
-        'The remote server is hanging or bogged down by slow database queries.',
-        'Try querying with narrower filters or pagination limits.',
-        'If the timeout persists, the service may be down.'
-      ]
-    };
-  }
   if (statusCode >= 500 && statusCode < 600) {
     return {
       title: `Upstream Server Error (HTTP ${statusCode})`,
@@ -193,19 +166,6 @@ function getErrorDiagnostics(statusCode: number, errorMessage?: string | null) {
         'The external provider may currently be experiencing intermittent maintenance or downtime.',
         'Check the API status page or try again in a few minutes.',
         'Verify if the target server requires specific content-type or payload format.'
-      ]
-    };
-  }
-  if (statusCode <= 0 || (errorMessage && errorMessage.toLowerCase().includes('connection refused'))) {
-    return {
-      title: 'Backend Proxy Offline / Connection Refused',
-      badge: 'Proxy Unreachable',
-      badgeColor: 'bg-[#F28B82]/10 text-[#F28B82] border-[#F28B82]/30',
-      description: 'Could not connect to the Free API Hub backend proxy service.',
-      tips: [
-        'Ensure the Python FastAPI backend is running on http://localhost:8000.',
-        'Check terminal logs for backend crashes or port binding conflicts.',
-        'Verify that your local firewall is not blocking localhost HTTP traffic.'
       ]
     };
   }
@@ -241,6 +201,7 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
     : `/${api.sample_endpoint}`;
   const fullInitialUrl = `${initialUrl}${initialEndpoint}`;
 
+  // Request State
   const [method, setMethod] = useState(api.method || 'GET');
   const [endpointUrl, setEndpointUrl] = useState(fullInitialUrl);
   const [params, setParams] = useState<Array<{ key: string; value: string }>>(() => {
@@ -249,32 +210,62 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
     }
     return [];
   });
-
   const [headers, setHeaders] = useState<Array<{ key: string; value: string }>>(() => {
     if (api.default_headers) {
       return Object.entries(api.default_headers).map(([key, value]) => ({ key, value }));
     }
     return [];
   });
-
   const [requestBody, setRequestBody] = useState<string>('');
   const [activeParamTab, setActiveParamTab] = useState<'params' | 'headers' | 'body'>('params');
 
+  // Response State
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState<ProxyResponse | null>(null);
 
+  // Layout & Presets State
+  const presets = useMemo(() => getEndpointPresets(api), [api]);
+  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
+  const [viewLayout, setViewLayout] = useState<'split' | 'focus' | 'stacked'>('split');
+  const [isCurlModalOpen, setIsCurlModalOpen] = useState(false);
+
   // Response Inspector Tabs
-  const [activeResponseTab, setActiveResponseTab] = useState<'json' | 'media' | 'headers' | 'table' | 'raw'>('json');
+  const [activeResponseTab, setActiveResponseTab] = useState<
+    'json' | 'preview' | 'media' | 'headers' | 'table' | 'types' | 'raw'
+  >('json');
+  const [jsonDisplayMode, setJsonDisplayMode] = useState<'tree' | 'raw'>('tree');
+  const [typesDisplayMode, setTypesDisplayMode] = useState<'typescript' | 'schema'>('typescript');
   const [jsonSearchQuery, setJsonSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Snippets
   const [activeSnippetLang, setActiveSnippetLang] = useState<SnippetLanguage>('curl');
-  const [snippetCategory, setSnippetCategory] = useState<string>('All');
   const [copiedSnippet, setCopiedSnippet] = useState(false);
   const [copiedJson, setCopiedJson] = useState(false);
+  const [copiedTypes, setCopiedTypes] = useState(false);
   const [copiedError, setCopiedError] = useState(false);
   const [urlValidationError, setUrlValidationError] = useState<string | null>(null);
+
+  // Request History State (Session)
+  const [history, setHistory] = useState<HistoryItem[]>(() => {
+    try {
+      const stored = sessionStorage.getItem(`fah_history_${api.slug}`);
+      if (stored) return JSON.parse(stored);
+    } catch {
+      // ignore
+    }
+    return [];
+  });
+  const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
+
+  // Sync history to session storage
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(`fah_history_${api.slug}`, JSON.stringify(history.slice(0, 10)));
+    } catch {
+      // ignore
+    }
+  }, [history, api.slug]);
 
   // Convert param list to map
   const paramMap = useMemo(() => {
@@ -292,16 +283,51 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
     }, {} as Record<string, string>);
   }, [headers]);
 
+  // Detect if the response payload is an HTML document
+  const isHtmlResponse = useMemo(() => {
+    if (!response?.data) return false;
+    const contentType = response.headers
+      ? Object.entries(response.headers).find(([k]) => k.toLowerCase() === 'content-type')?.[1]?.toLowerCase()
+      : '';
+    if (contentType && (contentType.includes('text/html') || contentType.includes('application/xhtml+xml'))) {
+      return true;
+    }
+    if (typeof response.data === 'string') {
+      const trimmed = response.data.trim().toLowerCase();
+      return (
+        trimmed.startsWith('<!doctype html') ||
+        trimmed.startsWith('<html') ||
+        (trimmed.includes('<head') && trimmed.includes('<body')) ||
+        (trimmed.includes('<title>') && trimmed.includes('</title>'))
+      );
+    }
+    return false;
+  }, [response]);
+
   // Extract media items whenever response data changes
   const mediaItems = useMemo(() => {
     if (!response?.data) return [];
-    return extractMediaItems(response.data);
-  }, [response?.data]);
+    return extractMediaItems(response.data, endpointUrl);
+  }, [response?.data, endpointUrl]);
 
-  const handleRunTest = async () => {
+  // Generated TypeScript / JSON Schema
+  const generatedTypesCode = useMemo(() => {
+    if (!response?.data) return '';
+    const rootName = `${api.slug.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join('')}Response`;
+    if (typesDisplayMode === 'typescript') {
+      return generateTypeScriptTypes(response.data, rootName);
+    }
+    return generateJsonSchema(response.data, rootName);
+  }, [response?.data, api.slug, typesDisplayMode]);
+
+  const handleRunTest = async (overrideTargetUrl?: string, overrideMethod?: string, overrideBody?: string) => {
     setUrlValidationError(null);
 
-    const trimmedUrl = endpointUrl.trim();
+    const baseToUse = overrideTargetUrl || endpointUrl;
+    const methodToUse = overrideMethod || method;
+    const bodyToUse = overrideBody !== undefined ? overrideBody : requestBody;
+
+    const trimmedUrl = baseToUse.trim();
     if (!trimmedUrl) {
       setUrlValidationError('Target request URL cannot be empty. Please enter a valid URL.');
       return;
@@ -318,18 +344,18 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
 
     // Prepare body
     let parsedBody: unknown = undefined;
-    if (requestBody.trim() && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase())) {
+    if (bodyToUse.trim() && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(methodToUse.toUpperCase())) {
       try {
-        parsedBody = JSON.parse(requestBody.trim());
+        parsedBody = JSON.parse(bodyToUse.trim());
       } catch {
-        parsedBody = requestBody.trim();
+        parsedBody = bodyToUse.trim();
       }
     }
 
     try {
       const result = await executeProxy({
         url: targetUrl,
-        method: method,
+        method: methodToUse,
         headers: {
           ...(api.default_headers || {}),
           ...headerMap
@@ -337,37 +363,150 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
         params: {},
         body: parsedBody
       });
-      logger.playground(targetUrl, method, result.status_code, result.latency_ms);
+      logger.playground(targetUrl, methodToUse, result.status_code, result.latency_ms);
       setResponse(result);
 
-      // Auto-switch to Media Preview if media is detected in response
-      const detected = extractMediaItems(result.data);
-      if (detected.length > 0) {
+      // Auto-switch tab if HTML detected or media detected
+      const isResultHtml = (() => {
+        const ct = result.headers
+          ? Object.entries(result.headers).find(([k]) => k.toLowerCase() === 'content-type')?.[1]?.toLowerCase()
+          : '';
+        if (ct && (ct.includes('text/html') || ct.includes('application/xhtml+xml'))) {
+          return true;
+        }
+        if (typeof result.data === 'string') {
+          const trimmed = result.data.trim().toLowerCase();
+          return (
+            trimmed.startsWith('<!doctype html') ||
+            trimmed.startsWith('<html') ||
+            (trimmed.includes('<head') && trimmed.includes('<body')) ||
+            (trimmed.includes('<title>') && trimmed.includes('</title>'))
+          );
+        }
+        return false;
+      })();
+
+      const detected = extractMediaItems(result.data, targetUrl);
+      if (isResultHtml && activeResponseTab !== 'headers' && activeResponseTab !== 'raw') {
+        setActiveResponseTab('preview');
+      } else if (detected.length > 0 && activeResponseTab !== 'types' && activeResponseTab !== 'headers') {
         setActiveResponseTab('media');
-      } else {
-        setActiveResponseTab('json');
       }
+
+      // Record in Session Request History
+      const pathSuffix = targetUrl.replace(initialUrl, '') || targetUrl;
+      const historyEntry: HistoryItem = {
+        id: `req_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        timestamp: Date.now(),
+        method: methodToUse,
+        url: targetUrl,
+        endpointDisplay: pathSuffix.length > 32 ? `${pathSuffix.slice(0, 32)}…` : pathSuffix,
+        statusCode: result.status_code,
+        latencyMs: result.latency_ms,
+        params,
+        headers,
+        body: bodyToUse,
+        dataSnapshot: result.data
+      };
+      setHistory((prev) => [historyEntry, ...prev.slice(0, 9)]);
+      setCurrentHistoryId(historyEntry.id);
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to execute request';
-      setResponse({
+      const failResult: ProxyResponse = {
         status_code: 500,
         latency_ms: 0,
         headers: {},
         data: null,
         error: errorMsg
-      });
+      };
+      setResponse(failResult);
+
+      const pathSuffix = targetUrl.replace(initialUrl, '') || targetUrl;
+      const failEntry: HistoryItem = {
+        id: `req_${Date.now()}_err`,
+        timestamp: Date.now(),
+        method: methodToUse,
+        url: targetUrl,
+        endpointDisplay: pathSuffix.length > 32 ? `${pathSuffix.slice(0, 32)}…` : pathSuffix,
+        statusCode: 500,
+        latencyMs: 0,
+        params,
+        headers,
+        body: bodyToUse
+      };
+      setHistory((prev) => [failEntry, ...prev.slice(0, 9)]);
+      setCurrentHistoryId(failEntry.id);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleLoadSampleEndpoint = (url: string, newMethod: string = 'GET') => {
-    setEndpointUrl(url);
-    setMethod(newMethod);
-    setParams([]);
+  const handleSelectPreset = (preset: EndpointPreset) => {
+    setSelectedPresetId(preset.id);
+    const newUrl = preset.endpoint.startsWith('http')
+      ? preset.endpoint
+      : `${initialUrl}${preset.endpoint.startsWith('/') ? '' : '/'}${preset.endpoint}`;
+
+    const newParams = preset.params
+      ? Object.entries(preset.params).map(([k, v]) => ({ key: k, value: v }))
+      : [];
+    const newHeaders = preset.headers
+      ? Object.entries(preset.headers).map(([k, v]) => ({ key: k, value: v }))
+      : [];
+    const newBody = preset.body || '';
+
+    setEndpointUrl(newUrl);
+    setMethod(preset.method);
+    setParams(newParams);
+    setHeaders(newHeaders);
+    setRequestBody(newBody);
+
+    if (newBody) {
+      setActiveParamTab('body');
+    } else if (newParams.length > 0) {
+      setActiveParamTab('params');
+    }
+
+    // Auto-execute preset for instant feedback
     setTimeout(() => {
-      handleRunTest();
+      handleRunTest(newUrl, preset.method, newBody);
+    }, 40);
+  };
+
+  const handleImportCurl = (parsed: ParsedCurl) => {
+    setEndpointUrl(parsed.url);
+    setMethod(parsed.method);
+    setHeaders(parsed.headers);
+    setParams(parsed.params);
+    if (parsed.body) {
+      setRequestBody(parsed.body);
+      setActiveParamTab('body');
+    } else if (parsed.params.length > 0) {
+      setActiveParamTab('params');
+    } else if (parsed.headers.length > 0) {
+      setActiveParamTab('headers');
+    }
+    // Auto-run imported command
+    setTimeout(() => {
+      handleRunTest(parsed.url, parsed.method, parsed.body || '');
     }, 50);
+  };
+
+  const handleSelectHistoryItem = (item: HistoryItem) => {
+    setCurrentHistoryId(item.id);
+    setEndpointUrl(item.url);
+    setMethod(item.method);
+    setParams(item.params || []);
+    setHeaders(item.headers || []);
+    setRequestBody(item.body || '');
+    if (item.dataSnapshot !== undefined) {
+      setResponse({
+        status_code: item.statusCode,
+        latency_ms: item.latencyMs,
+        headers: {},
+        data: item.dataSnapshot
+      });
+    }
   };
 
   const handleCopyErrorReport = () => {
@@ -422,6 +561,14 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
       navigator.clipboard.writeText(JSON.stringify(response.data, null, 2));
       setCopiedJson(true);
       setTimeout(() => setCopiedJson(false), 2000);
+    }
+  };
+
+  const handleCopyTypes = () => {
+    if (generatedTypesCode) {
+      navigator.clipboard.writeText(generatedTypesCode);
+      setCopiedTypes(true);
+      setTimeout(() => setCopiedTypes(false), 2000);
     }
   };
 
@@ -504,16 +651,81 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
     return res.slice(0, 100);
   }, [response?.data]);
 
-  // Language options filter
-  const filteredLanguages = useMemo(() => {
-    if (snippetCategory === 'All') return SUPPORTED_LANGUAGES;
-    return SUPPORTED_LANGUAGES.filter((l) => l.category === snippetCategory);
-  }, [snippetCategory]);
-
   return (
     <div className="w-full space-y-4">
-      {/* Top Request Bar */}
-      <div className="bg-[#28292A] rounded-2xl p-4 border border-[#3C4043] space-y-4">
+      {/* cURL Import Modal */}
+      <CurlImportModal
+        isOpen={isCurlModalOpen}
+        onClose={() => setIsCurlModalOpen(false)}
+        onImport={handleImportCurl}
+      />
+
+      {/* Top Request Section */}
+      <div className="bg-[#28292A] rounded-2xl p-4 sm:p-5 border border-[#3C4043] space-y-3.5">
+        {/* Presets Bar */}
+        {presets.length > 0 && (
+          <div className="space-y-1.5 pb-1 border-b border-[#3C4043]/50">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-[11px] font-mono text-slate-400 flex items-center gap-1.5 font-medium">
+                <Sparkles className="h-3 w-3 text-[#8AB4F8]" />
+                <span>1-Click Scenarios & Presets:</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsCurlModalOpen(true)}
+                className="text-[11px] font-mono text-[#8AB4F8] hover:text-[#A8C7FA] flex items-center gap-1 hover:underline transition-colors"
+              >
+                <Terminal className="h-3 w-3" />
+                <span>Import cURL</span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-none">
+              {presets.map((preset) => {
+                const isActive = selectedPresetId === preset.id;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => handleSelectPreset(preset)}
+                    className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono transition-all border ${
+                      isActive
+                        ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold border-[#8AB4F8] shadow-sm'
+                        : 'bg-[#1F1F1F] text-slate-300 hover:text-white border-[#3C4043] hover:border-[#5F6368] hover:bg-[#303134]'
+                    }`}
+                    title={preset.description}
+                  >
+                    <span
+                      className={`text-[9px] uppercase font-bold px-1 py-0.2 rounded ${
+                        isActive
+                          ? 'bg-[#1F1F1F]/20 text-[#1F1F1F]'
+                          : preset.method === 'POST'
+                          ? 'bg-sky-500/10 text-sky-400'
+                          : 'bg-emerald-500/10 text-emerald-400'
+                      }`}
+                    >
+                      {preset.method}
+                    </span>
+                    <span>{preset.label}</span>
+                    {preset.badge && (
+                      <span
+                        className={`text-[9px] px-1 py-0.2 rounded-full ${
+                          isActive
+                            ? 'bg-[#1F1F1F] text-[#8AB4F8]'
+                            : 'bg-[#8AB4F8]/15 text-[#8AB4F8]'
+                        }`}
+                      >
+                        {preset.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Request Input Bar */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
           {/* Method Selector Dropdown */}
           <div className="w-28 flex-shrink-0">
@@ -543,11 +755,22 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
             />
           </div>
 
+          {/* Import cURL quick button */}
+          <button
+            type="button"
+            onClick={() => setIsCurlModalOpen(true)}
+            className="hidden lg:flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#1F1F1F] hover:bg-[#303134] text-slate-300 hover:text-white border border-[#3C4043] text-xs font-mono transition-colors"
+            title="Paste and import a cURL command"
+          >
+            <Terminal className="h-3.5 w-3.5 text-[#8AB4F8]" />
+            <span>cURL</span>
+          </button>
+
           {/* Run Button */}
           <button
-            onClick={handleRunTest}
+            onClick={() => handleRunTest()}
             disabled={isLoading}
-            className="flex items-center justify-center gap-2 px-5 py-2 rounded-lg bg-[#8AB4F8] hover:bg-[#A8C7FA] text-[#1F1F1F] font-semibold text-xs transition-colors disabled:opacity-50"
+            className="flex items-center justify-center gap-2 px-5 py-2 rounded-lg bg-[#8AB4F8] hover:bg-[#A8C7FA] text-[#1F1F1F] font-bold text-xs transition-colors disabled:opacity-50 shadow-sm"
           >
             <Play className={`h-3.5 w-3.5 fill-current ${isLoading ? 'animate-spin' : ''}`} />
             <span>{isLoading ? 'Running...' : 'Run Test'}</span>
@@ -689,7 +912,7 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
               </div>
             ) : (
               <div className="text-[11px] font-mono text-slate-500 py-1">
-                No query parameters attached. Click "+ Add Query Param" to add custom filters or pagination.
+                No query parameters attached. Click "+ Add Query Param" or pick a preset scenario above.
               </div>
             )
           )}
@@ -777,10 +1000,29 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
         </div>
       </div>
 
-      {/* Main Split Grid: Live Response Inspector & Code Snippets */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Left Column: Comprehensive Response Payload Inspector */}
-        <div className="bg-[#28292A] rounded-2xl border border-[#3C4043] flex flex-col h-[560px] overflow-hidden">
+      {/* Session Request History Bar */}
+      <RequestHistoryBar
+        history={history}
+        onSelect={handleSelectHistoryItem}
+        onClear={() => {
+          setHistory([]);
+          sessionStorage.removeItem(`fah_history_${api.slug}`);
+        }}
+        currentHistoryId={currentHistoryId}
+      />
+
+      {/* Main Response & Snippets Area */}
+      <div
+        className={`grid gap-4 transition-all duration-300 ${
+          viewLayout === 'focus'
+            ? 'grid-cols-1'
+            : viewLayout === 'stacked'
+            ? 'grid-cols-1'
+            : 'grid-cols-1 lg:grid-cols-2'
+        }`}
+      >
+        {/* Response Payload Inspector */}
+        <div className="bg-[#28292A] rounded-2xl border border-[#3C4043] flex flex-col h-[580px] overflow-hidden">
           {/* Header Bar */}
           <div className="px-4 py-2.5 border-b border-[#3C4043] bg-[#28292A] flex flex-wrap items-center justify-between gap-2">
             {/* Left Title & Status */}
@@ -817,42 +1059,75 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
               )}
             </div>
 
-            {/* Header Right Actions */}
-            {Boolean(response?.data) && (
-              <div className="flex items-center gap-1">
+            {/* Header Right Actions (Search, Copy, Download, Layout controls) */}
+            <div className="flex items-center gap-1.5">
+              {Boolean(response?.data) && (
+                <>
+                  <button
+                    onClick={() => setIsSearchOpen(!isSearchOpen)}
+                    className={`p-1.5 rounded text-xs transition-colors border border-[#3C4043] ${
+                      isSearchOpen ? 'bg-[#8AB4F8]/20 text-[#8AB4F8]' : 'bg-[#1F1F1F] text-slate-400 hover:text-white'
+                    }`}
+                    title="Search in response"
+                  >
+                    <Search className="h-3 w-3" />
+                  </button>
+
+                  <button
+                    onClick={handleCopyJson}
+                    className="text-xs text-slate-400 hover:text-white flex items-center gap-1 px-2 py-1 rounded bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] transition-colors"
+                    title="Copy full JSON"
+                  >
+                    {copiedJson ? <Check className="h-3 w-3 text-[#81C995]" /> : <Copy className="h-3 w-3" />}
+                    <span className="hidden sm:inline">{copiedJson ? 'Copied' : 'Copy'}</span>
+                  </button>
+
+                  <button
+                    onClick={handleDownloadJson}
+                    className="text-xs text-slate-400 hover:text-white flex items-center gap-1 px-2 py-1 rounded bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] transition-colors"
+                    title="Download JSON file"
+                  >
+                    <Download className="h-3 w-3" />
+                    <span className="hidden sm:inline">Export</span>
+                  </button>
+                </>
+              )}
+
+              {/* Layout Switcher (Split, Focus, Stacked) */}
+              <div className="flex items-center bg-[#1F1F1F] p-0.5 rounded-lg border border-[#3C4043] ml-1">
                 <button
-                  onClick={() => setIsSearchOpen(!isSearchOpen)}
-                  className={`p-1.5 rounded text-xs transition-colors border border-[#3C4043] ${
-                    isSearchOpen ? 'bg-[#8AB4F8]/20 text-[#8AB4F8]' : 'bg-[#1F1F1F] text-slate-400 hover:text-white'
+                  onClick={() => setViewLayout('split')}
+                  className={`p-1 rounded transition-colors ${
+                    viewLayout === 'split' ? 'bg-[#8AB4F8] text-[#1F1F1F]' : 'text-slate-400 hover:text-white'
                   }`}
-                  title="Search in response"
+                  title="Side-by-side Split View"
                 >
-                  <Search className="h-3 w-3" />
+                  <Columns className="h-3 w-3" />
                 </button>
-
                 <button
-                  onClick={handleCopyJson}
-                  className="text-xs text-slate-400 hover:text-white flex items-center gap-1 px-2.5 py-1 rounded bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] transition-colors"
-                  title="Copy JSON"
+                  onClick={() => setViewLayout('focus')}
+                  className={`p-1 rounded transition-colors ${
+                    viewLayout === 'focus' ? 'bg-[#8AB4F8] text-[#1F1F1F]' : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Full Width Focus View"
                 >
-                  {copiedJson ? <Check className="h-3 w-3 text-[#81C995]" /> : <Copy className="h-3 w-3" />}
-                  <span>{copiedJson ? 'Copied' : 'Copy'}</span>
+                  <Maximize2 className="h-3 w-3" />
                 </button>
-
                 <button
-                  onClick={handleDownloadJson}
-                  className="text-xs text-slate-400 hover:text-white flex items-center gap-1 px-2.5 py-1 rounded bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] transition-colors"
-                  title="Download JSON file"
+                  onClick={() => setViewLayout('stacked')}
+                  className={`p-1 rounded transition-colors ${
+                    viewLayout === 'stacked' ? 'bg-[#8AB4F8] text-[#1F1F1F]' : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Stacked Top/Bottom View"
                 >
-                  <Download className="h-3 w-3" />
-                  <span>Download</span>
+                  <Rows className="h-3 w-3" />
                 </button>
               </div>
-            )}
+            </div>
           </div>
 
-          {/* Response View Selector Tabs (JSON, Media Preview, Headers, Table, Raw) */}
-          <div className="px-3 py-1.5 bg-[#232425] border-b border-[#3C4043] flex items-center justify-between gap-2 overflow-x-auto">
+          {/* Response View Selector Tabs (JSON, Media Preview, Headers, Structure, Types, Raw) */}
+          <div className="px-3 py-1.5 bg-[#232425] border-b border-[#3C4043] flex items-center justify-between gap-2 overflow-x-auto scrollbar-none">
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setActiveResponseTab('json')}
@@ -864,6 +1139,23 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
               >
                 <Code2 className="h-3 w-3" />
                 <span>JSON</span>
+              </button>
+
+              <button
+                onClick={() => setActiveResponseTab('preview')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
+                  activeResponseTab === 'preview'
+                    ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
+                    : 'text-slate-400 hover:text-white hover:bg-[#303134]'
+                }`}
+              >
+                <Globe className="h-3 w-3" />
+                <span>Web Preview</span>
+                {isHtmlResponse && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    HTML
+                  </span>
+                )}
               </button>
 
               <button
@@ -912,6 +1204,19 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
                 <span>Structure</span>
               </button>
 
+              {/* TypeScript & Schema Tab */}
+              <button
+                onClick={() => setActiveResponseTab('types')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
+                  activeResponseTab === 'types'
+                    ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
+                    : 'text-slate-400 hover:text-white hover:bg-[#303134]'
+                }`}
+              >
+                <FileCode className="h-3 w-3" />
+                <span>TS Types</span>
+              </button>
+
               <button
                 onClick={() => setActiveResponseTab('raw')}
                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
@@ -925,15 +1230,26 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
               </button>
             </div>
 
-            {/* Quick summary of response */}
-            {response && (
-              <span className="text-[10px] font-mono text-slate-400 hidden sm:inline">
-                {typeof response.data === 'object' && response.data !== null
-                  ? Array.isArray(response.data)
-                    ? `${response.data.length} array items`
-                    : `${Object.keys(response.data).length} root keys`
-                  : 'Scalar'}
-              </span>
+            {/* Tree vs Raw text toggle if on JSON tab */}
+            {activeResponseTab === 'json' && Boolean(response?.data) && (
+              <div className="flex items-center bg-[#1F1F1F] p-0.5 rounded-lg border border-[#3C4043]">
+                <button
+                  onClick={() => setJsonDisplayMode('tree')}
+                  className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors ${
+                    jsonDisplayMode === 'tree' ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Tree
+                </button>
+                <button
+                  onClick={() => setJsonDisplayMode('raw')}
+                  className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors ${
+                    jsonDisplayMode === 'raw' ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Plain
+                </button>
+              </div>
             )}
           </div>
 
@@ -1015,7 +1331,7 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
                         </button>
 
                         <button
-                          onClick={handleRunTest}
+                          onClick={() => handleRunTest()}
                           disabled={isLoading}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#303134] hover:bg-[#3C4043] text-slate-200 hover:text-white text-xs font-medium border border-[#3C4043] transition-colors disabled:opacity-50"
                         >
@@ -1059,16 +1375,53 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
                 );
               })()
             ) : response ? (
-              /* Success / Normal Response Views */
-              activeResponseTab === 'json' ? (
-                <pre className="text-slate-200 whitespace-pre-wrap leading-relaxed selection:bg-[#8AB4F8] selection:text-[#1F1F1F]">
-                  {filteredJsonContent}
-                </pre>
+              /* Success Response Views */
+              activeResponseTab === 'preview' ? (
+                /* Web Page / HTML Preview Tab */
+                <HtmlPreviewViewer
+                  html={typeof response.data === 'string' ? response.data : JSON.stringify(response.data, null, 2)}
+                  url={endpointUrl}
+                  statusCode={response.status_code}
+                  latencyMs={response.latency_ms}
+                />
+              ) : activeResponseTab === 'json' ? (
+                <div className="space-y-3">
+                  {isHtmlResponse && (
+                    <div className="p-3 rounded-xl bg-[#8AB4F8]/10 border border-[#8AB4F8]/30 flex flex-wrap items-center justify-between gap-2.5 font-sans">
+                      <div className="flex items-center gap-2 text-slate-200 text-xs">
+                        <Globe className="h-4 w-4 text-[#8AB4F8] flex-shrink-0" />
+                        <span>
+                          <strong>HTML Web Document Detected:</strong> This endpoint returned a rendered HTML web page ({response.status_code} OK).
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setActiveResponseTab('preview')}
+                        className="px-2.5 py-1 rounded-lg bg-[#8AB4F8] hover:bg-[#A8C7FA] text-[#1F1F1F] font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm"
+                      >
+                        <span>Switch to Web Preview</span>
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )}
+                  {jsonDisplayMode === 'tree' ? (
+                    <JsonTreeViewer
+                      data={response.data}
+                      searchQuery={jsonSearchQuery}
+                    />
+                  ) : (
+                    <pre className="text-slate-200 whitespace-pre-wrap leading-relaxed selection:bg-[#8AB4F8] selection:text-[#1F1F1F]">
+                      {filteredJsonContent}
+                    </pre>
+                  )}
+                </div>
               ) : activeResponseTab === 'media' ? (
                 /* Media Preview Tab */
                 <MediaPreviewViewer
                   mediaItems={mediaItems}
-                  onLoadSampleEndpoint={handleLoadSampleEndpoint}
+                  onLoadSampleEndpoint={(url) => {
+                    setEndpointUrl(url);
+                    handleRunTest(url);
+                  }}
                 />
               ) : activeResponseTab === 'headers' ? (
                 /* Response Headers Tab */
@@ -1102,6 +1455,48 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
                   ) : (
                     <p className="text-slate-500 font-sans text-xs">No explicit headers forwarded by target server.</p>
                   )}
+                </div>
+              ) : activeResponseTab === 'types' ? (
+                /* TypeScript / JSON Schema Generator View */
+                <div className="space-y-3 font-sans h-full flex flex-col">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#3C4043]">
+                    <div className="flex items-center gap-1.5 bg-[#28292A] p-0.5 rounded-lg border border-[#3C4043]">
+                      <button
+                        onClick={() => setTypesDisplayMode('typescript')}
+                        className={`px-2.5 py-1 rounded text-xs font-mono transition-colors ${
+                          typesDisplayMode === 'typescript'
+                            ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        TypeScript Interface
+                      </button>
+                      <button
+                        onClick={() => setTypesDisplayMode('schema')}
+                        className={`px-2.5 py-1 rounded text-xs font-mono transition-colors ${
+                          typesDisplayMode === 'schema'
+                            ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        JSON Schema
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={handleCopyTypes}
+                      className="text-xs text-slate-300 hover:text-white flex items-center gap-1.5 px-3 py-1 rounded bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] transition-colors"
+                    >
+                      {copiedTypes ? <Check className="h-3 w-3 text-[#81C995]" /> : <Copy className="h-3 w-3" />}
+                      <span>{copiedTypes ? 'Copied Types!' : 'Copy Types'}</span>
+                    </button>
+                  </div>
+
+                  <div className="flex-1 overflow-auto bg-[#141414] p-3 rounded-xl border border-[#3C4043]">
+                    <pre className="font-mono text-xs text-slate-200 whitespace-pre-wrap leading-relaxed selection:bg-[#8AB4F8] selection:text-[#1F1F1F]">
+                      {generatedTypesCode}
+                    </pre>
+                  </div>
                 </div>
               ) : activeResponseTab === 'table' ? (
                 /* Flattened Structure Inspector */
@@ -1143,70 +1538,97 @@ export const Playground: React.FC<PlaygroundProps> = ({ api }) => {
                 </pre>
               )
             ) : (
-              <div className="h-full flex flex-col items-center justify-center gap-2 text-slate-400 text-center px-4 font-sans">
-                <Play className="h-8 w-8 text-slate-600 mb-1" />
-                <p className="font-medium text-slate-300">No test executed yet</p>
-                <p className="text-xs text-slate-400 max-w-xs">
-                  Click <strong className="text-[#8AB4F8]">"Run Test"</strong> above to send a live request, inspect JSON payloads, headers, and media previews.
-                </p>
+              /* Enhanced Empty State / 1-Click Starter */
+              <div className="h-full flex flex-col items-center justify-center gap-3 text-slate-400 text-center px-4 font-sans">
+                <div className="p-3.5 rounded-2xl bg-[#28292A] border border-[#3C4043] text-[#8AB4F8]">
+                  <Play className="h-7 w-7 fill-current" />
+                </div>
+                <div className="space-y-1 max-w-sm">
+                  <p className="font-bold text-slate-200 text-sm">Ready to Test Endpoint</p>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Send a live HTTP request to inspect response trees, extract media, generate TypeScript interfaces, and test edge cases.
+                  </p>
+                </div>
+
+                <div className="pt-2 flex flex-col sm:flex-row items-center gap-2">
+                  <button
+                    onClick={() => handleRunTest()}
+                    disabled={isLoading}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#8AB4F8] hover:bg-[#A8C7FA] text-[#1F1F1F] font-bold text-xs transition-colors shadow-sm"
+                  >
+                    <Zap className="h-3.5 w-3.5 fill-current" />
+                    <span>Run Sample Request</span>
+                  </button>
+                  {presets[0] && (
+                    <button
+                      onClick={() => handleSelectPreset(presets[0])}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#28292A] hover:bg-[#303134] text-slate-300 hover:text-white border border-[#3C4043] text-xs font-mono transition-colors"
+                    >
+                      <span>Try preset: {presets[0].label}</span>
+                      <ArrowRight className="h-3 w-3 text-[#8AB4F8]" />
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Right Column: Multilingual Code Snippets */}
-        <div className="bg-[#28292A] rounded-2xl border border-[#3C4043] flex flex-col h-[560px] overflow-hidden">
-          {/* Header with Category Filter & Language Scroll Bar */}
-          <div className="px-4 py-2 border-b border-[#3C4043] bg-[#28292A] space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Terminal className="h-4 w-4 text-[#8AB4F8]" />
-                <span className="text-xs font-bold text-slate-200">Integration Client Code</span>
+        {/* Integration Client Code (Hidden if focus mode is active) */}
+        {viewLayout !== 'focus' && (
+          <div className="bg-[#28292A] rounded-2xl border border-[#3C4043] flex flex-col h-[580px] overflow-hidden">
+            {/* Header with Language Tabs */}
+            <div className="px-4 py-2.5 border-b border-[#3C4043] bg-[#28292A] space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Terminal className="h-4 w-4 text-[#8AB4F8]" />
+                  <span className="text-xs font-bold text-slate-200">Integration Client Code</span>
+                </div>
+
+                {/* Copy Code Button */}
+                <button
+                  onClick={handleCopySnippet}
+                  className="text-xs text-slate-300 hover:text-white flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] transition-colors"
+                >
+                  {copiedSnippet ? <Check className="h-3 w-3 text-[#81C995]" /> : <Copy className="h-3 w-3" />}
+                  <span>{copiedSnippet ? 'Copied' : 'Copy Code'}</span>
+                </button>
               </div>
 
-              {/* Copy Code Button */}
-              <button
-                onClick={handleCopySnippet}
-                className="text-xs text-slate-300 hover:text-white flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] transition-colors"
-              >
-                {copiedSnippet ? <Check className="h-3 w-3 text-[#81C995]" /> : <Copy className="h-3 w-3" />}
-                <span>{copiedSnippet ? 'Copied Snippet' : 'Copy Code'}</span>
-              </button>
+              {/* Clean Language Pill Selector (no ugly scrollbars) */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                {SUPPORTED_LANGUAGES.map((lang) => (
+                  <button
+                    key={lang.id}
+                    onClick={() => setActiveSnippetLang(lang.id)}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-medium whitespace-nowrap transition-colors ${
+                      activeSnippetLang === lang.id
+                        ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold shadow-sm'
+                        : 'text-slate-400 hover:text-white hover:bg-[#303134]'
+                    }`}
+                  >
+                    {lang.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Language Scroll Bar */}
-            <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-thin">
-              {SUPPORTED_LANGUAGES.map((lang) => (
-                <button
-                  key={lang.id}
-                  onClick={() => setActiveSnippetLang(lang.id)}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-medium whitespace-nowrap transition-colors ${
-                    activeSnippetLang === lang.id
-                      ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
-                      : 'text-slate-400 hover:text-white hover:bg-[#303134]'
-                  }`}
-                >
-                  {lang.label}
-                </button>
-              ))}
+            {/* Snippet Code Box */}
+            <div className="flex-1 p-4 overflow-auto font-mono text-xs bg-[#1F1F1F] text-slate-200 relative group">
+              <pre className="whitespace-pre-wrap leading-relaxed selection:bg-[#8AB4F8] selection:text-[#1F1F1F]">
+                {getActiveSnippet()}
+              </pre>
+            </div>
+
+            {/* Snippet Footer Info */}
+            <div className="px-4 py-2 bg-[#232425] border-t border-[#3C4043] flex items-center justify-between text-[11px] text-slate-400 font-sans">
+              <span className="font-mono text-[#8AB4F8]">
+                {SUPPORTED_LANGUAGES.find((l) => l.id === activeSnippetLang)?.label} snippet
+              </span>
+              <span>Production ready • Timeout: 10s • Auto-serialized</span>
             </div>
           </div>
-
-          {/* Snippet Code Box */}
-          <div className="flex-1 p-4 overflow-auto font-mono text-xs bg-[#1F1F1F] text-slate-200 relative group">
-            <pre className="whitespace-pre-wrap leading-relaxed selection:bg-[#8AB4F8] selection:text-[#1F1F1F]">
-              {getActiveSnippet()}
-            </pre>
-          </div>
-
-          {/* Snippet Footer Info */}
-          <div className="px-4 py-2 bg-[#232425] border-t border-[#3C4043] flex items-center justify-between text-[11px] text-slate-400 font-sans">
-            <span className="font-mono text-[#8AB4F8]">
-              {SUPPORTED_LANGUAGES.find((l) => l.id === activeSnippetLang)?.label} snippet
-            </span>
-            <span>Production ready • Timeout: 10s • Auto-serialized</span>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

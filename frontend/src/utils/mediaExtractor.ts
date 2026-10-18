@@ -73,9 +73,108 @@ function parseVimeoEmbed(url: string): string | null {
   return null;
 }
 
-export function extractMediaItems(data: unknown): MediaItem[] {
+function resolveUrl(url: string, baseUrl?: string): string {
+  const trimmed = cleanUrl(url);
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:')) {
+    return trimmed;
+  }
+  if (!baseUrl) return trimmed;
+  try {
+    return new URL(trimmed, baseUrl).href;
+  } catch {
+    return trimmed;
+  }
+}
+
+export function extractMediaItems(data: unknown, baseUrl?: string): MediaItem[] {
   const items: MediaItem[] = [];
   const visitedUrls = new Set<string>();
+
+  function registerMedia(
+    rawUrl: string,
+    type: 'image' | 'video' | 'audio',
+    keyPath: string,
+    title: string,
+    extension?: string,
+    embedUrl?: string
+  ) {
+    const finalUrl = resolveUrl(rawUrl, baseUrl);
+    if (!finalUrl || visitedUrls.has(finalUrl)) return;
+    if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://') && !finalUrl.startsWith('data:image/')) {
+      return;
+    }
+    visitedUrls.add(finalUrl);
+    items.push({
+      id: `media-${items.length}`,
+      type,
+      url: finalUrl,
+      embedUrl,
+      keyPath: keyPath || 'root',
+      title: title || 'Media Item',
+      extension: extension || type.toUpperCase()
+    });
+  }
+
+  function extractFromHtml(html: string) {
+    // 1. Check <base href="..."> in HTML if baseUrl not explicitly passed
+    let effectiveBase = baseUrl;
+    const baseMatch = html.match(/<base\s+[^>]*href=["']([^"']+)["']/i);
+    if (baseMatch && baseMatch[1]) {
+      effectiveBase = baseMatch[1];
+    }
+
+    // 2. OpenGraph & Twitter Meta Images
+    const metaRegex = /<meta\s+[^>]*(?:property|name)=["'](og:image|og:image:url|twitter:image|twitter:image:src|image)["'][^>]*content=["']([^"']+)["']/gi;
+    let match: RegExpExecArray | null;
+    while ((match = metaRegex.exec(html)) !== null) {
+      const prop = match[1];
+      const content = match[2];
+      registerMedia(content, 'image', `<meta ${prop}>`, `Social Card (${prop})`, 'IMAGE');
+    }
+
+    // Reversed attribute order: content="..." property="og:image"
+    const revMetaRegex = /<meta\s+[^>]*content=["']([^"']+)["'][^>]*(?:property|name)=["'](og:image|og:image:url|twitter:image|twitter:image:src|image)["']/gi;
+    while ((match = revMetaRegex.exec(html)) !== null) {
+      const content = match[1];
+      const prop = match[2];
+      registerMedia(content, 'image', `<meta ${prop}>`, `Social Card (${prop})`, 'IMAGE');
+    }
+
+    // 3. Image Tags (<img src="...">)
+    const imgRegex = /<img\s+[^>]*src=["']([^"']+)["'][^>]*>/gi;
+    while ((match = imgRegex.exec(html)) !== null) {
+      const src = match[1];
+      const altMatch = match[0].match(/alt=["']([^"']*)["']/i);
+      const title = altMatch && altMatch[1] ? altMatch[1] : 'HTML Image';
+      registerMedia(src, 'image', '<img>', title, 'IMG');
+    }
+
+    // 4. Video Tags & Sources (<video src="..."> or <source src="...">)
+    const videoRegex = /<(?:video|source)\s+[^>]*src=["']([^"']+)["'][^>]*>/gi;
+    while ((match = videoRegex.exec(html)) !== null) {
+      const src = match[1];
+      const ext = getUrlExtension(src);
+      if (VIDEO_EXTENSIONS.includes(ext) || ext === '.mp4' || ext === '.webm') {
+        registerMedia(src, 'video', '<video>', 'HTML5 Video', 'VIDEO');
+      } else if (AUDIO_EXTENSIONS.includes(ext) || ext === '.mp3' || ext === '.wav') {
+        registerMedia(src, 'audio', '<audio>', 'HTML5 Audio', 'AUDIO');
+      }
+    }
+
+    // 5. Favicon / Apple Touch Icon (<link rel="icon" href="...">)
+    const iconRegex = /<link\s+[^>]*rel=["'](?:shortcut icon|icon|apple-touch-icon)["'][^>]*href=["']([^"']+)["']/gi;
+    while ((match = iconRegex.exec(html)) !== null) {
+      const href = match[1];
+      registerMedia(href, 'image', '<link rel="icon">', 'Website Favicon / Icon', 'ICON');
+    }
+
+    // 6. Generic URLs embedded in HTML / text matching image extensions
+    const directUrlRegex = /(https?:\/\/[^\s"'<>]+\.(?:png|jpg|jpeg|gif|webp|svg|bmp|ico|avif))(?:\?[^\s"'<>]*)?/gi;
+    while ((match = directUrlRegex.exec(html)) !== null) {
+      const url = match[1];
+      registerMedia(url, 'image', 'embedded-url', 'Embedded Image URL', getUrlExtension(url).replace('.', '').toUpperCase());
+    }
+  }
 
   function inspectValue(val: unknown, keyPath: string, parentKey: string = '') {
     if (!val) return;
@@ -85,18 +184,14 @@ export function extractMediaItems(data: unknown): MediaItem[] {
 
       // Check base64 image data URL
       if (str.startsWith('data:image/')) {
-        if (!visitedUrls.has(str)) {
-          visitedUrls.add(str);
-          items.push({
-            id: `media-${items.length}`,
-            type: 'image',
-            url: str,
-            keyPath: keyPath || 'root',
-            title: parentKey || 'Base64 Image',
-            extension: str.slice(5, str.indexOf(';'))
-          });
-        }
+        registerMedia(str, 'image', keyPath || 'root', parentKey || 'Base64 Image', str.slice(5, str.indexOf(';')));
         return;
+      }
+
+      // Check if string contains HTML
+      const isHtml = str.includes('<html') || str.includes('<!doctype') || str.includes('<meta') || str.includes('<img');
+      if (isHtml) {
+        extractFromHtml(str);
       }
 
       // Check URL format
@@ -112,72 +207,30 @@ export function extractMediaItems(data: unknown): MediaItem[] {
 
       // 1. YouTube / Vimeo Video Embed
       if (ytEmbed) {
-        visitedUrls.add(str);
-        items.push({
-          id: `media-${items.length}`,
-          type: 'video',
-          url: str,
-          embedUrl: ytEmbed,
-          keyPath: keyPath || 'root',
-          title: parentKey || 'YouTube Video',
-          extension: 'YouTube'
-        });
+        registerMedia(str, 'video', keyPath || 'root', parentKey || 'YouTube Video', 'YouTube', ytEmbed);
         return;
       }
 
       if (vimeoEmbed) {
-        visitedUrls.add(str);
-        items.push({
-          id: `media-${items.length}`,
-          type: 'video',
-          url: str,
-          embedUrl: vimeoEmbed,
-          keyPath: keyPath || 'root',
-          title: parentKey || 'Vimeo Video',
-          extension: 'Vimeo'
-        });
+        registerMedia(str, 'video', keyPath || 'root', parentKey || 'Vimeo Video', 'Vimeo', vimeoEmbed);
         return;
       }
 
       // 2. Direct Video Extensions
       if (VIDEO_EXTENSIONS.includes(ext) || VIDEO_KEY_REGEX.test(parentKey)) {
-        visitedUrls.add(str);
-        items.push({
-          id: `media-${items.length}`,
-          type: 'video',
-          url: str,
-          keyPath: keyPath || 'root',
-          title: parentKey || 'Video Stream',
-          extension: ext ? ext.replace('.', '').toUpperCase() : 'MP4'
-        });
+        registerMedia(str, 'video', keyPath || 'root', parentKey || 'Video Stream', ext ? ext.replace('.', '').toUpperCase() : 'MP4');
         return;
       }
 
       // 3. Audio Extensions
       if (AUDIO_EXTENSIONS.includes(ext) || AUDIO_KEY_REGEX.test(parentKey)) {
-        visitedUrls.add(str);
-        items.push({
-          id: `media-${items.length}`,
-          type: 'audio',
-          url: str,
-          keyPath: keyPath || 'root',
-          title: parentKey || 'Audio Track',
-          extension: ext ? ext.replace('.', '').toUpperCase() : 'MP3'
-        });
+        registerMedia(str, 'audio', keyPath || 'root', parentKey || 'Audio Track', ext ? ext.replace('.', '').toUpperCase() : 'MP3');
         return;
       }
 
       // 4. Image Extensions or key matches
       if (IMAGE_EXTENSIONS.includes(ext) || IMAGE_KEY_REGEX.test(parentKey)) {
-        visitedUrls.add(str);
-        items.push({
-          id: `media-${items.length}`,
-          type: 'image',
-          url: str,
-          keyPath: keyPath || 'root',
-          title: parentKey || 'Image Asset',
-          extension: ext ? ext.replace('.', '').toUpperCase() : 'IMAGE'
-        });
+        registerMedia(str, 'image', keyPath || 'root', parentKey || 'Image Asset', ext ? ext.replace('.', '').toUpperCase() : 'IMAGE');
         return;
       }
 
@@ -187,21 +240,14 @@ export function extractMediaItems(data: unknown): MediaItem[] {
         lower.includes('images.unsplash.com') ||
         lower.includes('images.dog.ceo') ||
         lower.includes('cdn.thecatapi.com') ||
+        lower.includes('thecatapi.com/img') ||
         lower.includes('raw.githubusercontent.com/pokeapi') ||
         lower.includes('rickandmortyapi.com/api/character/avatar') ||
         lower.includes('randomfox.ca/images') ||
         lower.includes('i.imgur.com') ||
         lower.includes('avatars.githubusercontent.com')
       ) {
-        visitedUrls.add(str);
-        items.push({
-          id: `media-${items.length}`,
-          type: 'image',
-          url: str,
-          keyPath: keyPath || 'root',
-          title: parentKey || 'Media Image',
-          extension: ext ? ext.replace('.', '').toUpperCase() : 'JPG'
-        });
+        registerMedia(str, 'image', keyPath || 'root', parentKey || 'Media Image', ext ? ext.replace('.', '').toUpperCase() : 'JPG');
       }
     } else if (Array.isArray(val)) {
       val.forEach((item, idx) => {

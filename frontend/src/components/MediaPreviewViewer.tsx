@@ -235,7 +235,7 @@ export const MediaPreviewViewer: React.FC<MediaPreviewViewerProps> = ({
           {filteredItems.map((item) => (
             <div
               key={item.id}
-              className="bg-[#28292A] rounded-xl border border-[#3C4043] overflow-hidden flex flex-col group hover:border-[#8AB4F8] transition-colors"
+              className="bg-[#28292A] rounded-xl border border-[#3C4043] overflow-hidden flex flex-col group hover:border-[#5F6368] transition-colors"
             >
               {/* Media Visual Container */}
               <div className="relative aspect-video bg-[#1F1F1F] border-b border-[#3C4043] flex items-center justify-center overflow-hidden">

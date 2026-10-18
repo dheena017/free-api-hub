@@ -29,8 +29,8 @@ export const SearchFilter: React.FC<SearchFilterProps> = ({
     <div className="w-full max-w-2xl mx-auto space-y-3.5">
       {/* Sleek Command-Bar Style Search Input */}
       <div className="relative group">
-        <div className="relative flex items-center bg-[#28292A] border border-[#3C4043] focus-within:border-[#8AB4F8] rounded-2xl transition-colors">
-          <div className="pl-4 text-slate-400 group-focus-within:text-[#8AB4F8] transition-colors pointer-events-none">
+        <div className="relative flex items-center bg-[#28292A] border border-[#3C4043] focus-within:border-[#5F6368] rounded-2xl transition-colors">
+          <div className="pl-4 text-slate-400 group-focus-within:text-slate-200 transition-colors pointer-events-none">
             <Search className="h-5 w-5" />
           </div>
           
@@ -74,11 +74,11 @@ export const SearchFilter: React.FC<SearchFilterProps> = ({
               onClick={() => onCollectionSelect(isSelected ? '' : qf.id)}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all duration-150 whitespace-nowrap text-xs font-medium cursor-pointer ${
                 isSelected
-                  ? 'bg-[#8AB4F8]/15 border-[#8AB4F8] text-[#8AB4F8] font-semibold'
-                  : 'bg-[#28292A] border-[#3C4043] text-slate-300 hover:bg-[#303134] hover:border-[#8AB4F8] hover:text-white'
+                  ? 'bg-[#303134] border-[#5F6368] text-white font-semibold'
+                  : 'bg-[#28292A] border-[#3C4043] text-slate-300 hover:bg-[#303134] hover:border-[#5F6368] hover:text-white'
               }`}
             >
-              <Icon className={`h-3.5 w-3.5 ${isSelected ? 'text-[#8AB4F8]' : 'text-slate-400'}`} />
+              <Icon className={`h-3.5 w-3.5 ${isSelected ? 'text-white' : 'text-slate-400'}`} />
               <span>{qf.label}</span>
             </button>
           );

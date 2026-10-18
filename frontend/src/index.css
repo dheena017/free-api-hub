@@ -54,31 +54,28 @@ body {
   height: 0 !important;
 }
 
-/* Modern Glass & Glow Panels */
-.glass-panel {
-  background: rgba(40, 41, 42, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+/* Consistent Website Flat Panels */
+.glass-panel,
+.glass-panel-glow {
+  background-color: #28292A;
   border: 1px solid #3C4043;
   border-radius: 1rem;
+  box-shadow: none !important;
 }
 
-.glass-panel-glow {
-  background: rgba(40, 41, 42, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(138, 180, 248, 0.35);
-  box-shadow: 0 0 30px rgba(138, 180, 248, 0.08);
+.glass-panel:hover,
+.glass-panel-glow:hover {
+  border-color: #5F6368;
 }
 
-/* Card hover effect */
+/* Card hover effect without glow */
 .api-card-hover {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease, background-color 0.18s ease;
 }
 .api-card-hover:hover {
-  transform: translateY(-3px);
-  border-color: rgba(138, 180, 248, 0.5);
-  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.6), 0 0 20px -5px rgba(138, 180, 248, 0.15);
+  transform: translateY(-2px);
+  border-color: #5F6368;
+  box-shadow: none;
 }
 
 /* Fast CSS list performance rendering */

@@ -126,7 +126,7 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
       >
         {/* Search Input Bar */}
         <div className="flex items-center gap-3 p-4 border-b border-[#3C4043]">
-          <Search className="h-5 w-5 text-[#8AB4F8] flex-shrink-0" />
+          <Search className="h-5 w-5 text-slate-400 flex-shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -137,7 +137,7 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
             className="flex-1 bg-transparent text-sm sm:text-base text-white placeholder-slate-400 outline-none font-medium"
           />
           {isSearching && (
-            <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#8AB4F8] border-t-transparent flex-shrink-0" />
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-slate-400 border-t-transparent flex-shrink-0" />
           )}
           {query && (
             <button
@@ -188,7 +188,7 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
 
                   <div className="flex items-center gap-2 text-xs font-mono text-slate-400 flex-shrink-0">
                     <span className="text-[#81C995] font-semibold">{item.health.avg_latency_ms}ms</span>
-                    <ArrowRight className="h-3.5 w-3.5 text-[#8AB4F8]" />
+                    <ArrowRight className="h-3.5 w-3.5 text-slate-400" />
                   </div>
                 </div>
               );
@@ -216,9 +216,9 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                       navigate(item.path);
                       onClose();
                     }}
-                    className="p-2.5 rounded-xl bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] hover:border-[#8AB4F8]/50 text-left transition-all group cursor-pointer"
+                    className="p-2.5 rounded-xl bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] text-left transition-all group cursor-pointer"
                   >
-                    <div className="text-xs font-semibold text-white group-hover:text-[#8AB4F8]">
+                    <div className="text-xs font-semibold text-white group-hover:text-slate-200">
                       {item.label}
                     </div>
                     <div className="text-[10px] text-slate-400 font-mono mt-0.5">
@@ -241,7 +241,7 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                       navigate(`/explore?q=${encodeURIComponent(tag)}`);
                       onClose();
                     }}
-                    className="px-2.5 py-1 rounded-lg bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] text-slate-300 hover:text-white transition-colors font-mono text-[11px] cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] text-slate-300 hover:text-white transition-colors font-mono text-[11px] cursor-pointer"
                   >
                     #{tag}
                   </button>

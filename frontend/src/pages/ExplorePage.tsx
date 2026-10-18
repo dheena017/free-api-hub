@@ -162,14 +162,14 @@ export const ExplorePage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* Top Banner / Hero Title */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#3C4043]/60">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#3C4043]">
         <div>
           <div className="flex items-center gap-2.5 flex-wrap">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
               API Catalog Explorer
             </h1>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-[#8AB4F8]/10 text-[#8AB4F8] border border-[#8AB4F8]/25 shadow-sm">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-[#1F1F1F] text-slate-300 border border-[#3C4043]">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
               {favoritesOnly ? `${totalCount.toLocaleString()} Saved APIs` : `${totalCount.toLocaleString()} Verified APIs`}
             </span>
           </div>
@@ -182,32 +182,32 @@ export const ExplorePage: React.FC = () => {
         <div className="flex items-center gap-2 self-start md:self-auto flex-wrap">
           <button
             onClick={handleSurpriseMe}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium border bg-[#28292A] border-[#3C4043] text-purple-300 hover:text-white hover:bg-purple-500/15 hover:border-purple-500/30 transition-all shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium border bg-[#28292A] hover:bg-[#303134] border-[#3C4043] hover:border-[#5F6368] text-slate-300 hover:text-white transition-all"
             title="Jump to a random API to test in playground"
           >
-            <Dices className="h-4 w-4 text-purple-400" />
+            <Dices className="h-4 w-4 text-slate-400" />
             <span>Surprise Me</span>
           </button>
 
           <button
             onClick={() => updateQuery({ fav: favoritesOnly ? '0' : '1', page: '1' })}
-            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium border transition-all shadow-sm ${
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium border transition-all ${
               favoritesOnly
-                ? 'bg-amber-500/15 border-amber-500/30 text-amber-300 font-semibold'
-                : 'bg-[#28292A] border-[#3C4043] text-slate-300 hover:text-white hover:bg-[#303134]'
+                ? 'bg-[#303134] border-[#5F6368] text-[#FDD663] font-semibold'
+                : 'bg-[#28292A] border-[#3C4043] hover:border-[#5F6368] text-slate-300 hover:text-white hover:bg-[#303134]'
             }`}
           >
-            <Star className={`h-4 w-4 ${favoritesOnly ? 'text-amber-400 fill-amber-400' : 'text-slate-400'}`} />
+            <Star className={`h-4 w-4 ${favoritesOnly ? 'text-[#FDD663] fill-[#FDD663]' : 'text-slate-400'}`} />
             <span>Saved ({bookmarks.length})</span>
           </button>
 
-          <div className="flex items-center rounded-xl bg-[#28292A] border border-[#3C4043] p-1 shadow-sm">
+          <div className="flex items-center rounded-xl bg-[#28292A] border border-[#3C4043] p-1">
             <button
               onClick={() => setViewMode('grid')}
               title="Grid View"
               className={`p-1.5 rounded-lg transition-colors ${
                 viewMode === 'grid'
-                  ? 'bg-[#3C4043] text-white shadow-sm'
+                  ? 'bg-[#3C4043] text-white'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -218,7 +218,7 @@ export const ExplorePage: React.FC = () => {
               title="Compact List View"
               className={`p-1.5 rounded-lg transition-colors ${
                 viewMode === 'compact'
-                  ? 'bg-[#3C4043] text-white shadow-sm'
+                  ? 'bg-[#3C4043] text-white'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -239,7 +239,7 @@ export const ExplorePage: React.FC = () => {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search by API name, category, feature, or keyword (e.g. weather, crypto, pokemon, geocoding)..."
-            className="w-full pl-12 pr-12 py-3.5 rounded-2xl bg-[#28292A] hover:bg-[#303134] focus:bg-[#303134] border border-[#3C4043] focus:border-[#8AB4F8] text-white placeholder-slate-400 text-sm transition-all outline-none shadow-md"
+            className="w-full pl-12 pr-12 py-3.5 rounded-2xl bg-[#28292A] hover:bg-[#303134] focus:bg-[#303134] border border-[#3C4043] focus:border-[#5F6368] text-white placeholder-slate-400 text-sm transition-all outline-none"
           />
           {searchInput && (
             <button
