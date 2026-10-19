@@ -184,9 +184,9 @@ export function CustomSelect<T extends string = string>({
   };
 
   const variantStyles = {
-    default: 'bg-[#1F1F1F] border-[#3C4043] text-slate-100 hover:border-[#5F6368] focus:border-[#8AB4F8]',
-    surface: 'bg-[#28292A] border-[#3C4043] text-slate-100 hover:border-[#5F6368] focus:border-[#8AB4F8]',
-    glass: 'bg-[#28292A] border-[#3C4043] text-slate-100 hover:border-[#5F6368] focus:border-[#8AB4F8]'
+    default: 'bg-surface border-border text-text-base hover:border-border-light focus:border-accent shadow-sm',
+    surface: 'bg-surface-elevated border-border text-text-base hover:border-border-light focus:border-accent shadow-sm',
+    glass: 'bg-surface border-border text-text-base hover:border-border-light focus:border-accent shadow-sm'
   };
 
   return (
@@ -198,7 +198,7 @@ export function CustomSelect<T extends string = string>({
       {label && (
         <label
           htmlFor={selectId}
-          className="text-xs font-medium text-slate-300 block mb-1.5"
+          className="text-xs font-medium text-text-muted block mb-1.5"
         >
           {label}
         </label>
@@ -215,31 +215,31 @@ export function CustomSelect<T extends string = string>({
         className={`w-full flex items-center justify-between border font-normal transition-colors duration-150 outline-none select-none ${
           sizeStyles[size]
         } ${variantStyles[variant]} ${
-          error ? '!border-[#F28B82]' : ''
+          error ? '!border-rose-500' : ''
         } ${
-          isOpen ? 'border-[#8AB4F8]' : ''
+          isOpen ? '!border-accent ring-1 ring-accent/30' : ''
         } ${
-          disabled ? 'opacity-50 cursor-not-allowed bg-[#1F1F1F]/50' : 'cursor-pointer'
+          disabled ? 'opacity-50 cursor-not-allowed bg-surface-elevated/50' : 'cursor-pointer'
         }`}
       >
         <div className="flex items-center gap-2 truncate flex-1 min-w-0 mr-1.5">
-          {icon && <span className="text-slate-400 flex-shrink-0">{icon}</span>}
+          {icon && <span className="text-text-muted flex-shrink-0">{icon}</span>}
           {selectedOption?.icon && (
-            <span className="flex-shrink-0 text-slate-300">{selectedOption.icon}</span>
+            <span className="flex-shrink-0 text-text-muted">{selectedOption.icon}</span>
           )}
-          <span className={`truncate text-left ${!selectedOption ? 'text-slate-400' : 'text-slate-100'}`}>
+          <span className={`truncate text-left ${!selectedOption ? 'text-text-muted' : 'text-text-base'}`}>
             {selectedOption ? selectedOption.label : placeholder}
           </span>
           {showBadgeInTrigger && selectedOption?.badge && (
-            <span className="ml-auto flex-shrink-0 text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#303134] text-slate-300 border border-[#3C4043]">
+            <span className="ml-auto flex-shrink-0 text-[10px] font-mono px-1.5 py-0.5 rounded bg-surface-elevated text-text-muted border border-border">
               {selectedOption.badge}
             </span>
           )}
         </div>
 
         <ChevronDown
-          className={`h-4 w-4 text-slate-400 flex-shrink-0 transition-transform duration-200 ease-out ${
-            isOpen ? 'rotate-180 text-[#8AB4F8]' : ''
+          className={`h-4 w-4 text-text-muted flex-shrink-0 transition-transform duration-200 ease-out ${
+            isOpen ? 'rotate-180 text-accent' : ''
           }`}
         />
       </button>
@@ -247,13 +247,13 @@ export function CustomSelect<T extends string = string>({
       {/* Dropdown Menu Popover */}
       {isOpen && (
         <div
-          className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} z-50 mt-1.5 w-full min-w-[200px] bg-[#28292A] border border-[#3C4043] rounded-xl py-1.5 overflow-hidden animate-in fade-in-0 duration-100 ${menuClassName}`}
+          className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} z-50 mt-1.5 w-full min-w-[200px] bg-surface border border-border rounded-xl py-1.5 overflow-hidden shadow-2xl animate-in fade-in-0 duration-100 ${menuClassName}`}
         >
           {/* Optional Search Filter */}
           {searchable && (
-            <div className="p-2 border-b border-[#3C4043] bg-[#28292A]">
+            <div className="p-2 border-b border-border bg-surface">
               <div className="relative flex items-center">
-                <Search className="absolute left-2.5 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+                <Search className="absolute left-2.5 h-3.5 w-3.5 text-text-muted pointer-events-none" />
                 <input
                   ref={searchInputRef}
                   type="text"
@@ -263,13 +263,13 @@ export function CustomSelect<T extends string = string>({
                     setFocusedIndex(0);
                   }}
                   placeholder="Filter options..."
-                  className="w-full bg-[#1F1F1F] border border-[#3C4043] rounded-lg pl-8 pr-7 py-1 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-[#8AB4F8]"
+                  className="w-full bg-surface-elevated border border-border rounded-lg pl-8 pr-7 py-1 text-xs text-text-base placeholder-text-muted focus:outline-none focus:border-accent"
                 />
                 {searchQuery && (
                   <button
                     type="button"
                     onClick={() => setSearchQuery('')}
-                    className="absolute right-2 text-slate-400 hover:text-white"
+                    className="absolute right-2 text-text-muted hover:text-text-base"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -286,7 +286,7 @@ export function CustomSelect<T extends string = string>({
             className="max-h-60 overflow-y-auto overflow-x-hidden p-1 space-y-0.5 focus:outline-none"
           >
             {filteredOptions.length === 0 ? (
-              <li className="px-3 py-2 text-xs text-slate-400 text-center">
+              <li className="px-3 py-2 text-xs text-text-muted text-center">
                 No matching options
               </li>
             ) : (
@@ -305,35 +305,35 @@ export function CustomSelect<T extends string = string>({
                       opt.disabled
                         ? 'opacity-40 cursor-not-allowed'
                         : isSelected
-                        ? 'bg-[#8AB4F8]/15 text-[#8AB4F8] font-medium'
+                        ? 'bg-accent/15 text-accent font-semibold'
                         : isFocused
-                        ? 'bg-[#303134] text-white'
-                        : 'text-slate-300 hover:bg-[#303134] hover:text-white'
+                        ? 'bg-surface-hover text-text-base'
+                        : 'text-text-muted hover:bg-surface-hover hover:text-text-base'
                     }`}
                   >
                     <div className="flex items-center gap-2 min-w-0 mr-2 flex-1">
                       {opt.icon && (
-                        <span className={`flex-shrink-0 ${isSelected ? 'text-[#8AB4F8]' : 'text-slate-400'}`}>
+                        <span className={`flex-shrink-0 ${isSelected ? 'text-accent' : 'text-text-muted'}`}>
                           {opt.icon}
                         </span>
                       )}
                       <div className="truncate min-w-0 flex-1">
                         <div className="truncate font-medium">{opt.label}</div>
                         {opt.description && (
-                          <div className="text-[11px] text-slate-400 truncate mt-0.5">
+                          <div className="text-[11px] text-text-muted truncate mt-0.5">
                             {opt.description}
                           </div>
                         )}
                       </div>
                       {opt.badge && (
-                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#1F1F1F] text-slate-400 border border-[#3C4043] flex-shrink-0">
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-surface-elevated text-text-muted border border-border flex-shrink-0">
                           {opt.badge}
                         </span>
                       )}
                     </div>
 
                     {isSelected && (
-                      <Check className="h-4 w-4 text-[#8AB4F8] flex-shrink-0 ml-1.5" />
+                      <Check className="h-4 w-4 text-accent flex-shrink-0 ml-1.5" />
                     )}
                   </li>
                 );
@@ -345,12 +345,12 @@ export function CustomSelect<T extends string = string>({
 
       {/* Helper text or Error */}
       {error ? (
-        <div className="flex items-center gap-1.5 mt-1.5 text-[11px] text-rose-400 font-medium animate-in fade-in-0 duration-150">
-          <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 text-rose-400" />
+        <div className="flex items-center gap-1.5 mt-1.5 text-[11px] text-rose-500 font-medium animate-in fade-in-0 duration-150">
+          <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 text-rose-500" />
           <span>{error}</span>
         </div>
       ) : helperText ? (
-        <p className="text-[11px] text-slate-400 mt-1">{helperText}</p>
+        <p className="text-[11px] text-text-muted mt-1">{helperText}</p>
       ) : null}
     </div>
   );

@@ -17,12 +17,13 @@ export default {
         'text-base': 'var(--color-text)',
         'text-muted': 'var(--color-text-muted)',
         accent: {
-          DEFAULT: '#8AB4F8',
-          hover: '#AECBFA'
+          DEFAULT: 'var(--color-accent)',
+          hover: 'var(--color-accent-hover)',
+          contrast: 'var(--color-accent-contrast)'
         },
-        healthy: '#81C995',
-        degraded: '#FDD663',
-        offline: '#F28B82'
+        healthy: 'var(--color-healthy)',
+        degraded: 'var(--color-degraded)',
+        offline: 'var(--color-offline)'
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

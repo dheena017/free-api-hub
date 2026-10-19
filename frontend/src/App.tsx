@@ -127,16 +127,16 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-black/80 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-black/60 backdrop-blur-md"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl bg-[#28292A] rounded-2xl border border-[#3C4043] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="w-full max-w-2xl bg-surface rounded-2xl border border-border shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input Bar */}
-        <div className="flex items-center gap-3 p-4 border-b border-[#3C4043]">
-          <Search className="h-5 w-5 text-slate-400 flex-shrink-0" />
+        <div className="flex items-center gap-3 p-4 border-b border-border">
+          <Search className="h-5 w-5 text-text-muted flex-shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -144,16 +144,16 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDownInInput}
             placeholder="Type API name, tag, or topic (e.g. weather, crypto, pokemon)..."
-            className="flex-1 bg-transparent text-sm sm:text-base text-white placeholder-slate-400 outline-none font-medium"
+            className="flex-1 bg-transparent text-sm sm:text-base text-text-base placeholder-text-muted outline-none font-medium"
           />
           {isSearching && (
-            <div className="animate-spin rounded-full h-4 w-4 border-2 border-slate-400 border-t-transparent flex-shrink-0" />
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-text-muted border-t-transparent flex-shrink-0" />
           )}
           {query && (
             <button
               type="button"
               onClick={() => setQuery('')}
-              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#303134]"
+              className="p-1 rounded-lg text-text-muted hover:text-text-base hover:bg-surface-hover"
             >
               <X className="h-4 w-4" />
             </button>
@@ -162,8 +162,8 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
 
         {/* Live Suggestions List */}
         {suggestions.length > 0 && (
-          <div className="max-h-80 overflow-y-auto divide-y divide-[#3C4043] p-2">
-            <div className="px-3 py-1.5 text-[11px] font-mono text-slate-400 uppercase tracking-wider">
+          <div className="max-h-80 overflow-y-auto divide-y divide-border p-2">
+            <div className="px-3 py-1.5 text-[11px] font-mono text-text-muted uppercase tracking-wider">
               Matching Endpoints
             </div>
             {suggestions.map((item, idx) => {
@@ -174,31 +174,31 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                   onClick={() => handleSelectApi(item.slug)}
                   className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-colors ${
                     isSelected
-                      ? 'bg-[#303134] text-white'
-                      : 'hover:bg-[#303134]/60 text-slate-200'
+                      ? 'bg-surface-hover text-text-base'
+                      : 'hover:bg-surface-hover/60 text-text-base'
                   }`}
                 >
                   <div className="min-w-0 flex-1 pr-3">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-white">{item.name}</span>
-                      <span className="text-[10px] font-mono uppercase text-slate-300 px-1.5 py-0.5 rounded bg-[#1F1F1F] border border-[#3C4043]">
+                      <span className="font-bold text-sm text-text-base">{item.name}</span>
+                      <span className="text-[10px] font-mono uppercase text-text-muted px-1.5 py-0.5 rounded bg-surface-elevated border border-border">
                         {item.category}
                       </span>
                       {item.auth_type === 'none' && (
-                        <span className="text-[10px] text-[#81C995] font-mono flex items-center gap-0.5">
+                        <span className="text-[10px] text-healthy font-mono flex items-center gap-0.5">
                           <Zap className="h-2.5 w-2.5" />
                           <span>No Key</span>
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-400 truncate mt-0.5">
+                    <p className="text-xs text-text-muted truncate mt-0.5">
                       {item.description}
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2 text-xs font-mono text-slate-400 flex-shrink-0">
-                    <span className="text-[#81C995] font-semibold">{item.health.avg_latency_ms}ms</span>
-                    <ArrowRight className="h-3.5 w-3.5 text-slate-400" />
+                  <div className="flex items-center gap-2 text-xs font-mono text-text-muted flex-shrink-0">
+                    <span className="text-healthy font-semibold">{item.health.avg_latency_ms}ms</span>
+                    <ArrowRight className="h-3.5 w-3.5 text-text-muted" />
                   </div>
                 </div>
               );
@@ -210,7 +210,7 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
         {!query.trim() && (
           <div className="p-4 space-y-4">
             <div>
-              <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider mb-2">
+              <div className="text-[11px] font-mono text-text-muted uppercase tracking-wider mb-2">
                 Quick Collections
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -221,12 +221,12 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                       navigate(item.path);
                       onClose();
                     }}
-                    className="p-2.5 rounded-xl bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] text-left transition-all group cursor-pointer"
+                    className="p-2.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border hover:border-border-light text-left transition-all group cursor-pointer"
                   >
-                    <div className="text-xs font-semibold text-white group-hover:text-slate-200">
+                    <div className="text-xs font-semibold text-text-base group-hover:text-accent">
                       {item.shortLabel || item.name}
                     </div>
-                    <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                    <div className="text-[10px] text-text-muted font-mono mt-0.5">
                       {item.desc}
                     </div>
                   </button>
@@ -235,7 +235,7 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
             </div>
 
             <div>
-              <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider mb-2">
+              <div className="text-[11px] font-mono text-text-muted uppercase tracking-wider mb-2">
                 Trending Categories
               </div>
               <div className="flex flex-wrap gap-1.5 text-xs">
@@ -249,7 +249,7 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                       navigate(`/category/${encodeURIComponent(tag)}`);
                       onClose();
                     }}
-                    className="px-2.5 py-1 rounded-lg bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] text-slate-300 hover:text-white transition-colors font-mono text-[11px] cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-surface-elevated hover:bg-surface-hover border border-border hover:border-border-light text-text-muted hover:text-text-base transition-colors font-mono text-[11px] cursor-pointer"
                   >
                     #{tag}
                   </button>
@@ -261,9 +261,9 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
 
         {/* Empty state when query produces no result */}
         {query.trim() && !isSearching && suggestions.length === 0 && (
-          <div className="p-8 text-center text-xs text-slate-400">
+          <div className="p-8 text-center text-xs text-text-muted">
             No instant matches found for "<strong>{query}</strong>". Press{' '}
-            <kbd className="px-1.5 py-0.5 rounded bg-[#1F1F1F] border border-[#3C4043] text-slate-300 font-mono">
+            <kbd className="px-1.5 py-0.5 rounded bg-surface-elevated border border-border text-text-base font-mono">
               Enter
             </kbd>{' '}
             to explore all results.
@@ -271,23 +271,23 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
         )}
 
         {/* Modal Footer Controls */}
-        <div className="p-3 bg-[#1F1F1F] border-t border-[#3C4043] flex items-center justify-between text-[11px] text-slate-400">
+        <div className="p-3 bg-surface-elevated border-t border-border flex items-center justify-between text-[11px] text-text-muted">
           <div className="flex items-center gap-3">
             <span>
-              <kbd className="px-1.5 py-0.5 rounded bg-[#28292A] border border-[#3C4043] text-slate-300">↑↓</kbd> Navigate
+              <kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-text-muted">↑↓</kbd> Navigate
             </span>
             <span>
-              <kbd className="px-1.5 py-0.5 rounded bg-[#28292A] border border-[#3C4043] text-slate-300">Enter</kbd> Select
+              <kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-text-muted">Enter</kbd> Select
             </span>
             <span>
-              <kbd className="px-1.5 py-0.5 rounded bg-[#28292A] border border-[#3C4043] text-slate-300">Esc</kbd> Close
+              <kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-text-muted">Esc</kbd> Close
             </span>
           </div>
 
           {query.trim() && (
             <button
               onClick={handleExploreAll}
-              className="text-[#8AB4F8] hover:underline font-medium inline-flex items-center gap-1"
+              className="text-accent hover:underline font-medium inline-flex items-center gap-1"
             >
               <span>Explore all in directory</span>
               <ArrowRight className="h-3 w-3" />

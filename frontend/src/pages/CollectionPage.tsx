@@ -104,14 +104,14 @@ export const CollectionPage: React.FC = () => {
         </Link>
 
         {/* View mode toggle */}
-        <div className="flex items-center rounded-lg bg-[#28292A] border border-[#3C4043] p-0.5">
+        <div className="flex items-center rounded-lg bg-surface border border-border p-0.5">
           <button
             onClick={() => setViewMode('grid')}
             title="Grid View"
             className={`p-1.5 rounded-md transition-colors ${
               viewMode === 'grid'
-                ? 'bg-[#3C4043] text-white shadow-sm'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-surface-hover text-text-base shadow-sm'
+                : 'text-text-muted hover:text-text-base'
             }`}
           >
             <LayoutGrid className="h-4 w-4" />
@@ -121,8 +121,8 @@ export const CollectionPage: React.FC = () => {
             title="Compact List View"
             className={`p-1.5 rounded-md transition-colors ${
               viewMode === 'compact'
-                ? 'bg-[#3C4043] text-white shadow-sm'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-surface-hover text-text-base shadow-sm'
+                : 'text-text-muted hover:text-text-base'
             }`}
           >
             <List className="h-4 w-4" />
@@ -141,8 +141,8 @@ export const CollectionPage: React.FC = () => {
               to={`/collections/${col.id}`}
               className={`px-4 py-2 rounded-xl flex items-center gap-2 whitespace-nowrap font-medium transition-colors border ${
                 isSelected
-                  ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold border-[#8AB4F8]'
-                  : 'bg-[#28292A] border-[#3C4043] text-slate-300 hover:bg-[#303134] hover:text-white'
+                  ? 'bg-accent text-background font-bold border-accent'
+                  : 'bg-surface border-border text-text-muted hover:bg-surface-hover hover:text-text-base'
               }`}
             >
               <TabIcon className="h-4 w-4" />
@@ -153,29 +153,29 @@ export const CollectionPage: React.FC = () => {
       </div>
 
       {/* Hero Header */}
-      <div className="bg-[#28292A] rounded-2xl p-6 sm:p-8 border border-[#3C4043] space-y-3">
-        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#8AB4F8]/10 border border-[#8AB4F8]/20 text-[#8AB4F8] text-xs font-mono font-medium">
+      <div className="bg-surface rounded-2xl p-6 sm:p-8 border border-border space-y-3">
+        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-mono font-medium">
           <Icon className="h-3.5 w-3.5" />
           <span>{currentCollection.tagline}</span>
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-text-base tracking-tight">
           {currentCollection.name}
         </h1>
 
-        <p className="text-sm text-slate-300 max-w-2xl leading-relaxed">
+        <p className="text-sm text-text-muted max-w-2xl leading-relaxed">
           {currentCollection.description}
         </p>
 
-        <div className="text-xs font-mono text-slate-400 pt-1">
-          Showing <strong className="text-white">{totalCount.toLocaleString()}</strong> verified endpoints in this collection
+        <div className="text-xs font-mono text-text-muted pt-1">
+          Showing <strong className="text-text-base">{totalCount.toLocaleString()}</strong> verified endpoints in this collection
         </div>
       </div>
 
       {/* Search & Sort Toolbar */}
-      <div className="bg-[#28292A] rounded-2xl border border-[#3C4043] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-surface rounded-2xl border border-border p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" />
           <input
             type="text"
             value={searchQuery}
@@ -184,7 +184,7 @@ export const CollectionPage: React.FC = () => {
               setCurrentPage(1);
             }}
             placeholder={`Search within ${currentCollection.name}...`}
-            className="w-full pl-9 pr-8 py-2 rounded-xl bg-[#1F1F1F] border border-[#3C4043] text-xs text-white placeholder-slate-400 outline-none focus:border-[#8AB4F8]"
+            className="w-full pl-9 pr-8 py-2 rounded-xl bg-surface-elevated border border-border text-xs text-text-base placeholder-text-muted outline-none focus:border-accent"
           />
           {searchQuery && (
             <button
@@ -192,7 +192,7 @@ export const CollectionPage: React.FC = () => {
                 setSearchQuery('');
                 setCurrentPage(1);
               }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-base"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -218,13 +218,13 @@ export const CollectionPage: React.FC = () => {
         {isLoading ? (
           <SkeletonGrid count={pageSize} viewMode={viewMode} />
         ) : error ? (
-          <div className="bg-[#28292A] rounded-2xl p-8 text-center border border-rose-500/30 space-y-3">
+          <div className="bg-surface rounded-2xl p-8 text-center border border-rose-500/30 space-y-3">
             <AlertCircle className="h-8 w-8 text-rose-400 mx-auto" />
-            <h3 className="text-base font-semibold text-white">Error Loading Collection</h3>
+            <h3 className="text-base font-semibold text-text-base">Error Loading Collection</h3>
             <p className="text-xs text-rose-300 max-w-md mx-auto">{error}</p>
             <button
               onClick={loadCollection}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#303134] hover:bg-[#3C4043] text-xs text-[#8AB4F8] font-medium border border-[#3C4043] transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface-elevated hover:bg-surface-hover text-xs text-accent font-medium border border-border transition-colors"
             >
               <RefreshCw className="h-3.5 w-3.5" />
               <span>Retry</span>
@@ -248,24 +248,24 @@ export const CollectionPage: React.FC = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="pt-6 pb-2 border-t border-[#3C4043] flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="text-xs text-slate-400 font-mono">
-                  Page <strong className="text-white">{currentPage}</strong> of{' '}
-                  <strong className="text-white">{totalPages}</strong> ({totalCount.toLocaleString()} endpoints)
+              <div className="pt-6 pb-2 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-xs text-text-muted font-mono">
+                  Page <strong className="text-text-base">{currentPage}</strong> of{' '}
+                  <strong className="text-text-base">{totalPages}</strong> ({totalCount.toLocaleString()} endpoints)
                 </div>
 
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => handlePageChange(1)}
                     disabled={currentPage === 1}
-                    className="p-2 rounded-lg bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 rounded-lg bg-surface hover:bg-surface-hover border border-border text-text-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronsLeft className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className="p-2 rounded-lg bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 rounded-lg bg-surface hover:bg-surface-hover border border-border text-text-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
@@ -280,8 +280,8 @@ export const CollectionPage: React.FC = () => {
                           onClick={() => handlePageChange(p)}
                           className={`min-w-[34px] h-[34px] rounded-lg text-xs font-mono font-medium transition-colors border ${
                             p === currentPage
-                              ? 'bg-[#8AB4F8] border-[#8AB4F8] text-[#1F1F1F] font-bold'
-                              : 'bg-[#28292A] border-[#3C4043] text-slate-300 hover:bg-[#303134]'
+                              ? 'bg-accent border-accent text-background font-bold'
+                              : 'bg-surface border-border text-text-muted hover:bg-surface-hover hover:text-text-base'
                           }`}
                         >
                           {p}
@@ -293,14 +293,14 @@ export const CollectionPage: React.FC = () => {
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className="p-2 rounded-lg bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 rounded-lg bg-surface hover:bg-surface-hover border border-border text-text-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronRight className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => handlePageChange(totalPages)}
                     disabled={currentPage === totalPages}
-                    className="p-2 rounded-lg bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 rounded-lg bg-surface hover:bg-surface-hover border border-border text-text-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronsRight className="h-4 w-4" />
                   </button>
@@ -309,10 +309,10 @@ export const CollectionPage: React.FC = () => {
             )}
           </div>
         ) : (
-          <div className="bg-[#28292A] rounded-2xl p-12 text-center border border-[#3C4043] space-y-3">
-            <FilterX className="h-9 w-9 text-slate-500 mx-auto" />
-            <h3 className="text-base font-semibold text-white">No endpoints found</h3>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
+          <div className="bg-surface rounded-2xl p-12 text-center border border-border space-y-3">
+            <FilterX className="h-9 w-9 text-text-muted mx-auto" />
+            <h3 className="text-base font-semibold text-text-base">No endpoints found</h3>
+            <p className="text-xs text-text-muted max-w-sm mx-auto">
               No APIs match your current search query in this collection.
             </p>
             <button
@@ -320,7 +320,7 @@ export const CollectionPage: React.FC = () => {
                 setSearchQuery('');
                 setSelectedSort('popular');
               }}
-              className="px-4 py-2 rounded-xl bg-[#8AB4F8] text-[#1F1F1F] font-semibold text-xs hover:bg-[#A8C7FA] transition-colors"
+              className="px-4 py-2 rounded-xl bg-accent text-background font-semibold text-xs hover:opacity-90 transition-colors"
             >
               Reset Search
             </button>

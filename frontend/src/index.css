@@ -11,6 +11,12 @@
   --color-border-light: #C4C7C5;
   --color-text: #1F2937;
   --color-text-muted: #5F6368;
+  --color-accent: #1A73E8;
+  --color-accent-hover: #1557B0;
+  --color-accent-contrast: #FFFFFF;
+  --color-healthy: #188038;
+  --color-degraded: #B06000;
+  --color-offline: #D93025;
   color-scheme: light;
 }
 
@@ -24,6 +30,12 @@ html.dark,
   --color-border-light: #5F6368;
   --color-text: #F1F5F9;
   --color-text-muted: #9AA0A6;
+  --color-accent: #8AB4F8;
+  --color-accent-hover: #AECBFA;
+  --color-accent-contrast: #1F1F1F;
+  --color-healthy: #81C995;
+  --color-degraded: #FDD663;
+  --color-offline: #F28B82;
   color-scheme: dark;
 }
 

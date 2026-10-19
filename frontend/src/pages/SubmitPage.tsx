@@ -270,20 +270,20 @@ export const SubmitPage: React.FC = () => {
           <PlusCircle className="h-4 w-4" />
           <span>Community Directory Pipeline</span>
         </div>
-        <h1 className="text-3xl font-extrabold text-white">Community API Hub</h1>
-        <p className="text-xs text-slate-400 max-w-xl leading-relaxed">
+        <h1 className="text-3xl font-extrabold text-text-base">Community API Hub</h1>
+        <p className="text-xs text-text-muted max-w-xl leading-relaxed">
           Help expand the world's most reliable free API catalog. Submissions undergo pre-flight live validation and persistent automated health verification.
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-[#3C4043] gap-6">
+      <div className="flex border-b border-border gap-6">
         <button
           onClick={() => setPageTab('submit')}
           className={`pb-3 text-xs font-semibold flex items-center gap-2 border-b-2 transition-colors ${
             pageTab === 'submit'
-              ? 'border-[#8AB4F8] text-[#8AB4F8]'
-              : 'border-transparent text-slate-400 hover:text-white'
+              ? 'border-accent text-accent'
+              : 'border-transparent text-text-muted hover:text-text-base'
           }`}
         >
           <PlusCircle className="h-4 w-4" />
@@ -293,8 +293,8 @@ export const SubmitPage: React.FC = () => {
           onClick={() => setPageTab('track')}
           className={`pb-3 text-xs font-semibold flex items-center gap-2 border-b-2 transition-colors ${
             pageTab === 'track'
-              ? 'border-[#8AB4F8] text-[#8AB4F8]'
-              : 'border-transparent text-slate-400 hover:text-white'
+              ? 'border-accent text-accent'
+              : 'border-transparent text-text-muted hover:text-text-base'
           }`}
         >
           <Clock className="h-4 w-4" />
@@ -303,14 +303,14 @@ export const SubmitPage: React.FC = () => {
       </div>
 
       {pageTab === 'track' ? (
-        <div className="bg-[#28292A] rounded-2xl p-6 sm:p-8 border border-[#3C4043] space-y-6">
+        <div className="bg-surface rounded-2xl p-6 sm:p-8 border border-border space-y-6">
           <div className="space-y-1">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Search className="h-5 w-5 text-[#8AB4F8]" />
+            <h2 className="text-lg font-bold text-text-base flex items-center gap-2">
+              <Search className="h-5 w-5 text-accent" />
               <span>Lookup Submission by ID</span>
             </h2>
-            <p className="text-xs text-slate-400">
-              Enter your tracking identifier (e.g. <span className="font-mono text-slate-300">sub_...</span>) to check automated moderation and catalog intake status.
+            <p className="text-xs text-text-muted">
+              Enter your tracking identifier (e.g. <span className="font-mono text-text-muted">sub_...</span>) to check automated moderation and catalog intake status.
             </p>
           </div>
 
@@ -320,12 +320,12 @@ export const SubmitPage: React.FC = () => {
               value={lookupId}
               onChange={(e) => setLookupId(e.target.value)}
               placeholder="sub_xxxxxxxxxxxx"
-              className="flex-1 bg-[#1F1F1F] border border-[#3C4043] rounded-lg px-3 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-[#8AB4F8]"
+              className="flex-1 bg-surface-elevated border border-border rounded-lg px-3 py-2 text-xs font-mono text-text-base placeholder-text-muted focus:outline-none focus:border-accent"
             />
             <button
               onClick={() => handleLookup()}
               disabled={isLookingUp || !lookupId.trim()}
-              className="px-4 py-2 bg-[#8AB4F8] hover:bg-[#A8C7FA] disabled:opacity-50 text-xs font-semibold text-[#1F1F1F] rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="px-4 py-2 bg-accent hover:opacity-90 disabled:opacity-50 text-xs font-semibold text-background rounded-lg transition-colors flex items-center justify-center gap-2"
             >
               {isLookingUp ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
               <span>{isLookingUp ? 'Checking...' : 'Check Status'}</span>
@@ -340,20 +340,20 @@ export const SubmitPage: React.FC = () => {
           )}
 
           {lookupResult && (
-            <div className="p-5 rounded-xl bg-[#1F1F1F] border border-[#3C4043] space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#3C4043]">
+            <div className="p-5 rounded-xl bg-surface-elevated border border-border space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border">
                 <div>
-                  <div className="text-[11px] font-mono uppercase text-slate-400">Tracking Reference</div>
-                  <div className="text-sm font-mono font-bold text-white">{lookupResult.id}</div>
+                  <div className="text-[11px] font-mono uppercase text-text-muted">Tracking Reference</div>
+                  <div className="text-sm font-mono font-bold text-text-base">{lookupResult.id}</div>
                 </div>
                 <div>
                   <span
                     className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
                       lookupResult.status === 'approved'
-                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                        ? 'bg-healthy/10 border-healthy/30 text-healthy'
                         : lookupResult.status === 'rejected'
-                        ? 'bg-rose-500/10 border-rose-500/30 text-rose-400'
-                        : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                        ? 'bg-offline/10 border-offline/30 text-offline'
+                        : 'bg-degraded/10 border-degraded/30 text-degraded'
                     }`}
                   >
                     <Clock className="h-3 w-3" />
@@ -368,57 +368,57 @@ export const SubmitPage: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 <div>
-                  <span className="text-slate-400">API Name:</span>
-                  <p className="font-semibold text-white mt-0.5">{lookupResult.name}</p>
+                  <span className="text-text-muted">API Name:</span>
+                  <p className="font-semibold text-text-base mt-0.5">{lookupResult.name}</p>
                 </div>
                 <div>
-                  <span className="text-slate-400">Category:</span>
-                  <p className="font-mono text-slate-200 mt-0.5">{lookupResult.category}</p>
+                  <span className="text-text-muted">Category:</span>
+                  <p className="font-mono text-text-base mt-0.5">{lookupResult.category}</p>
                 </div>
                 <div>
-                  <span className="text-slate-400">Base URL:</span>
-                  <p className="font-mono text-[#8AB4F8] mt-0.5 truncate">{lookupResult.base_url}</p>
+                  <span className="text-text-muted">Base URL:</span>
+                  <p className="font-mono text-accent mt-0.5 truncate">{lookupResult.base_url}</p>
                 </div>
                 <div>
-                  <span className="text-slate-400">Endpoint Path:</span>
-                  <p className="font-mono text-slate-300 mt-0.5">{lookupResult.endpoint}</p>
+                  <span className="text-text-muted">Endpoint Path:</span>
+                  <p className="font-mono text-text-muted mt-0.5">{lookupResult.endpoint}</p>
                 </div>
                 <div>
-                  <span className="text-slate-400">Submission Timestamp:</span>
-                  <p className="text-slate-300 mt-0.5 font-mono">{new Date(lookupResult.created_at).toLocaleString()}</p>
+                  <span className="text-text-muted">Submission Timestamp:</span>
+                  <p className="text-text-muted mt-0.5 font-mono">{new Date(lookupResult.created_at).toLocaleString()}</p>
                 </div>
                 <div>
-                  <span className="text-slate-400">Automated Bot Validation:</span>
-                  <p className="text-emerald-400 mt-0.5 font-semibold">Verified Live (HTTP 200 OK)</p>
+                  <span className="text-text-muted">Automated Bot Validation:</span>
+                  <p className="text-healthy mt-0.5 font-semibold">Verified Live (HTTP 200 OK)</p>
                 </div>
               </div>
 
               {lookupResult.review_notes && (
-                <div className="p-3 bg-[#28292A] rounded-lg border border-[#3C4043] text-xs space-y-1">
-                  <span className="font-medium text-slate-300">Moderation Notes:</span>
-                  <p className="text-slate-400">{lookupResult.review_notes}</p>
+                <div className="p-3 bg-surface rounded-lg border border-border text-xs space-y-1">
+                  <span className="font-medium text-text-muted">Moderation Notes:</span>
+                  <p className="text-text-muted">{lookupResult.review_notes}</p>
                 </div>
               )}
             </div>
           )}
         </div>
       ) : submissionSuccess ? (
-        <div className="bg-[#28292A] rounded-2xl p-8 border border-[#3C4043] text-center space-y-5">
-          <div className="h-12 w-12 rounded-full bg-[#1F1F1F] border border-[#3C4043] text-emerald-400 flex items-center justify-center mx-auto">
+        <div className="bg-surface rounded-2xl p-8 border border-border text-center space-y-5">
+          <div className="h-12 w-12 rounded-full bg-surface-elevated border border-border text-healthy flex items-center justify-center mx-auto">
             <CheckCircle2 className="h-6 w-6" />
           </div>
           <div className="space-y-1">
-            <h2 className="text-xl font-bold text-white">API Successfully Submitted!</h2>
-            <p className="text-xs text-slate-300 max-w-md mx-auto">
+            <h2 className="text-xl font-bold text-text-base">API Successfully Submitted!</h2>
+            <p className="text-xs text-text-muted max-w-md mx-auto">
               Your endpoint has been placed into our automated verification queue. Once verified by our daily health bot, it will appear publicly in the directory.
             </p>
           </div>
 
           {lastSubmittedId && (
-            <div className="max-w-md mx-auto p-3.5 bg-[#1F1F1F] rounded-xl border border-[#3C4043] flex items-center justify-between gap-3 text-left">
+            <div className="max-w-md mx-auto p-3.5 bg-surface-elevated rounded-xl border border-border flex items-center justify-between gap-3 text-left">
               <div>
-                <span className="text-[10px] font-mono text-slate-400 uppercase">Your Tracking Reference</span>
-                <div className="text-xs font-mono font-bold text-[#8AB4F8]">{lastSubmittedId}</div>
+                <span className="text-[10px] font-mono text-text-muted uppercase">Your Tracking Reference</span>
+                <div className="text-xs font-mono font-bold text-accent">{lastSubmittedId}</div>
               </div>
               <button
                 onClick={() => {
@@ -426,9 +426,9 @@ export const SubmitPage: React.FC = () => {
                   setCopiedSubId(true);
                   setTimeout(() => setCopiedSubId(false), 2000);
                 }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#28292A] hover:bg-[#3C4043] border border-[#3C4043] text-xs font-medium text-slate-200 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-hover border border-border text-xs font-medium text-text-base transition-colors"
               >
-                {copiedSubId ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                {copiedSubId ? <Check className="h-3.5 w-3.5 text-healthy" /> : <Copy className="h-3.5 w-3.5 text-text-muted" />}
                 <span>{copiedSubId ? 'Copied' : 'Copy'}</span>
               </button>
             </div>
@@ -442,7 +442,7 @@ export const SubmitPage: React.FC = () => {
                   setPageTab('track');
                   handleLookup(lastSubmittedId);
                 }}
-                className="px-4 py-2 rounded-lg bg-[#8AB4F8] hover:bg-[#A8C7FA] text-xs font-semibold text-[#1F1F1F] transition-colors"
+                className="px-4 py-2 rounded-lg bg-accent hover:opacity-90 text-xs font-semibold text-background transition-colors"
               >
                 Track This Submission
               </button>
@@ -463,7 +463,7 @@ export const SubmitPage: React.FC = () => {
                   detailed_description: ''
                 });
               }}
-              className="px-4 py-2 rounded-lg bg-[#303134] border border-[#3C4043] text-xs text-slate-200 hover:text-white hover:bg-[#3C4043] font-medium transition-colors"
+              className="px-4 py-2 rounded-lg bg-surface-elevated border border-border text-xs text-text-base hover:bg-surface-hover font-medium transition-colors"
             >
               Submit Another API
             </button>
@@ -472,9 +472,9 @@ export const SubmitPage: React.FC = () => {
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Quick Demo Pre-fill Bar */}
-          <div className="bg-[#28292A] rounded-2xl p-4 border border-[#3C4043] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2 text-slate-300">
-              <Zap className="h-4 w-4 text-[#8AB4F8]" />
+          <div className="bg-surface rounded-2xl p-4 border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2 text-text-muted">
+              <Zap className="h-4 w-4 text-accent" />
               <span>Testing the verification pipeline? Load a real sample from our verified catalog:</span>
             </div>
             <div className="flex items-center gap-2">
@@ -482,22 +482,22 @@ export const SubmitPage: React.FC = () => {
                 type="button"
                 disabled={isLookingUp}
                 onClick={handleQuickFillFromCatalog}
-                className="px-3 py-1.5 rounded-lg bg-[#1F1F1F] hover:bg-[#3C4043] border border-[#3C4043] text-slate-200 text-xs font-mono transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="px-3 py-1.5 rounded-lg bg-surface-elevated hover:bg-surface-hover border border-border text-text-base text-xs font-mono transition-colors flex items-center gap-1.5 cursor-pointer"
               >
-                <Sparkles className="h-3.5 w-3.5 text-[#8AB4F8]" />
+                <Sparkles className="h-3.5 w-3.5 text-accent" />
                 <span>{isLookingUp ? 'Fetching from Catalog...' : 'Load Catalog Sample'}</span>
               </button>
             </div>
           </div>
 
-          <div className="bg-[#28292A] rounded-2xl p-6 sm:p-8 border border-[#3C4043] space-y-6">
-            <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wider border-b border-[#3C4043] pb-3">
+          <div className="bg-surface rounded-2xl p-6 sm:p-8 border border-border space-y-6">
+            <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider border-b border-border pb-3">
               1. API Information
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-medium text-slate-300 block mb-1">
+                <label className="text-xs font-medium text-text-muted block mb-1">
                   API Name *
                 </label>
                 <input
@@ -508,10 +508,10 @@ export const SubmitPage: React.FC = () => {
                     setFormData({ ...formData, name: e.target.value });
                     if (fieldErrors.name) setFieldErrors({ ...fieldErrors, name: '' });
                   }}
-                  className={`w-full bg-[#1F1F1F] border rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none transition-colors ${
+                  className={`w-full bg-surface-elevated border rounded-lg px-3 py-2 text-xs text-text-base focus:outline-none transition-colors ${
                     fieldErrors.name
                       ? 'border-rose-500 ring-1 ring-rose-500/30'
-                      : 'border-[#3C4043] focus:border-[#8AB4F8]'
+                      : 'border-border focus:border-accent'
                   }`}
                 />
                 {fieldErrors.name && (
@@ -541,10 +541,10 @@ export const SubmitPage: React.FC = () => {
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-medium text-slate-300">
+                <label className="text-xs font-medium text-text-muted">
                   Description *
                 </label>
-                <span className="text-[10px] text-slate-400 font-mono">Shown on API cards & search</span>
+                <span className="text-[10px] text-text-muted font-mono">Shown on API cards & search</span>
               </div>
               <textarea
                 rows={2}
@@ -557,10 +557,10 @@ export const SubmitPage: React.FC = () => {
                   });
                   if (fieldErrors.description) setFieldErrors({ ...fieldErrors, description: '' });
                 }}
-                className={`w-full bg-[#1F1F1F] border rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none transition-colors ${
+                className={`w-full bg-surface-elevated border rounded-lg px-3 py-2 text-xs text-text-base focus:outline-none transition-colors ${
                   fieldErrors.description
                     ? 'border-rose-500 ring-1 ring-rose-500/30'
-                    : 'border-[#3C4043] focus:border-[#8AB4F8]'
+                    : 'border-border focus:border-accent'
                 }`}
               />
               {fieldErrors.description && (
@@ -573,22 +573,22 @@ export const SubmitPage: React.FC = () => {
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-medium text-slate-300">
+                <label className="text-xs font-medium text-text-muted">
                   Detailed Description (Full Overview)
                 </label>
-                <span className="text-[10px] text-slate-400 font-mono">Shown on API Detail Page</span>
+                <span className="text-[10px] text-text-muted font-mono">Shown on API Detail Page</span>
               </div>
               <textarea
                 rows={4}
                 placeholder="Comprehensive technical overview: explain key features, response formats, rate limits, and common developer use cases..."
                 value={formData.detailed_description}
                 onChange={(e) => setFormData({ ...formData, detailed_description: e.target.value })}
-                className="w-full bg-[#1F1F1F] border border-[#3C4043] rounded-lg px-3 py-2 text-xs text-slate-100 focus:border-[#8AB4F8] focus:outline-none transition-colors leading-relaxed"
+                className="w-full bg-surface-elevated border border-border rounded-lg px-3 py-2 text-xs text-text-base focus:border-accent focus:outline-none transition-colors leading-relaxed"
               />
             </div>
 
             <div>
-              <label className="text-xs font-medium text-slate-300 block mb-1">
+              <label className="text-xs font-medium text-text-muted block mb-1">
                 Official Documentation URL *
               </label>
               <input
@@ -599,10 +599,10 @@ export const SubmitPage: React.FC = () => {
                   setFormData({ ...formData, documentation_url: e.target.value });
                   if (fieldErrors.documentation_url) setFieldErrors({ ...fieldErrors, documentation_url: '' });
                 }}
-                className={`w-full bg-[#1F1F1F] border rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none transition-colors ${
+                className={`w-full bg-surface-elevated border rounded-lg px-3 py-2 text-xs text-text-base focus:outline-none transition-colors ${
                   fieldErrors.documentation_url
                     ? 'border-rose-500 ring-1 ring-rose-500/30'
-                    : 'border-[#3C4043] focus:border-[#8AB4F8]'
+                    : 'border-border focus:border-accent'
                 }`}
               />
               {fieldErrors.documentation_url && (
@@ -639,18 +639,18 @@ export const SubmitPage: React.FC = () => {
             </div>
 
             {/* Section 2: Live Pre-Validation */}
-            <div className="pt-4 border-t border-[#3C4043] space-y-4">
-              <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                <Play className="h-3.5 w-3.5 text-[#8AB4F8]" />
+            <div className="pt-4 border-t border-border space-y-4">
+              <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider flex items-center gap-2">
+                <Play className="h-3.5 w-3.5 text-accent" />
                 <span>2. Live Endpoint Pre-Validator (Mandatory)</span>
               </h3>
-              <p className="text-xs text-slate-400">
-                Enter the Base URL and sample GET path. We will send a live probe right now to confirm it responds with <code className="text-emerald-400">200 OK</code>.
+              <p className="text-xs text-text-muted">
+                Enter the Base URL and sample GET path. We will send a live probe right now to confirm it responds with <code className="text-healthy">200 OK</code>.
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="sm:col-span-2">
-                  <label className="text-xs font-medium text-slate-300 block mb-1">
+                  <label className="text-xs font-medium text-text-muted block mb-1">
                     Base URL *
                   </label>
                   <input
@@ -661,10 +661,10 @@ export const SubmitPage: React.FC = () => {
                       setFormData({ ...formData, base_url: e.target.value });
                       if (fieldErrors.base_url) setFieldErrors({ ...fieldErrors, base_url: '' });
                     }}
-                    className={`w-full bg-[#1F1F1F] border rounded-lg px-3 py-2 text-xs font-mono text-slate-100 focus:outline-none transition-colors ${
+                    className={`w-full bg-surface-elevated border rounded-lg px-3 py-2 text-xs font-mono text-text-base focus:outline-none transition-colors ${
                       fieldErrors.base_url
                         ? 'border-rose-500 ring-1 ring-rose-500/30'
-                        : 'border-[#3C4043] focus:border-[#8AB4F8]'
+                        : 'border-border focus:border-accent'
                     }`}
                   />
                   {fieldErrors.base_url && (
@@ -676,7 +676,7 @@ export const SubmitPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="text-xs font-medium text-slate-300 block mb-1">
+                  <label className="text-xs font-medium text-text-muted block mb-1">
                     GET Endpoint Path *
                   </label>
                   <input
@@ -687,10 +687,10 @@ export const SubmitPage: React.FC = () => {
                       setFormData({ ...formData, endpoint: e.target.value });
                       if (fieldErrors.endpoint) setFieldErrors({ ...fieldErrors, endpoint: '' });
                     }}
-                    className={`w-full bg-[#1F1F1F] border rounded-lg px-3 py-2 text-xs font-mono text-slate-100 focus:outline-none transition-colors ${
+                    className={`w-full bg-surface-elevated border rounded-lg px-3 py-2 text-xs font-mono text-text-base focus:outline-none transition-colors ${
                       fieldErrors.endpoint
                         ? 'border-rose-500 ring-1 ring-rose-500/30'
-                        : 'border-[#3C4043] focus:border-[#8AB4F8]'
+                        : 'border-border focus:border-accent'
                     }`}
                   />
                   {fieldErrors.endpoint && (
@@ -708,12 +708,12 @@ export const SubmitPage: React.FC = () => {
                   type="button"
                   onClick={handleValidate}
                   disabled={isValidating}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#303134] hover:bg-[#3C4043] text-xs font-medium text-[#8AB4F8] border border-[#3C4043] transition-colors disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-elevated hover:bg-surface-hover text-xs font-medium text-accent border border-border transition-colors disabled:opacity-50"
                 >
                   {isValidating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5 fill-current" />}
                   <span>{isValidating ? 'Validating Endpoint Live...' : 'Validate Endpoint Live'}</span>
                 </button>
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-text-muted">
                   Sends an authentic HTTP probe to confirm zero-downtime reliability
                 </span>
               </div>
@@ -723,13 +723,13 @@ export const SubmitPage: React.FC = () => {
                 <div
                   className={`p-4 rounded-xl border text-xs space-y-2.5 ${
                     validationResult.is_valid
-                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                      ? 'bg-healthy/10 border-healthy/30 text-healthy'
                       : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
                   }`}
                 >
                   <div className="flex items-center gap-2 font-semibold">
                     {validationResult.is_valid ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                      <CheckCircle2 className="h-4 w-4 text-healthy" />
                     ) : (
                       <AlertCircle className="h-4 w-4 text-rose-400" />
                     )}
@@ -739,31 +739,31 @@ export const SubmitPage: React.FC = () => {
                         : `Validation Failed (HTTP ${validationResult.status_code || 'Connection Failed'})`}
                     </span>
                   </div>
-                  <p className="text-slate-300 leading-relaxed">{validationResult.message}</p>
+                  <p className="text-text-muted leading-relaxed">{validationResult.message}</p>
 
                   {/* Diagnostic hints for failed validation */}
                   {!validationResult.is_valid && (
-                    <div className="bg-[#1F1F1F] p-3 rounded-lg border border-[#3C4043] space-y-1.5 text-slate-300 font-sans">
-                      <span className="font-semibold text-slate-200 block text-[11px]">
+                    <div className="bg-surface-elevated p-3 rounded-lg border border-border space-y-1.5 text-text-muted font-sans">
+                      <span className="font-semibold text-text-base block text-[11px]">
                         Diagnostic Guidance:
                       </span>
                       {validationResult.status_code === 401 && (
-                        <p className="text-[11px] text-slate-400">
+                        <p className="text-[11px] text-text-muted">
                           The target endpoint rejected the request with HTTP 401 Unauthorized. To list in the free directory, please specify an open public endpoint (e.g. status check, ping, public demo) that responds without private keys.
                         </p>
                       )}
                       {validationResult.status_code === 403 && (
-                        <p className="text-[11px] text-slate-400">
+                        <p className="text-[11px] text-text-muted">
                           The target host refused connection (HTTP 403 Forbidden). Check whether Cloudflare challenge or domain whitelisting is blocking external automated health checks.
                         </p>
                       )}
                       {validationResult.status_code === 404 && (
-                        <p className="text-[11px] text-slate-400">
+                        <p className="text-[11px] text-text-muted">
                           The sample path was not found on this base URL (HTTP 404). Ensure the sample path includes any required version prefix (e.g. /v1/status instead of /status).
                         </p>
                       )}
                       {validationResult.status_code === 0 && (
-                        <p className="text-[11px] text-slate-400">
+                        <p className="text-[11px] text-text-muted">
                           Connection timed out or DNS resolution failed. Verify the Base URL domain name and ensure https:// is reachable.
                         </p>
                       )}
@@ -771,7 +771,7 @@ export const SubmitPage: React.FC = () => {
                   )}
 
                   {Boolean(validationResult.sample_data) && (
-                    <div className="mt-2 bg-[#1F1F1F] p-2.5 rounded-lg border border-[#3C4043] font-mono text-[11px] max-h-32 overflow-auto text-slate-300">
+                    <div className="mt-2 bg-surface-elevated p-2.5 rounded-lg border border-border font-mono text-[11px] max-h-32 overflow-auto text-text-muted">
                       <pre>{JSON.stringify(validationResult.sample_data, null, 2)}</pre>
                     </div>
                   )}
@@ -791,8 +791,8 @@ export const SubmitPage: React.FC = () => {
             )}
 
             {/* Submit Action */}
-            <div className="pt-4 border-t border-[#3C4043] flex items-center justify-between">
-              <span className="text-xs text-slate-400">
+            <div className="pt-4 border-t border-border flex items-center justify-between">
+              <span className="text-xs text-text-muted">
                 {!validationResult?.is_valid
                   ? '⚠️ Requires successful live pre-validation before submitting'
                   : '✅ Endpoint verified and ready for catalog inclusion'}
@@ -800,7 +800,7 @@ export const SubmitPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting || !validationResult?.is_valid}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#8AB4F8] hover:bg-[#A8C7FA] text-[#1F1F1F] font-semibold text-xs transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-accent hover:opacity-90 text-background font-semibold text-xs transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 <span>{isSubmitting ? 'Submitting...' : 'Submit Verified API'}</span>

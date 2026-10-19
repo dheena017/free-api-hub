@@ -197,17 +197,17 @@ export const HomePage: React.FC = () => {
       {/* Backend Connection Error Banner (if offline) */}
       {loadError && (
         <div className="max-w-3xl mx-auto px-4 pt-6">
-          <div className="p-4 rounded-2xl bg-[#F28B82]/10 border border-[#F28B82]/30 flex items-center justify-between gap-3 text-[#F28B82]">
+          <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-between gap-3 text-rose-500">
             <div className="flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-[#F28B82] flex-shrink-0" />
+              <AlertCircle className="h-5 w-5 text-rose-500 flex-shrink-0" />
               <div>
-                <span className="font-semibold text-xs text-white block">Connection Alert</span>
-                <p className="text-xs text-slate-300">{loadError}</p>
+                <span className="font-semibold text-xs text-text-base block">Connection Alert</span>
+                <p className="text-xs text-text-muted">{loadError}</p>
               </div>
             </div>
             <button
               onClick={() => setRetryCount((c) => c + 1)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#28292A] hover:bg-[#303134] text-xs text-[#8AB4F8] font-medium border border-[#3C4043] transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-elevated text-xs text-accent font-medium border border-border transition-colors cursor-pointer"
             >
               <RefreshCw className="h-3.5 w-3.5" />
               <span>Retry</span>
@@ -219,8 +219,8 @@ export const HomePage: React.FC = () => {
       {/* Hero Header */}
       <section className="pt-12 sm:pt-16 pb-4 text-center max-w-5xl mx-auto px-4">
         {/* Value Prop Pill */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#8AB4F8]/10 border border-[#8AB4F8]/20 text-[#8AB4F8] text-xs font-medium mb-6">
-          <span className="h-2 w-2 rounded-full bg-[#81C995]" />
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-medium mb-6">
+          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           <span>
             {stats ? `${stats.total_apis.toLocaleString()} Verified Free REST APIs` : 'Verified Free REST APIs'} • Zero Credit Card Traps
           </span>
@@ -228,13 +228,13 @@ export const HomePage: React.FC = () => {
 
         {/* Center Brand Logo & Title */}
         <div className="flex flex-col items-center justify-center gap-3 mb-8">
-          <div className="p-3 rounded-2xl bg-[#28292A] border border-[#3C4043] mb-1">
+          <div className="p-3 rounded-2xl bg-surface border border-border shadow-sm mb-1">
             <Logo size="xl" />
           </div>
-          <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tight">
-            FreeAPI<span className="bg-gradient-to-r from-sky-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent">Hub</span>
+          <h1 className="text-4xl sm:text-6xl font-black text-text-base tracking-tight">
+            FreeAPI<span className="bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 bg-clip-text text-transparent">Hub</span>
           </h1>
-          <p className="text-sm sm:text-base text-slate-300 max-w-xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-base text-text-muted max-w-xl mx-auto leading-relaxed">
             The developer search engine for genuinely free, verified REST APIs.
             Discover in seconds, test live in your browser, and export production-ready code.
           </p>
@@ -256,23 +256,23 @@ export const HomePage: React.FC = () => {
           </form>
 
           {/* Quick Search Suggestions & Surprise Me */}
-          <div className="mt-3.5 flex items-center justify-center gap-2 flex-wrap text-xs text-slate-400">
-            <span className="text-[11px] font-mono text-slate-500">Trending:</span>
+          <div className="mt-3.5 flex items-center justify-center gap-2 flex-wrap text-xs text-text-muted">
+            <span className="text-[11px] font-mono text-text-muted">Trending:</span>
             {popularQueries.map((item) => (
               <button
                 key={item.query}
                 onClick={() => navigate(`/explore?q=${encodeURIComponent(item.query)}`)}
-                className="px-2.5 py-1 rounded-full bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] text-slate-300 hover:text-white transition-all text-[11px] cursor-pointer"
+                className="px-2.5 py-1 rounded-full bg-surface hover:bg-surface-elevated border border-border hover:border-border-light text-text-muted hover:text-text-base transition-all text-[11px] cursor-pointer"
               >
                 {item.label}
               </button>
             ))}
             <button
               onClick={handleSurpriseMe}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] text-slate-300 hover:text-white transition-all text-[11px] font-medium cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface hover:bg-surface-elevated border border-border hover:border-border-light text-text-muted hover:text-text-base transition-all text-[11px] font-medium cursor-pointer"
               title="Test a surprise random API"
             >
-              <Dices className="h-3 w-3 text-slate-400" />
+              <Dices className="h-3 w-3 text-text-muted" />
               <span>Surprise Me</span>
             </button>
           </div>
@@ -287,13 +287,13 @@ export const HomePage: React.FC = () => {
               <Link
                 key={cat.slug}
                 to={`/category/${cat.slug}`}
-                className="flex flex-col items-center justify-center gap-2 p-3 rounded-2xl bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] group transition-all duration-150"
+                className="flex flex-col items-center justify-center gap-2 p-3 rounded-2xl bg-surface hover:bg-surface-elevated border border-border hover:border-border-light group transition-all duration-150 shadow-sm"
                 title={`${cat.name} (${cat.count} APIs)`}
               >
-                <div className="h-10 w-10 rounded-xl bg-[#1F1F1F] border border-[#3C4043] flex items-center justify-center text-slate-300 group-hover:text-white transition-colors">
+                <div className="h-10 w-10 rounded-xl bg-surface-elevated border border-border flex items-center justify-center text-text-muted group-hover:text-text-base transition-colors">
                   <Icon className="h-5 w-5" />
                 </div>
-                <span className="text-xs font-semibold text-slate-300 group-hover:text-white transition-colors text-center truncate w-full">
+                <span className="text-xs font-semibold text-text-muted group-hover:text-text-base transition-colors text-center truncate w-full">
                   {cat.name.split(' ')[0]}
                 </span>
               </Link>
@@ -304,20 +304,20 @@ export const HomePage: React.FC = () => {
 
       {/* Live Stats Dashboard Banner */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="relative overflow-hidden rounded-3xl bg-[#28292A] border border-[#3C4043] p-6 sm:p-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-6 border-b border-[#3C4043]">
+        <div className="relative overflow-hidden rounded-3xl bg-surface border border-border p-6 sm:p-8 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-6 border-b border-border">
             <div className="flex items-center gap-3">
               <span className="relative flex h-2.5 w-2.5 items-center justify-center">
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 animate-pulse" />
               </span>
               <div>
-                <span className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+                <span className="text-xs font-bold text-text-base uppercase tracking-wider font-mono flex items-center gap-2">
                   <span>Platform Live Telemetry</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold">
                     All Systems Operational
                   </span>
                 </span>
-                <p className="text-[11px] text-slate-400 mt-0.5 font-mono">
+                <p className="text-[11px] text-text-muted mt-0.5 font-mono">
                   Autonomous health daemon pings every endpoint 24/7/365
                 </p>
               </div>
@@ -325,7 +325,7 @@ export const HomePage: React.FC = () => {
 
             <Link
               to="/status"
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] text-xs font-mono text-slate-300 hover:text-white transition-all self-start sm:self-auto group"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border hover:border-border-light text-xs font-mono text-text-muted hover:text-text-base transition-all self-start sm:self-auto group"
             >
               <span>View Real-Time Probe Log</span>
               <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
@@ -334,26 +334,26 @@ export const HomePage: React.FC = () => {
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {/* Stat 1 */}
-            <div className="bg-[#1F1F1F] border border-[#3C4043] hover:border-[#5F6368] rounded-2xl p-4 sm:p-5 relative overflow-hidden group transition-colors">
-              <div className="text-xs text-slate-400 font-medium mb-1 flex items-center justify-between">
+            <div className="bg-surface-elevated border border-border hover:border-border-light rounded-2xl p-4 sm:p-5 relative overflow-hidden group transition-colors shadow-sm">
+              <div className="text-xs text-text-muted font-medium mb-1 flex items-center justify-between">
                 <span>Verified Endpoints</span>
-                <span className="text-[10px] font-mono text-[#81C995] bg-[#81C995]/10 px-1.5 py-0.5 rounded">Indexed</span>
+                <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">Indexed</span>
               </div>
-              <div className="text-3xl sm:text-4xl font-black font-mono text-white tracking-tight">
+              <div className="text-3xl sm:text-4xl font-black font-mono text-text-base tracking-tight">
                 {stats?.total_apis ? stats.total_apis.toLocaleString() : '4,045'}+
               </div>
-              <div className="text-[11px] text-slate-500 mt-2 font-mono">
+              <div className="text-[11px] text-text-muted mt-2 font-mono">
                 Across 24 Developer Categories
               </div>
             </div>
 
             {/* Stat 2 */}
-            <div className="bg-[#1F1F1F] border border-[#3C4043] hover:border-[#5F6368] rounded-2xl p-4 sm:p-5 relative overflow-hidden group transition-colors">
-              <div className="text-xs text-slate-400 font-medium mb-1 flex items-center justify-between">
+            <div className="bg-surface-elevated border border-border hover:border-border-light rounded-2xl p-4 sm:p-5 relative overflow-hidden group transition-colors shadow-sm">
+              <div className="text-xs text-text-muted font-medium mb-1 flex items-center justify-between">
                 <span>Verified Uptime</span>
-                <span className="text-[10px] font-mono text-[#81C995] bg-[#81C995]/10 px-1.5 py-0.5 rounded">24h SLA</span>
+                <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">24h SLA</span>
               </div>
-              <div className="text-3xl sm:text-4xl font-black font-mono text-[#81C995] tracking-tight">
+              <div className="text-3xl sm:text-4xl font-black font-mono text-emerald-600 dark:text-emerald-400 tracking-tight">
                 {stats?.global_uptime_percent || '99.79'}%
               </div>
               {/* Mini visual uptime bars */}
@@ -361,7 +361,7 @@ export const HomePage: React.FC = () => {
                 {[...Array(14)].map((_, i) => (
                   <span
                     key={i}
-                    className="h-2 flex-1 rounded-sm bg-[#81C995]/70 hover:bg-[#81C995] transition-colors"
+                    className="h-2 flex-1 rounded-sm bg-emerald-500/60 hover:bg-emerald-500 transition-colors"
                     title="Probe Successful"
                   />
                 ))}
@@ -369,29 +369,29 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* Stat 3 */}
-            <div className="bg-[#1F1F1F] border border-[#3C4043] hover:border-[#5F6368] rounded-2xl p-4 sm:p-5 relative overflow-hidden group transition-colors">
-              <div className="text-xs text-slate-400 font-medium mb-1 flex items-center justify-between">
+            <div className="bg-surface-elevated border border-border hover:border-border-light rounded-2xl p-4 sm:p-5 relative overflow-hidden group transition-colors shadow-sm">
+              <div className="text-xs text-text-muted font-medium mb-1 flex items-center justify-between">
                 <span>Average Response</span>
-                <span className="text-[10px] font-mono text-slate-300 bg-[#303134] px-1.5 py-0.5 rounded">Global</span>
+                <span className="text-[10px] font-mono text-accent bg-accent/10 px-1.5 py-0.5 rounded">Global</span>
               </div>
-              <div className="text-3xl sm:text-4xl font-black font-mono text-slate-100 tracking-tight">
+              <div className="text-3xl sm:text-4xl font-black font-mono text-text-base tracking-tight">
                 {stats?.avg_latency_ms || '127'}ms
               </div>
-              <div className="text-[11px] text-slate-500 mt-2 font-mono">
+              <div className="text-[11px] text-text-muted mt-2 font-mono">
                 ⚡ Sub-150ms Speed Tier
               </div>
             </div>
 
             {/* Stat 4 */}
-            <div className="bg-[#1F1F1F] border border-[#3C4043] hover:border-[#5F6368] rounded-2xl p-4 sm:p-5 relative overflow-hidden group transition-colors">
-              <div className="text-xs text-slate-400 font-medium mb-1 flex items-center justify-between">
+            <div className="bg-surface-elevated border border-border hover:border-border-light rounded-2xl p-4 sm:p-5 relative overflow-hidden group transition-colors shadow-sm">
+              <div className="text-xs text-text-muted font-medium mb-1 flex items-center justify-between">
                 <span>Credit Cards</span>
-                <span className="text-[10px] font-mono text-slate-300 bg-[#303134] px-1.5 py-0.5 rounded">Guaranteed</span>
+                <span className="text-[10px] font-mono text-text-muted bg-surface px-1.5 py-0.5 rounded">Guaranteed</span>
               </div>
-              <div className="text-3xl sm:text-4xl font-black font-mono text-white tracking-tight">
+              <div className="text-3xl sm:text-4xl font-black font-mono text-text-base tracking-tight">
                 $0
               </div>
-              <div className="text-[11px] text-slate-500 mt-2 font-mono">
+              <div className="text-[11px] text-text-muted mt-2 font-mono">
                 100% Free Tiers Forever
               </div>
             </div>
@@ -402,17 +402,17 @@ export const HomePage: React.FC = () => {
       {/* Recently Viewed APIs Shelf */}
       {history.length > 0 && (
         <section className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="bg-[#28292A] border border-[#3C4043] rounded-2xl p-5">
-            <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#3C4043]">
+          <div className="bg-surface border border-border rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-border">
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-slate-400" />
-                <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
+                <Clock className="h-4 w-4 text-text-muted" />
+                <h3 className="text-xs font-bold text-text-base uppercase tracking-wider font-mono">
                   Recently Viewed APIs ({history.length})
                 </h3>
               </div>
               <button
                 onClick={clearHistory}
-                className="text-[11px] font-mono text-slate-400 hover:text-rose-400 inline-flex items-center gap-1.5 transition-colors px-2 py-1 rounded-lg hover:bg-rose-500/10 cursor-pointer"
+                className="text-[11px] font-mono text-text-muted hover:text-rose-500 inline-flex items-center gap-1.5 transition-colors px-2 py-1 rounded-lg hover:bg-rose-500/10 cursor-pointer"
                 title="Clear recent viewing history"
               >
                 <Trash2 className="h-3 w-3" />
@@ -424,22 +424,22 @@ export const HomePage: React.FC = () => {
               {history.map((item) => (
                 <div
                   key={item.slug}
-                  className="flex-shrink-0 flex items-center gap-2 pl-3 pr-2 py-2 rounded-xl bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] transition-all group"
+                  className="flex-shrink-0 flex items-center gap-2 pl-3 pr-2 py-2 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border hover:border-border-light transition-all group"
                 >
                   <Link
                     to={`/api/${item.slug}`}
                     className="flex items-center gap-2"
                   >
-                    <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-[#28292A] text-slate-300 group-hover:text-white border border-[#3C4043]">
+                    <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-surface text-text-muted group-hover:text-text-base border border-border">
                       {item.category.split('-')[0]}
                     </span>
-                    <span className="text-xs font-semibold text-slate-200 group-hover:text-white transition-colors whitespace-nowrap">
+                    <span className="text-xs font-semibold text-text-base transition-colors whitespace-nowrap">
                       {item.name}
                     </span>
                   </Link>
                   <button
                     onClick={() => removeHistoryItem(item.slug)}
-                    className="p-1 rounded-md text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors ml-1 cursor-pointer"
+                    className="p-1 rounded-md text-text-muted hover:text-rose-500 hover:bg-rose-500/10 transition-colors ml-1 cursor-pointer"
                     title={`Remove ${item.name} from history`}
                   >
                     <X className="h-3 w-3" />
@@ -459,17 +459,17 @@ export const HomePage: React.FC = () => {
               <Sparkles className="h-3 w-3" />
               <span>Curated Endpoints</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-text-base tracking-tight">
               Featured Free APIs
             </h2>
-            <p className="text-xs sm:text-sm text-slate-400 mt-1">
+            <p className="text-xs sm:text-sm text-text-muted mt-1">
               Live-verified endpoints ready for instant integration in your frontend or backend
             </p>
           </div>
 
           <Link
             to="/explore"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] text-xs font-semibold text-slate-200 hover:text-white transition-all self-start sm:self-auto group"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-surface hover:bg-surface-elevated border border-border hover:border-border-light text-xs font-semibold text-text-muted hover:text-text-base transition-all self-start sm:self-auto group shadow-sm"
           >
             <span>Browse all {stats?.total_apis ? stats.total_apis.toLocaleString() : '4,045'} APIs</span>
             <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
@@ -477,13 +477,13 @@ export const HomePage: React.FC = () => {
         </div>
 
         {/* Dynamic Tabs - Segmented Pill Control */}
-        <div className="inline-flex p-1.5 rounded-2xl bg-[#1F1F1F] border border-[#3C4043] gap-1.5 overflow-x-auto no-scrollbar">
+        <div className="inline-flex p-1.5 rounded-2xl bg-surface-elevated border border-border gap-1.5 overflow-x-auto no-scrollbar shadow-inner">
           <button
             onClick={() => setFeaturedTab('popular')}
             className={`px-4 py-2 rounded-xl text-xs transition-colors cursor-pointer ${
               featuredTab === 'popular'
-                ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
-                : 'text-slate-300 hover:text-white hover:bg-[#303134] font-medium'
+                ? 'bg-accent text-background font-bold shadow-sm'
+                : 'text-text-muted hover:text-text-base hover:bg-surface font-medium'
             }`}
           >
             🔥 Most Reliable
@@ -492,8 +492,8 @@ export const HomePage: React.FC = () => {
             onClick={() => setFeaturedTab('no-auth')}
             className={`px-4 py-2 rounded-xl text-xs transition-colors cursor-pointer ${
               featuredTab === 'no-auth'
-                ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
-                : 'text-slate-300 hover:text-white hover:bg-[#303134] font-medium'
+                ? 'bg-accent text-background font-bold shadow-sm'
+                : 'text-text-muted hover:text-text-base hover:bg-surface font-medium'
             }`}
           >
             ⚡ Zero-Auth (No Key)
@@ -502,8 +502,8 @@ export const HomePage: React.FC = () => {
             onClick={() => setFeaturedTab('fast')}
             className={`px-4 py-2 rounded-xl text-xs transition-colors cursor-pointer ${
               featuredTab === 'fast'
-                ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
-                : 'text-slate-300 hover:text-white hover:bg-[#303134] font-medium'
+                ? 'bg-accent text-background font-bold shadow-sm'
+                : 'text-text-muted hover:text-text-base hover:bg-surface font-medium'
             }`}
           >
             🚀 Ultra Fast (&lt;100ms)
@@ -513,8 +513,8 @@ export const HomePage: React.FC = () => {
               onClick={() => setFeaturedTab('saved')}
               className={`px-4 py-2 rounded-xl text-xs transition-colors cursor-pointer ${
                 featuredTab === 'saved'
-                  ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
-                  : 'text-slate-300 hover:text-white hover:bg-[#303134] font-medium'
+                  ? 'bg-accent text-background font-bold shadow-sm'
+                  : 'text-text-muted hover:text-text-base hover:bg-surface font-medium'
               }`}
             >
               ⭐ My Saved ({bookmarks.length})
@@ -532,7 +532,7 @@ export const HomePage: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className="p-12 text-center bg-[#28292A] rounded-2xl border border-[#3C4043] text-sm text-slate-400">
+          <div className="p-12 text-center bg-surface rounded-2xl border border-border text-sm text-text-muted shadow-sm">
             {featuredTab === 'saved'
               ? 'No bookmarked APIs found yet. Click the star icon on any card to save it!'
               : 'No APIs found in this category.'}
@@ -544,20 +544,20 @@ export const HomePage: React.FC = () => {
       <section id="categories-directory" className="max-w-6xl mx-auto px-4 sm:px-6 pt-6">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
           <div>
-            <div className="inline-flex items-center gap-1.5 text-xs font-mono text-[#8AB4F8] uppercase tracking-wider mb-1">
+            <div className="inline-flex items-center gap-1.5 text-xs font-mono text-accent uppercase tracking-wider mb-1">
               <Layers className="h-3.5 w-3.5" />
               <span>Full Category Index</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-text-base tracking-tight">
               Explore by API Category
             </h2>
-            <p className="text-xs sm:text-sm text-slate-400 mt-1">
+            <p className="text-xs sm:text-sm text-text-muted mt-1">
               Discover verified free APIs across {categories.length} organized developer domains
             </p>
           </div>
           <Link
             to="/explore"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#8AB4F8] hover:underline self-start sm:self-auto"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent hover:underline self-start sm:self-auto"
           >
             <span>View All in Directory</span>
             <ArrowRight className="h-3.5 w-3.5" />
@@ -571,22 +571,22 @@ export const HomePage: React.FC = () => {
               <Link
                 key={cat.slug}
                 to={`/category/${cat.slug}`}
-                className="p-4 rounded-2xl bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] transition-all group flex flex-col justify-between space-y-3"
+                className="p-4 rounded-2xl bg-surface hover:bg-surface-elevated border border-border hover:border-border-light transition-all group flex flex-col justify-between space-y-3 shadow-sm"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div className="h-10 w-10 rounded-xl bg-[#1F1F1F] border border-[#3C4043] flex items-center justify-center text-[#8AB4F8] group-hover:scale-105 transition-transform flex-shrink-0">
+                  <div className="h-10 w-10 rounded-xl bg-surface-elevated border border-border flex items-center justify-center text-accent group-hover:scale-105 transition-transform flex-shrink-0">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-[#1F1F1F] border border-[#3C4043] text-slate-300 group-hover:text-white">
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-surface-elevated border border-border text-text-muted group-hover:text-text-base">
                     {cat.count} APIs
                   </span>
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white group-hover:text-[#8AB4F8] transition-colors">
+                  <h3 className="text-sm font-bold text-text-base group-hover:text-accent transition-colors">
                     {cat.name}
                   </h3>
                   {cat.description && (
-                    <p className="text-xs text-slate-400 line-clamp-2 mt-1 leading-relaxed">
+                    <p className="text-xs text-text-muted line-clamp-2 mt-1 leading-relaxed">
                       {cat.description}
                     </p>
                   )}
@@ -600,54 +600,54 @@ export const HomePage: React.FC = () => {
       {/* Feature Differentiators Grid */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-8">
         <div className="text-center max-w-2xl mx-auto mb-10">
-          <div className="inline-flex items-center gap-1.5 text-xs font-mono text-slate-400 uppercase tracking-wider mb-1">
+          <div className="inline-flex items-center gap-1.5 text-xs font-mono text-text-muted uppercase tracking-wider mb-1">
             <span>Why Developers Choose Us</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-text-base tracking-tight">
             Built Exclusively for Developers
           </h2>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1.5">
+          <p className="text-xs sm:text-sm text-text-muted mt-1.5">
             Why Free API Hub is the cleanest alternative to bloated commercial API directories
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <div className="bg-[#28292A] hover:bg-[#303134] p-6 rounded-2xl border border-[#3C4043] hover:border-[#5F6368] space-y-3 transition-colors group">
-            <div className="h-10 w-10 rounded-xl bg-[#1F1F1F] border border-[#3C4043] text-[#81C995] flex items-center justify-center">
+          <div className="bg-surface hover:bg-surface-elevated p-6 rounded-2xl border border-border hover:border-border-light space-y-3 transition-colors group shadow-sm">
+            <div className="h-10 w-10 rounded-xl bg-surface-elevated border border-border text-emerald-500 flex items-center justify-center">
               <ShieldCheck className="h-5 w-5" />
             </div>
-            <h3 className="text-sm font-bold text-white group-hover:text-slate-200 transition-colors">Zero Credit Card Traps</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <h3 className="text-sm font-bold text-text-base transition-colors">Zero Credit Card Traps</h3>
+            <p className="text-xs text-text-muted leading-relaxed">
               Every indexed endpoint is genuinely free forever or has an open tier without entering financial information.
             </p>
           </div>
 
-          <div className="bg-[#28292A] hover:bg-[#303134] p-6 rounded-2xl border border-[#3C4043] hover:border-[#5F6368] space-y-3 transition-colors group">
-            <div className="h-10 w-10 rounded-xl bg-[#1F1F1F] border border-[#3C4043] text-slate-300 flex items-center justify-center">
+          <div className="bg-surface hover:bg-surface-elevated p-6 rounded-2xl border border-border hover:border-border-light space-y-3 transition-colors group shadow-sm">
+            <div className="h-10 w-10 rounded-xl bg-surface-elevated border border-border text-accent flex items-center justify-center">
               <Play className="h-5 w-5" />
             </div>
-            <h3 className="text-sm font-bold text-white group-hover:text-slate-200 transition-colors">Live In-Browser Playground</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <h3 className="text-sm font-bold text-text-base transition-colors">Live In-Browser Playground</h3>
+            <p className="text-xs text-text-muted leading-relaxed">
               Send live HTTP requests straight from your browser. Inspect status codes, latency, headers, and formatted JSON payloads.
             </p>
           </div>
 
-          <div className="bg-[#28292A] hover:bg-[#303134] p-6 rounded-2xl border border-[#3C4043] hover:border-[#5F6368] space-y-3 transition-colors group">
-            <div className="h-10 w-10 rounded-xl bg-[#1F1F1F] border border-[#3C4043] text-[#FDD663] flex items-center justify-center">
+          <div className="bg-surface hover:bg-surface-elevated p-6 rounded-2xl border border-border hover:border-border-light space-y-3 transition-colors group shadow-sm">
+            <div className="h-10 w-10 rounded-xl bg-surface-elevated border border-border text-amber-500 flex items-center justify-center">
               <Zap className="h-5 w-5" />
             </div>
-            <h3 className="text-sm font-bold text-white group-hover:text-slate-200 transition-colors">Automated Health Probes</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <h3 className="text-sm font-bold text-text-base transition-colors">Automated Health Probes</h3>
+            <p className="text-xs text-text-muted leading-relaxed">
               Our automated daemon periodically pings every single endpoint. Dead or deprecated APIs are pruned to avoid broken code.
             </p>
           </div>
 
-          <div className="bg-[#28292A] hover:bg-[#303134] p-6 rounded-2xl border border-[#3C4043] hover:border-[#5F6368] space-y-3 transition-colors group">
-            <div className="h-10 w-10 rounded-xl bg-[#1F1F1F] border border-[#3C4043] text-slate-300 flex items-center justify-center">
+          <div className="bg-surface hover:bg-surface-elevated p-6 rounded-2xl border border-border hover:border-border-light space-y-3 transition-colors group shadow-sm">
+            <div className="h-10 w-10 rounded-xl bg-surface-elevated border border-border text-text-muted flex items-center justify-center">
               <Code2 className="h-5 w-5" />
             </div>
-            <h3 className="text-sm font-bold text-white group-hover:text-slate-200 transition-colors">Ready Code Snippets</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <h3 className="text-sm font-bold text-text-base transition-colors">Ready Code Snippets</h3>
+            <p className="text-xs text-text-muted leading-relaxed">
               Copy pre-tested code snippets for cURL, JavaScript fetch, Python requests, Node.js, and Go with 1 click.
             </p>
           </div>

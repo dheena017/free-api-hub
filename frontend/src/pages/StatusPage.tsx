@@ -237,13 +237,13 @@ export const StatusPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <XCircle className="h-5 w-5 text-rose-400 flex-shrink-0" />
             <div className="text-xs">
-              <strong className="text-white block">Connection Alert</strong>
+              <strong className="text-text-base block">Connection Alert</strong>
               <span>{dashboardError}</span>
             </div>
           </div>
           <button
             onClick={loadStatusData}
-            className="px-3 py-1.5 rounded-lg bg-[#303134] hover:bg-[#3C4043] text-xs font-mono text-[#8AB4F8] transition-colors border border-[#3C4043]"
+            className="px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-hover text-xs font-mono text-accent transition-colors border border-border"
           >
             Retry
           </button>
@@ -251,33 +251,33 @@ export const StatusPage: React.FC = () => {
       )}
 
       {/* Header and Live Status Bar */}
-      <div className="bg-[#28292A] border border-[#3C4043] rounded-2xl p-6 sm:p-8 space-y-6">
+      <div className="bg-surface border border-border rounded-2xl p-6 sm:p-8 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-medium mb-3">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-healthy/10 border border-healthy/20 text-healthy text-xs font-mono font-medium mb-3">
+              <span className="h-2 w-2 rounded-full bg-healthy animate-pulse" />
               <span>Real-Time Health Monitoring</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-text-base tracking-tight">
               API Ecosystem Status
             </h1>
-            <p className="text-xs sm:text-sm text-slate-300 max-w-xl mt-1 leading-relaxed">
+            <p className="text-xs sm:text-sm text-text-muted max-w-xl mt-1 leading-relaxed">
               Automated health daemons continuously verify availability and latency for all catalog endpoints.
             </p>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
             {/* Auto-Refresh Toggle */}
-            <div className="flex items-center bg-[#1F1F1F] rounded-xl border border-[#3C4043] p-1 text-xs">
-              <span className="text-[10px] text-slate-400 font-mono px-2">Auto-Ping:</span>
+            <div className="flex items-center bg-surface-elevated rounded-xl border border-border p-1 text-xs">
+              <span className="text-[10px] text-text-muted font-mono px-2">Auto-Ping:</span>
               {[0, 15, 30, 60].map((interval) => (
                 <button
                   key={interval}
                   onClick={() => setAutoRefreshInterval(interval)}
                   className={`px-2 py-0.5 rounded-lg text-[10px] font-mono transition-colors ${
                     autoRefreshInterval === interval
-                      ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold shadow-sm'
-                      : 'text-slate-400 hover:text-white'
+                      ? 'bg-accent text-background font-bold shadow-sm'
+                      : 'text-text-muted hover:text-text-base'
                   }`}
                 >
                   {interval === 0 ? 'Off' : `${interval}s`}
@@ -287,17 +287,17 @@ export const StatusPage: React.FC = () => {
 
             <button
               onClick={handleCopyReport}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#28292A] hover:bg-[#303134] text-slate-300 hover:text-white text-xs font-medium border border-[#3C4043] transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface hover:bg-surface-hover text-text-muted hover:text-text-base text-xs font-medium border border-border transition-colors"
               title="Copy markdown health report"
             >
-              {copiedReport ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5 text-slate-400" />}
+              {copiedReport ? <Check className="h-3.5 w-3.5 text-healthy" /> : <Copy className="h-3.5 w-3.5 text-text-muted" />}
               <span>{copiedReport ? 'Report Copied!' : 'Copy Report'}</span>
             </button>
 
             <button
               onClick={handleBatchProbe}
               disabled={isBatchProbing || endpoints.length === 0}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#8AB4F8] hover:bg-[#A8C7FA] text-xs font-bold text-[#1F1F1F] transition-all disabled:opacity-50 shadow-sm"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-accent hover:opacity-90 text-xs font-bold text-background transition-all disabled:opacity-50 shadow-sm"
             >
               <Radio className={`h-4 w-4 ${isBatchProbing ? 'animate-pulse' : ''}`} />
               <span>{isBatchProbing ? `Probing ${endpoints.length} Endpoints...` : `Live Probe Page (${endpoints.length})`}</span>
@@ -306,7 +306,7 @@ export const StatusPage: React.FC = () => {
             <button
               onClick={loadStatusData}
               disabled={isLoading}
-              className="p-2 rounded-xl bg-[#303134] hover:bg-[#3C4043] text-slate-300 hover:text-white border border-[#3C4043] transition-colors"
+              className="p-2 rounded-xl bg-surface hover:bg-surface-hover text-text-muted hover:text-text-base border border-border transition-colors"
               title="Refresh status data"
             >
               <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -314,42 +314,42 @@ export const StatusPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Global Summary Cards (No hardcoding) */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-[#3C4043]">
-          <div className="bg-[#1F1F1F] p-4 rounded-xl border border-[#3C4043]">
-            <div className="text-[10px] font-mono text-slate-400 uppercase">Operational Uptime</div>
-            <div className="text-xl sm:text-2xl font-bold font-mono text-emerald-400 mt-1 flex items-center gap-1.5">
+        {/* Global Summary Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-border">
+          <div className="bg-surface-elevated p-4 rounded-xl border border-border">
+            <div className="text-[10px] font-mono text-text-muted uppercase">Operational Uptime</div>
+            <div className="text-xl sm:text-2xl font-bold font-mono text-healthy mt-1 flex items-center gap-1.5">
               <CheckCircle2 className="h-5 w-5" />
               <span>{stats ? `${stats.global_uptime_percent}%` : '--'}</span>
             </div>
-            <div className="text-[11px] text-slate-400 mt-0.5">Catalog Global Average</div>
+            <div className="text-[11px] text-text-muted mt-0.5">Catalog Global Average</div>
           </div>
 
-          <div className="bg-[#1F1F1F] p-4 rounded-xl border border-[#3C4043]">
-            <div className="text-[10px] font-mono text-slate-400 uppercase">Monitored Endpoints</div>
-            <div className="text-xl sm:text-2xl font-bold font-mono text-white mt-1">
+          <div className="bg-surface-elevated p-4 rounded-xl border border-border">
+            <div className="text-[10px] font-mono text-text-muted uppercase">Monitored Endpoints</div>
+            <div className="text-xl sm:text-2xl font-bold font-mono text-text-base mt-1">
               {stats ? stats.total_apis.toLocaleString() : '--'}
             </div>
-            <div className="text-[11px] text-slate-400 mt-0.5">Live Tracked APIs</div>
+            <div className="text-[11px] text-text-muted mt-0.5">Live Tracked APIs</div>
           </div>
 
-          <div className="bg-[#1F1F1F] p-4 rounded-xl border border-[#3C4043]">
-            <div className="text-[10px] font-mono text-slate-400 uppercase">Average Latency</div>
-            <div className="text-xl sm:text-2xl font-bold font-mono text-sky-400 mt-1 flex items-center gap-1">
+          <div className="bg-surface-elevated p-4 rounded-xl border border-border">
+            <div className="text-[10px] font-mono text-text-muted uppercase">Average Latency</div>
+            <div className="text-xl sm:text-2xl font-bold font-mono text-accent mt-1 flex items-center gap-1">
               <Clock className="h-4 w-4" />
               <span>{stats ? `${stats.avg_latency_ms}ms` : '--'}</span>
             </div>
-            <div className="text-[11px] text-slate-400 mt-0.5">Round-Trip Telemetry</div>
+            <div className="text-[11px] text-text-muted mt-0.5">Round-Trip Telemetry</div>
           </div>
 
-          <div className="bg-[#1F1F1F] p-4 rounded-xl border border-[#3C4043]">
-            <div className="text-[10px] font-mono text-slate-400 uppercase">Health Status</div>
-            <div className="text-xl sm:text-2xl font-bold font-mono text-emerald-400 mt-1">
+          <div className="bg-surface-elevated p-4 rounded-xl border border-border">
+            <div className="text-[10px] font-mono text-text-muted uppercase">Health Status</div>
+            <div className="text-xl sm:text-2xl font-bold font-mono text-healthy mt-1">
               {stats ? (
                 (stats.offline_count ?? 0) === 0 ? 'All Systems Go' : `${stats.offline_count} Incidents`
               ) : '--'}
             </div>
-            <div className="text-[11px] text-slate-400 mt-0.5">
+            <div className="text-[11px] text-text-muted mt-0.5">
               {stats ? `${stats.total_checks_today.toLocaleString()} Daily Checks` : 'Continuous Probing'}
             </div>
           </div>
@@ -357,15 +357,15 @@ export const StatusPage: React.FC = () => {
 
         {/* Live Batch Probe Banner */}
         {liveProbeBanner && (
-          <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between gap-3 text-xs text-emerald-300">
+          <div className="p-4 rounded-xl bg-healthy/10 border border-healthy/30 flex items-center justify-between gap-3 text-xs text-healthy">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0" />
+              <CheckCircle2 className="h-4 w-4 text-healthy flex-shrink-0" />
               <span>
                 Batch Probe Completed at {liveProbeBanner.timestamp}:{' '}
-                <strong className="text-white">{liveProbeBanner.count}</strong> endpoints tested •{' '}
-                <strong className="text-emerald-400">{liveProbeBanner.healthy} Operational</strong> •{' '}
-                <strong className="text-amber-400">{liveProbeBanner.degraded} Degraded</strong> •{' '}
-                <strong className="text-rose-400">{liveProbeBanner.offline} Offline</strong>
+                <strong className="text-text-base">{liveProbeBanner.count}</strong> endpoints tested •{' '}
+                <strong className="text-healthy">{liveProbeBanner.healthy} Operational</strong> •{' '}
+                <strong className="text-degraded">{liveProbeBanner.degraded} Degraded</strong> •{' '}
+                <strong className="text-offline">{liveProbeBanner.offline} Offline</strong>
               </span>
             </div>
           </div>
@@ -373,7 +373,7 @@ export const StatusPage: React.FC = () => {
       </div>
 
       {/* Filter and Search Controls Bar */}
-      <div className="bg-[#28292A] rounded-2xl border border-[#3C4043] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-surface rounded-2xl border border-border p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Status Filter Tabs (Dynamic counts from stats) */}
         <div
           className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs scrollbar-none"
@@ -386,8 +386,8 @@ export const StatusPage: React.FC = () => {
             }}
             className={`px-3 py-1.5 rounded-lg font-medium transition-colors border ${
               statusFilter === 'all'
-                ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold border-[#8AB4F8]'
-                : 'bg-[#1F1F1F] text-slate-300 border-[#3C4043] hover:bg-[#303134]'
+                ? 'bg-accent text-background font-bold border-accent'
+                : 'bg-surface-elevated text-text-muted border-border hover:bg-surface-hover hover:text-text-base'
             }`}
           >
             All ({stats?.total_apis.toLocaleString() ?? totalEndpoints.toLocaleString()})
@@ -399,8 +399,8 @@ export const StatusPage: React.FC = () => {
             }}
             className={`px-3 py-1.5 rounded-lg font-medium transition-colors border ${
               statusFilter === 'healthy'
-                ? 'bg-emerald-500 text-[#1F1F1F] font-bold border-emerald-500'
-                : 'bg-[#1F1F1F] text-emerald-400 border-[#3C4043] hover:bg-[#303134]'
+                ? 'bg-healthy text-background font-bold border-healthy'
+                : 'bg-surface-elevated text-healthy border-border hover:bg-surface-hover'
             }`}
           >
             🟢 Operational ({stats?.healthy_count ?? 0})
@@ -413,8 +413,8 @@ export const StatusPage: React.FC = () => {
               }}
               className={`px-3 py-1.5 rounded-lg font-medium transition-colors border ${
                 statusFilter === 'degraded'
-                  ? 'bg-amber-400 text-[#1F1F1F] font-bold border-amber-400'
-                  : 'bg-[#1F1F1F] text-amber-300 border-[#3C4043] hover:bg-[#303134]'
+                  ? 'bg-degraded text-background font-bold border-degraded'
+                  : 'bg-surface-elevated text-degraded border-border hover:bg-surface-hover'
               }`}
             >
               🟡 Degraded ({stats?.degraded_count ?? 0})
@@ -428,8 +428,8 @@ export const StatusPage: React.FC = () => {
               }}
               className={`px-3 py-1.5 rounded-lg font-medium transition-colors border ${
                 statusFilter === 'offline'
-                  ? 'bg-rose-500 text-white font-bold border-rose-500'
-                  : 'bg-[#1F1F1F] text-rose-400 border-[#3C4043] hover:bg-[#303134]'
+                  ? 'bg-offline text-white font-bold border-offline'
+                  : 'bg-surface-elevated text-offline border-border hover:bg-surface-hover'
               }`}
             >
               🔴 Offline ({stats?.offline_count ?? 0})
@@ -443,8 +443,8 @@ export const StatusPage: React.FC = () => {
               }}
               className={`px-3 py-1.5 rounded-lg font-medium transition-colors border ${
                 statusFilter === 'untested'
-                  ? 'bg-slate-400 text-[#1F1F1F] font-bold border-slate-400'
-                  : 'bg-[#1F1F1F] text-slate-400 border-[#3C4043] hover:bg-[#303134]'
+                  ? 'bg-text-muted text-background font-bold border-text-muted'
+                  : 'bg-surface-elevated text-text-muted border-border hover:bg-surface-hover hover:text-text-base'
               }`}
             >
               ⚪ Untested ({stats?.untested_count ?? 0})
@@ -455,18 +455,18 @@ export const StatusPage: React.FC = () => {
         {/* Right Search, Page Size & Sort */}
         <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
           <div className="relative w-44 sm:w-56">
-            <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search all endpoints..."
-              className="w-full pl-8 pr-7 py-1.5 rounded-xl bg-[#1F1F1F] border border-[#3C4043] text-xs text-white placeholder-slate-400 outline-none focus:border-[#8AB4F8]"
+              className="w-full pl-8 pr-7 py-1.5 rounded-xl bg-surface-elevated border border-border text-xs text-text-base placeholder-text-muted outline-none focus:border-accent"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-base"
               >
                 <X className="h-3 w-3" />
               </button>
@@ -518,7 +518,7 @@ export const StatusPage: React.FC = () => {
               return (
                 <div
                   key={ep.slug}
-                  className="bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] rounded-2xl p-4 sm:px-6 sm:py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors"
+                  className="bg-surface hover:bg-surface-hover border border-border rounded-2xl p-4 sm:px-6 sm:py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors"
                 >
                   <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
                     <LivePingBadge
@@ -530,29 +530,29 @@ export const StatusPage: React.FC = () => {
                       <div className="flex items-center gap-2 flex-wrap">
                         <Link
                           to={`/api/${ep.slug}`}
-                          className="font-bold text-sm text-white hover:text-accent transition-colors truncate"
+                          className="font-bold text-sm text-text-base hover:text-accent transition-colors truncate"
                         >
                           {ep.name}
                         </Link>
-                        <span className="text-[10px] uppercase font-mono text-slate-400 px-1.5 py-0.5 rounded bg-[#1F1F1F] border border-[#3C4043]">
+                        <span className="text-[10px] uppercase font-mono text-text-muted px-1.5 py-0.5 rounded bg-surface-elevated border border-border">
                           {ep.category}
                         </span>
-                        <span className="text-[10px] font-mono font-bold text-emerald-400 px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
+                        <span className="text-[10px] font-mono font-bold text-healthy px-1.5 py-0.5 rounded bg-healthy/10 border border-healthy/20">
                           {ep.endpoints?.[0]?.method || 'GET'}
                         </span>
                         <span
                           className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
                             ep.health.last_status_code && ep.health.last_status_code >= 200 && ep.health.last_status_code < 400
-                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                              ? 'bg-healthy/10 text-healthy border-healthy/20'
                               : ep.health.last_status_code
-                              ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                              : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                              ? 'bg-offline/10 text-offline border-offline/20'
+                              : 'bg-surface-elevated text-text-muted border-border'
                           }`}
                         >
                           {ep.health.last_status_code ? `HTTP ${ep.health.last_status_code}` : 'Pending Probe'}
                         </span>
                       </div>
-                      <div className="text-xs font-mono text-slate-400 truncate mt-1">
+                      <div className="text-xs font-mono text-text-muted truncate mt-1">
                         {ep.base_url}{ep.endpoint}
                       </div>
                     </div>
@@ -570,25 +570,25 @@ export const StatusPage: React.FC = () => {
                           key={idx}
                           className={`w-1.5 h-5 rounded-sm transition-colors ${
                             ep.health.status === 'untested'
-                              ? 'bg-slate-700/50'
+                              ? 'bg-border'
                               : ep.health.status === 'offline' && idx >= 9
-                              ? 'bg-rose-500'
+                              ? 'bg-offline'
                               : ep.health.status === 'degraded' && idx >= 10
-                              ? 'bg-amber-400'
-                              : 'bg-emerald-500/80 hover:bg-emerald-400'
+                              ? 'bg-degraded'
+                              : 'bg-healthy/80 hover:bg-healthy'
                           }`}
                         />
                       ))}
                     </div>
 
                     <div className="text-right font-mono">
-                      <div className="text-white font-bold">
+                      <div className="text-text-base font-bold">
                         {ep.health.uptime_percent != null ? `${ep.health.uptime_percent}%` : '--'}
                       </div>
                       <div className={`text-[11px] ${latency.colorClass.split(' ')[0]}`}>
                         {ep.health.avg_latency_ms != null ? `${ep.health.avg_latency_ms}ms` : 'Untested'}
                       </div>
-                      <div className="text-[10px] text-slate-400">
+                      <div className="text-[10px] text-text-muted">
                         {formatLastChecked(ep.health.last_checked)}
                       </div>
                     </div>
@@ -597,7 +597,7 @@ export const StatusPage: React.FC = () => {
                       <button
                         onClick={() => handleSingleProbe(ep.slug)}
                         disabled={isProbingCurrent}
-                        className="p-2 rounded-lg bg-[#1F1F1F] hover:bg-[#3C4043] text-[#8AB4F8] border border-[#3C4043] transition-colors disabled:opacity-50"
+                        className="p-2 rounded-lg bg-surface-elevated hover:bg-surface-hover text-accent border border-border transition-colors disabled:opacity-50"
                         title="Ping this endpoint now"
                       >
                         <RefreshCw className={`h-3.5 w-3.5 ${isProbingCurrent ? 'animate-spin' : ''}`} />
@@ -605,7 +605,7 @@ export const StatusPage: React.FC = () => {
 
                       <Link
                         to={`/api/${ep.slug}`}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#8AB4F8]/10 hover:bg-[#8AB4F8]/20 border border-[#8AB4F8]/30 text-xs font-semibold text-[#8AB4F8] hover:text-white transition-colors"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-accent/10 hover:bg-accent/20 border border-accent/30 text-xs font-semibold text-accent transition-colors"
                       >
                         <Play className="h-3 w-3 fill-current" />
                         <span>Playground</span>
@@ -618,10 +618,10 @@ export const StatusPage: React.FC = () => {
 
             {/* Comprehensive Pagination Controls */}
             {totalPages > 1 && (
-              <div className="pt-6 pb-2 border-t border-[#3C4043] flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="text-xs text-slate-400 font-mono">
-                  Showing <strong className="text-white">{(currentPage - 1) * pageSize + 1}</strong> -{' '}
-                  <strong className="text-white">{Math.min(currentPage * pageSize, totalEndpoints)}</strong> of{' '}
+              <div className="pt-6 pb-2 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-xs text-text-muted font-mono">
+                  Showing <strong className="text-text-base">{(currentPage - 1) * pageSize + 1}</strong> -{' '}
+                  <strong className="text-text-base">{Math.min(currentPage * pageSize, totalEndpoints)}</strong> of{' '}
                   <strong className="text-accent">{totalEndpoints.toLocaleString()}</strong> monitored APIs
                 </div>
 
@@ -629,7 +629,7 @@ export const StatusPage: React.FC = () => {
                   <button
                     onClick={() => handlePageChange(1)}
                     disabled={currentPage === 1}
-                    className="p-2 rounded-lg bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 rounded-lg bg-surface hover:bg-surface-hover border border-border text-text-muted hover:text-text-base disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     title="First Page"
                   >
                     <ChevronsLeft className="h-4 w-4" />
@@ -637,7 +637,7 @@ export const StatusPage: React.FC = () => {
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className="p-2 rounded-lg bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 rounded-lg bg-surface hover:bg-surface-hover border border-border text-text-muted hover:text-text-base disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     title="Previous Page"
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -663,8 +663,8 @@ export const StatusPage: React.FC = () => {
                           onClick={() => handlePageChange(pageNumber)}
                           className={`min-w-[34px] h-[34px] rounded-lg text-xs font-mono font-medium transition-colors border ${
                             isActive
-                              ? 'bg-[#8AB4F8] border-[#8AB4F8] text-[#1F1F1F] font-bold shadow-sm'
-                              : 'bg-[#28292A] border-[#3C4043] text-slate-300 hover:bg-[#303134] hover:text-white'
+                              ? 'bg-accent border-accent text-background font-bold shadow-sm'
+                              : 'bg-surface border-border text-text-muted hover:bg-surface-hover hover:text-text-base'
                           }`}
                         >
                           {pageNumber}
@@ -676,7 +676,7 @@ export const StatusPage: React.FC = () => {
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className="p-2 rounded-lg bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 rounded-lg bg-surface hover:bg-surface-hover border border-border text-text-muted hover:text-text-base disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     title="Next Page"
                   >
                     <ChevronRight className="h-4 w-4" />
@@ -684,7 +684,7 @@ export const StatusPage: React.FC = () => {
                   <button
                     onClick={() => handlePageChange(totalPages)}
                     disabled={currentPage === totalPages}
-                    className="p-2 rounded-lg bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 rounded-lg bg-surface hover:bg-surface-hover border border-border text-text-muted hover:text-text-base disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     title="Last Page"
                   >
                     <ChevronsRight className="h-4 w-4" />
@@ -694,10 +694,10 @@ export const StatusPage: React.FC = () => {
             )}
           </div>
         ) : (
-          <div className="bg-[#28292A] rounded-2xl p-12 text-center border border-[#3C4043] space-y-3">
-            <FilterX className="h-10 w-10 text-slate-500 mx-auto" />
-            <h3 className="text-base font-semibold text-white">No endpoints match filter</h3>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
+          <div className="bg-surface rounded-2xl p-12 text-center border border-border space-y-3">
+            <FilterX className="h-10 w-10 text-text-muted mx-auto" />
+            <h3 className="text-base font-semibold text-text-base">No endpoints match filter</h3>
+            <p className="text-xs text-text-muted max-w-sm mx-auto">
               No API endpoints matched the criteria. Try clearing the search query or selecting "All" statuses.
             </p>
             <button
@@ -707,7 +707,7 @@ export const StatusPage: React.FC = () => {
                 setStatusSort('uptime');
                 setCurrentPage(1);
               }}
-              className="px-4 py-2 rounded-xl bg-[#8AB4F8] text-[#1F1F1F] font-semibold text-xs hover:bg-[#A8C7FA] transition-colors"
+              className="px-4 py-2 rounded-xl bg-accent text-background font-semibold text-xs hover:opacity-90 transition-colors"
             >
               Reset Status Filters
             </button>

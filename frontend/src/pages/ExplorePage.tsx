@@ -171,18 +171,18 @@ export const ExplorePage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* Top Banner / Hero Title */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#3C4043]">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border">
         <div>
           <div className="flex items-center gap-2.5 flex-wrap">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-text-base tracking-tight">
               API Catalog Explorer
             </h1>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-[#1F1F1F] text-slate-300 border border-[#3C4043]">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-surface-elevated text-text-muted border border-border">
+              <span className="w-1.5 h-1.5 rounded-full bg-healthy" />
               {favoritesOnly ? `${totalCount.toLocaleString()} Saved APIs` : `${totalCount.toLocaleString()} Verified APIs`}
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-text-muted mt-1.5 max-w-2xl leading-relaxed">
             Search, filter, and test verified public REST APIs without authentication roadblocks or credit card gates.
           </p>
         </div>
@@ -191,10 +191,10 @@ export const ExplorePage: React.FC = () => {
         <div className="flex items-center gap-2 self-start md:self-auto flex-wrap">
           <button
             onClick={handleSurpriseMe}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium border bg-[#28292A] hover:bg-[#303134] border-[#3C4043] hover:border-[#5F6368] text-slate-300 hover:text-white transition-all"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium border bg-surface hover:bg-surface-hover border-border hover:border-border-light text-text-muted hover:text-text-base transition-all"
             title="Jump to a random API to test in playground"
           >
-            <Dices className="h-4 w-4 text-slate-400" />
+            <Dices className="h-4 w-4 text-text-muted" />
             <span>Surprise Me</span>
           </button>
 
@@ -202,22 +202,22 @@ export const ExplorePage: React.FC = () => {
             onClick={() => updateQuery({ fav: favoritesOnly ? '0' : '1', page: '1' })}
             className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium border transition-all ${
               favoritesOnly
-                ? 'bg-[#303134] border-[#5F6368] text-[#FDD663] font-semibold'
-                : 'bg-[#28292A] border-[#3C4043] hover:border-[#5F6368] text-slate-300 hover:text-white hover:bg-[#303134]'
+                ? 'bg-surface-hover border-border-light text-amber-500 font-semibold'
+                : 'bg-surface border-border hover:border-border-light text-text-muted hover:text-text-base hover:bg-surface-hover'
             }`}
           >
-            <Star className={`h-4 w-4 ${favoritesOnly ? 'text-[#FDD663] fill-[#FDD663]' : 'text-slate-400'}`} />
+            <Star className={`h-4 w-4 ${favoritesOnly ? 'text-amber-500 fill-amber-500' : 'text-text-muted'}`} />
             <span>Saved ({bookmarks.length})</span>
           </button>
 
-          <div className="flex items-center rounded-xl bg-[#28292A] border border-[#3C4043] p-1">
+          <div className="flex items-center rounded-xl bg-surface border border-border p-1">
             <button
               onClick={() => setViewMode('grid')}
               title="Grid View"
               className={`p-1.5 rounded-lg transition-colors ${
                 viewMode === 'grid'
-                  ? 'bg-[#3C4043] text-white'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-surface-hover text-text-base'
+                  : 'text-text-muted hover:text-text-base'
               }`}
             >
               <LayoutGrid className="h-4 w-4" />
@@ -227,8 +227,8 @@ export const ExplorePage: React.FC = () => {
               title="Compact List View"
               className={`p-1.5 rounded-lg transition-colors ${
                 viewMode === 'compact'
-                  ? 'bg-[#3C4043] text-white'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-surface-hover text-text-base'
+                  : 'text-text-muted hover:text-text-base'
               }`}
             >
               <List className="h-4 w-4" />
@@ -240,7 +240,7 @@ export const ExplorePage: React.FC = () => {
       {/* Search Input Bar with Quick Filters */}
       <div className="space-y-3">
         <div className="relative max-w-4xl mx-auto">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
             <Search className="h-5 w-5" />
           </div>
           <input
@@ -248,7 +248,7 @@ export const ExplorePage: React.FC = () => {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search by API name, category, feature, or keyword (e.g. weather, crypto, pokemon, geocoding)..."
-            className="w-full pl-12 pr-12 py-3.5 rounded-2xl bg-[#28292A] hover:bg-[#303134] focus:bg-[#303134] border border-[#3C4043] focus:border-[#5F6368] text-white placeholder-slate-400 text-sm transition-all outline-none"
+            className="w-full pl-12 pr-12 py-3.5 rounded-2xl bg-surface hover:bg-surface-hover focus:bg-surface-hover border border-border focus:border-accent text-text-base placeholder-text-muted text-sm transition-all outline-none"
           />
           {searchInput && (
             <button
@@ -256,7 +256,7 @@ export const ExplorePage: React.FC = () => {
                 setSearchInput('');
                 updateQuery({ q: null, page: '1' });
               }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1 rounded-full hover:bg-[#3C4043] transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-base p-1 rounded-full hover:bg-surface-hover transition-colors"
               title="Clear search"
             >
               <X className="h-4 w-4" />
@@ -266,35 +266,35 @@ export const ExplorePage: React.FC = () => {
 
         {/* Quick popular tags */}
         {!searchInput && (
-          <div className="flex items-center justify-center gap-2 flex-wrap text-xs text-slate-400 pt-0.5">
-            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-mono">Popular:</span>
+          <div className="flex items-center justify-center gap-2 flex-wrap text-xs text-text-muted pt-0.5">
+            <span className="text-[11px] uppercase tracking-wider text-text-muted font-mono">Popular:</span>
             <button
               onClick={() => setSearchInput('weather')}
-              className="px-2.5 py-1 rounded-lg bg-[#28292A]/80 hover:bg-[#303134] text-slate-300 hover:text-white border border-[#3C4043]/60 transition-colors shadow-sm"
+              className="px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-hover text-text-muted hover:text-text-base border border-border transition-colors shadow-sm"
             >
               ☀️ Weather
             </button>
             <button
               onClick={() => setSearchInput('crypto')}
-              className="px-2.5 py-1 rounded-lg bg-[#28292A]/80 hover:bg-[#303134] text-slate-300 hover:text-white border border-[#3C4043]/60 transition-colors shadow-sm"
+              className="px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-hover text-text-muted hover:text-text-base border border-border transition-colors shadow-sm"
             >
               🪙 Crypto
             </button>
             <button
               onClick={() => setSearchInput('geolocation')}
-              className="px-2.5 py-1 rounded-lg bg-[#28292A]/80 hover:bg-[#303134] text-slate-300 hover:text-white border border-[#3C4043]/60 transition-colors shadow-sm"
+              className="px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-hover text-text-muted hover:text-text-base border border-border transition-colors shadow-sm"
             >
               📍 Geolocation
             </button>
             <button
               onClick={() => setSearchInput('ai')}
-              className="px-2.5 py-1 rounded-lg bg-[#28292A]/80 hover:bg-[#303134] text-slate-300 hover:text-white border border-[#3C4043]/60 transition-colors shadow-sm"
+              className="px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-hover text-text-muted hover:text-text-base border border-border transition-colors shadow-sm"
             >
               ✨ AI & ML
             </button>
             <button
               onClick={() => setSearchInput('finance')}
-              className="px-2.5 py-1 rounded-lg bg-[#28292A]/80 hover:bg-[#303134] text-slate-300 hover:text-white border border-[#3C4043]/60 transition-colors shadow-sm"
+              className="px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-hover text-text-muted hover:text-text-base border border-border transition-colors shadow-sm"
             >
               📈 Finance
             </button>
@@ -307,7 +307,7 @@ export const ExplorePage: React.FC = () => {
         <button
           type="button"
           onClick={() => scrollCategories('left')}
-          className="hidden sm:flex items-center justify-center flex-shrink-0 mr-2 w-8 h-8 rounded-full bg-[#28292A] border border-[#3C4043] text-slate-300 hover:text-white hover:bg-[#3C4043] shadow-md transition-all z-10"
+          className="hidden sm:flex items-center justify-center flex-shrink-0 mr-2 w-8 h-8 rounded-full bg-surface border border-border text-text-muted hover:text-text-base hover:bg-surface-hover shadow-md transition-all z-10"
           title="Scroll categories left"
           aria-label="Scroll categories left"
         >
@@ -324,7 +324,7 @@ export const ExplorePage: React.FC = () => {
             className={`px-3.5 py-1.5 rounded-full whitespace-nowrap font-medium transition-colors border shadow-sm ${
               categoryParam === 'all'
                 ? 'bg-accent/20 border-accent text-accent font-semibold'
-                : 'bg-[#28292A] border-[#3C4043] text-slate-300 hover:bg-[#3C4043] hover:text-white'
+                : 'bg-surface border-border text-text-muted hover:bg-surface-hover hover:text-text-base'
             }`}
           >
             All Categories
@@ -336,7 +336,7 @@ export const ExplorePage: React.FC = () => {
               className={`px-3.5 py-1.5 rounded-full whitespace-nowrap font-medium transition-colors border shadow-sm ${
                 categoryParam === cat.slug
                   ? 'bg-accent/20 border-accent text-accent font-semibold'
-                  : 'bg-[#28292A] border-[#3C4043] text-slate-300 hover:bg-[#3C4043] hover:text-white'
+                  : 'bg-surface border-border text-text-muted hover:bg-surface-hover hover:text-text-base'
               }`}
             >
               {cat.name} ({cat.count})
@@ -347,7 +347,7 @@ export const ExplorePage: React.FC = () => {
         <button
           type="button"
           onClick={() => scrollCategories('right')}
-          className="hidden sm:flex items-center justify-center flex-shrink-0 ml-2 w-8 h-8 rounded-full bg-[#28292A] border border-[#3C4043] text-slate-300 hover:text-white hover:bg-[#3C4043] shadow-md transition-all z-10"
+          className="hidden sm:flex items-center justify-center flex-shrink-0 ml-2 w-8 h-8 rounded-full bg-surface border border-border text-text-muted hover:text-text-base hover:bg-surface-hover shadow-md transition-all z-10"
           title="Scroll categories right"
           aria-label="Scroll categories right"
         >
@@ -356,58 +356,58 @@ export const ExplorePage: React.FC = () => {
       </div>
 
       {/* Active Filter Chips & Controls Bar */}
-      <div className="bg-[#28292A] rounded-2xl border border-[#3C4043] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+      <div className="bg-surface rounded-2xl border border-border p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
         {/* Left: Active count and chips */}
         <div className="flex items-center gap-2 flex-wrap text-xs">
-          <span className="text-slate-400 font-medium inline-flex items-center gap-1.5 mr-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            Showing <strong className="text-white">{Math.min(offset + 1, totalCount)}</strong> -{' '}
-            <strong className="text-white">{Math.min(offset + pageSize, totalCount)}</strong> of{' '}
+          <span className="text-text-muted font-medium inline-flex items-center gap-1.5 mr-1">
+            <span className="w-2 h-2 rounded-full bg-healthy" />
+            Showing <strong className="text-text-base">{Math.min(offset + 1, totalCount)}</strong> -{' '}
+            <strong className="text-text-base">{Math.min(offset + pageSize, totalCount)}</strong> of{' '}
             <strong className="text-accent">{totalCount.toLocaleString()}</strong> APIs
           </span>
 
           {/* Chips */}
           {qParam && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#1F1F1F] border border-[#3C4043] text-slate-200 text-xs shadow-sm">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-surface-elevated border border-border text-text-base text-xs shadow-sm">
               <span>Query: <strong>"{qParam}"</strong></span>
-              <button onClick={() => { setSearchInput(''); updateQuery({ q: null, page: '1' }); }} className="text-slate-400 hover:text-white">
+              <button onClick={() => { setSearchInput(''); updateQuery({ q: null, page: '1' }); }} className="text-text-muted hover:text-text-base">
                 <X className="h-3 w-3" />
               </button>
             </span>
           )}
 
           {categoryParam !== 'all' && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#1F1F1F] border border-[#3C4043] text-slate-200 text-xs shadow-sm">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-surface-elevated border border-border text-text-base text-xs shadow-sm">
               <span>Category: <strong>{categoryParam}</strong></span>
-              <button onClick={() => updateQuery({ category: 'all', page: '1' })} className="text-slate-400 hover:text-white">
+              <button onClick={() => updateQuery({ category: 'all', page: '1' })} className="text-text-muted hover:text-text-base">
                 <X className="h-3 w-3" />
               </button>
             </span>
           )}
 
           {authParam !== 'all' && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#1F1F1F] border border-[#3C4043] text-slate-200 text-xs shadow-sm">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-surface-elevated border border-border text-text-base text-xs shadow-sm">
               <span>Auth: <strong>{authParam === 'none' ? 'No Key' : 'Free Key'}</strong></span>
-              <button onClick={() => updateQuery({ auth: 'all', page: '1' })} className="text-slate-400 hover:text-white">
+              <button onClick={() => updateQuery({ auth: 'all', page: '1' })} className="text-text-muted hover:text-text-base">
                 <X className="h-3 w-3" />
               </button>
             </span>
           )}
 
           {pricingParam !== 'all' && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#1F1F1F] border border-[#3C4043] text-slate-200 text-xs shadow-sm">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-surface-elevated border border-border text-text-base text-xs shadow-sm">
               <span>Pricing: <strong>{pricingParam.replace('_', ' ')}</strong></span>
-              <button onClick={() => updateQuery({ pricing: 'all', page: '1' })} className="text-slate-400 hover:text-white">
+              <button onClick={() => updateQuery({ pricing: 'all', page: '1' })} className="text-text-muted hover:text-text-base">
                 <X className="h-3 w-3" />
               </button>
             </span>
           )}
 
           {favoritesOnly && (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#1F1F1F] border border-amber-500/30 text-amber-300 text-xs shadow-sm">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-elevated border border-amber-500/30 text-amber-400 text-xs shadow-sm">
               <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
               <span>Saved Bookmarks</span>
-              <button onClick={() => updateQuery({ fav: '0', page: '1' })} className="text-slate-400 hover:text-white" title="Show all APIs">
+              <button onClick={() => updateQuery({ fav: '0', page: '1' })} className="text-text-muted hover:text-text-base" title="Show all APIs">
                 <X className="h-3 w-3" />
               </button>
             </span>
@@ -416,7 +416,7 @@ export const ExplorePage: React.FC = () => {
           {hasActiveFilters && (
             <button
               onClick={handleResetFilters}
-              className="text-xs text-[#8AB4F8] hover:underline font-semibold ml-1 inline-flex items-center gap-1"
+              className="text-xs text-accent hover:underline font-semibold ml-1 inline-flex items-center gap-1"
             >
               <FilterX className="h-3 w-3" />
               <span>Clear All</span>
@@ -491,14 +491,14 @@ export const ExplorePage: React.FC = () => {
         {isLoading ? (
           <SkeletonGrid count={pageSize > 24 ? 12 : pageSize} viewMode={viewMode} />
         ) : loadError ? (
-          <div className="bg-[#28292A] rounded-2xl p-10 text-center border border-rose-500/30 space-y-3">
+          <div className="bg-surface rounded-2xl p-10 text-center border border-rose-500/30 space-y-3">
             <AlertCircle className="h-10 w-10 text-rose-400 mx-auto" />
-            <h3 className="text-base font-semibold text-white">Connection Error</h3>
+            <h3 className="text-base font-semibold text-text-base">Connection Error</h3>
             <p className="text-xs text-rose-300 max-w-md mx-auto leading-relaxed">{loadError}</p>
             <div className="pt-2">
               <button
                 onClick={() => setRetryCount((c) => c + 1)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#303134] hover:bg-[#3C4043] text-xs text-[#8AB4F8] font-medium border border-[#3C4043] transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-elevated hover:bg-surface-hover text-xs text-accent font-medium border border-border transition-colors"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
                 <span>Retry Connection</span>
@@ -523,17 +523,17 @@ export const ExplorePage: React.FC = () => {
 
             {/* Pagination Component */}
             {totalPages > 1 && (
-              <div className="pt-8 pb-4 border-t border-[#3C4043] flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="text-xs text-slate-400 font-mono">
-                  Page <strong className="text-white">{currentPage}</strong> of{' '}
-                  <strong className="text-white">{totalPages}</strong> ({totalCount.toLocaleString()} total entries)
+              <div className="pt-8 pb-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-xs text-text-muted font-mono">
+                  Page <strong className="text-text-base">{currentPage}</strong> of{' '}
+                  <strong className="text-text-base">{totalPages}</strong> ({totalCount.toLocaleString()} total entries)
                 </div>
 
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => handlePageChange(1)}
                     disabled={currentPage === 1}
-                    className="p-2 rounded-lg bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 rounded-lg bg-surface hover:bg-surface-hover border border-border text-text-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     title="First Page"
                   >
                     <ChevronsLeft className="h-4 w-4" />
@@ -542,7 +542,7 @@ export const ExplorePage: React.FC = () => {
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className="p-2 rounded-lg bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 rounded-lg bg-surface hover:bg-surface-hover border border-border text-text-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     title="Previous Page"
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -569,8 +569,8 @@ export const ExplorePage: React.FC = () => {
                           onClick={() => handlePageChange(pageNumber)}
                           className={`min-w-[34px] h-[34px] rounded-lg text-xs font-mono font-medium transition-colors border ${
                             isActive
-                              ? 'bg-[#8AB4F8] border-[#8AB4F8] text-[#1F1F1F] font-bold shadow-sm'
-                              : 'bg-[#28292A] border-[#3C4043] text-slate-300 hover:bg-[#303134] hover:text-white'
+                              ? 'bg-accent border-accent text-background font-bold shadow-sm'
+                              : 'bg-surface border-border text-text-muted hover:bg-surface-hover hover:text-text-base'
                           }`}
                         >
                           {pageNumber}
@@ -582,7 +582,7 @@ export const ExplorePage: React.FC = () => {
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className="p-2 rounded-lg bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 rounded-lg bg-surface hover:bg-surface-hover border border-border text-text-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     title="Next Page"
                   >
                     <ChevronRight className="h-4 w-4" />
@@ -591,7 +591,7 @@ export const ExplorePage: React.FC = () => {
                   <button
                     onClick={() => handlePageChange(totalPages)}
                     disabled={currentPage === totalPages}
-                    className="p-2 rounded-lg bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 rounded-lg bg-surface hover:bg-surface-hover border border-border text-text-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     title="Last Page"
                   >
                     <ChevronsRight className="h-4 w-4" />
@@ -601,12 +601,12 @@ export const ExplorePage: React.FC = () => {
             )}
           </div>
         ) : (
-          <div className="bg-[#28292A] rounded-2xl p-12 text-center border border-[#3C4043] space-y-4">
-            <FilterX className="h-10 w-10 text-slate-500 mx-auto" />
-            <h3 className="text-base font-semibold text-white">
+          <div className="bg-surface rounded-2xl p-12 text-center border border-border space-y-4">
+            <FilterX className="h-10 w-10 text-text-muted mx-auto" />
+            <h3 className="text-base font-semibold text-text-base">
               {favoritesOnly && bookmarks.length === 0 ? "No Saved APIs" : "No matching APIs found"}
             </h3>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+            <p className="text-xs text-text-muted max-w-sm mx-auto leading-relaxed">
               {favoritesOnly && bookmarks.length === 0
                 ? "You haven't bookmarked any APIs yet. Click the star icon on any card to save it here for fast access!"
                 : favoritesOnly
@@ -616,7 +616,7 @@ export const ExplorePage: React.FC = () => {
             <div className="pt-1">
               <button
                 onClick={handleResetFilters}
-                className="px-4 py-2 rounded-xl bg-[#8AB4F8] hover:bg-[#A8C7FA] text-xs text-[#1F1F1F] font-semibold transition-colors"
+                className="px-4 py-2 rounded-xl bg-accent hover:opacity-90 text-xs text-background font-semibold transition-colors"
               >
                 Reset All Filters
               </button>
