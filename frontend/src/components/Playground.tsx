@@ -16,6 +16,7 @@ import { RequestHistoryView, HistoryItem } from './RequestHistoryBar';
 import { getEndpointPresets, EndpointPreset } from '../utils/endpointPresets';
 import { generateTypeScriptTypes, generateJsonSchema } from '../utils/typeGenerator';
 import { ParsedCurl } from '../utils/curlParser';
+import { CodeSnippetViewer } from './CodeSnippetViewer';
 import {
   Play,
   Copy,
@@ -40,26 +41,25 @@ import {
   Braces,
   ShieldAlert,
   Maximize2,
-  Minimize2,
   Columns,
   Rows,
   FileCode,
   Zap,
   ArrowRight,
   Globe,
-  BookOpen,
   History,
-  X
+  X,
+  Lock,
+  ChevronDown
 } from 'lucide-react';
 import { logger } from '../utils/logger';
-import { CustomSelect, SelectOption } from './CustomSelect';
 
 function getErrorDiagnostics(statusCode: number, errorMessage?: string | null) {
   if (statusCode === 400) {
     return {
       title: 'Bad Request (HTTP 400)',
       badge: 'Invalid Parameters',
-      badgeColor: 'bg-[#FDD663]/10 text-[#FDD663] border-[#FDD663]/30',
+      badgeColor: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
       description: 'The remote server rejected the request syntax, required query parameters, or formatting.',
       tips: [
         'Check query parameters for missing required arguments (e.g. ?id=, ?q=, or ?latitude=).',
@@ -72,7 +72,7 @@ function getErrorDiagnostics(statusCode: number, errorMessage?: string | null) {
     return {
       title: 'Authentication Required (HTTP 401)',
       badge: 'Auth Required',
-      badgeColor: 'bg-[#FDD663]/10 text-[#FDD663] border-[#FDD663]/30',
+      badgeColor: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
       description: 'The target API requires authentication credentials or an API Key before serving requests.',
       tips: [
         'Check the official documentation to obtain your free developer API key or bearer token.',
@@ -85,7 +85,7 @@ function getErrorDiagnostics(statusCode: number, errorMessage?: string | null) {
     return {
       title: 'Access Forbidden (HTTP 403)',
       badge: 'Access Denied',
-      badgeColor: 'bg-[#F28B82]/10 text-[#F28B82] border-[#F28B82]/30',
+      badgeColor: 'bg-rose-500/10 text-rose-400 border-rose-500/30',
       description: 'The target server received the request but refused to authorize it. This often occurs when quota is exceeded, Cloudflare bot protection intervenes, or domain restrictions apply.',
       tips: [
         'The endpoint may require higher permissions, client registration, or User-Agent whitelisting.',
@@ -98,7 +98,7 @@ function getErrorDiagnostics(statusCode: number, errorMessage?: string | null) {
     return {
       title: 'Endpoint Not Found (HTTP 404)',
       badge: 'Path Not Found',
-      badgeColor: 'bg-[#FDD663]/10 text-[#FDD663] border-[#FDD663]/30',
+      badgeColor: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
       description: 'The URL path does not exist on the target API server.',
       tips: [
         'Check for typos in the endpoint path in the URL bar above.',
@@ -111,7 +111,7 @@ function getErrorDiagnostics(statusCode: number, errorMessage?: string | null) {
     return {
       title: 'Method Not Allowed (HTTP 405)',
       badge: 'Method Unsupported',
-      badgeColor: 'bg-[#8AB4F8]/10 text-[#8AB4F8] border-[#8AB4F8]/30',
+      badgeColor: 'bg-accent/10 text-accent border-accent/30',
       description: 'The endpoint exists, but does not support the selected HTTP method.',
       tips: [
         'Check if this endpoint requires GET instead of POST, or vice versa.',
@@ -124,7 +124,7 @@ function getErrorDiagnostics(statusCode: number, errorMessage?: string | null) {
     return {
       title: 'Request Timeout (HTTP 408)',
       badge: 'Timeout',
-      badgeColor: 'bg-[#FDD663]/10 text-[#FDD663] border-[#FDD663]/30',
+      badgeColor: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
       description: 'The target API server closed the connection before receiving the complete request.',
       tips: [
         'The remote server may be under heavy load or experiencing high latency.',
@@ -137,7 +137,7 @@ function getErrorDiagnostics(statusCode: number, errorMessage?: string | null) {
     return {
       title: 'Unprocessable Entity (HTTP 422)',
       badge: 'Validation Failed',
-      badgeColor: 'bg-[#F28B82]/10 text-[#F28B82] border-[#F28B82]/30',
+      badgeColor: 'bg-rose-500/10 text-rose-400 border-rose-500/30',
       description: 'The request syntax is valid, but the target server was unable to process the contained instructions.',
       tips: [
         'Inspect query parameter values for semantic errors (e.g. non-numeric ID or invalid ISO date).',
@@ -150,7 +150,7 @@ function getErrorDiagnostics(statusCode: number, errorMessage?: string | null) {
     return {
       title: 'Rate Limit Exceeded (HTTP 429)',
       badge: 'Rate Limited',
-      badgeColor: 'bg-[#FDD663]/10 text-[#FDD663] border-[#FDD663]/30',
+      badgeColor: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
       description: 'Too many requests were sent to this free API in a short duration.',
       tips: [
         'Wait 30-60 seconds before retrying the request in the playground.',
@@ -163,7 +163,7 @@ function getErrorDiagnostics(statusCode: number, errorMessage?: string | null) {
     return {
       title: `Upstream Server Error (HTTP ${statusCode})`,
       badge: 'Server Failure',
-      badgeColor: 'bg-[#F28B82]/10 text-[#F28B82] border-[#F28B82]/30',
+      badgeColor: 'bg-rose-500/10 text-rose-400 border-rose-500/30',
       description: 'The upstream API server encountered an unexpected internal exception.',
       tips: [
         'The external provider may currently be experiencing intermittent maintenance or downtime.',
@@ -175,7 +175,7 @@ function getErrorDiagnostics(statusCode: number, errorMessage?: string | null) {
   return {
     title: `Request Failed (Code: ${statusCode || 'Network Error'})`,
     badge: 'Request Error',
-    badgeColor: 'bg-[#F28B82]/10 text-[#F28B82] border-[#F28B82]/30',
+    badgeColor: 'bg-rose-500/10 text-rose-400 border-rose-500/30',
     description: errorMessage || 'An unexpected error occurred while communicating with the remote server.',
     tips: [
       'Ensure the target server URL starts with http:// or https://.',
@@ -185,13 +185,15 @@ function getErrorDiagnostics(statusCode: number, errorMessage?: string | null) {
   };
 }
 
-const HTTP_METHOD_OPTIONS: SelectOption[] = [
-  { value: 'GET', label: 'GET' },
-  { value: 'POST', label: 'POST' },
-  { value: 'PUT', label: 'PUT' },
-  { value: 'DELETE', label: 'DELETE' },
-  { value: 'PATCH', label: 'PATCH' }
-];
+const METHOD_STYLES: Record<string, { bg: string; text: string; border: string }> = {
+  GET: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30' },
+  POST: { bg: 'bg-sky-500/15', text: 'text-sky-400', border: 'border-sky-500/30' },
+  PUT: { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30' },
+  DELETE: { bg: 'bg-rose-500/15', text: 'text-rose-400', border: 'border-rose-500/30' },
+  PATCH: { bg: 'bg-purple-500/15', text: 'text-purple-400', border: 'border-purple-500/30' }
+};
+
+const HTTP_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'] as const;
 
 const POPULAR_LANG_LIST: Array<{ id: SnippetLanguage; label: string }> = [
   { id: 'curl', label: 'cURL' },
@@ -248,8 +250,7 @@ export const Playground: React.FC<PlaygroundProps> = ({
   initialEndpoint,
   initialMethod,
   initialParams,
-  initialBody,
-  onOpenDocs
+  initialBody
 }) => {
   const initialUrl = (api?.base_url || '').replace(/\/+$/, '');
   const rawSample = api?.endpoint || (api?.endpoints?.[0]?.path) || '';
@@ -266,6 +267,7 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
   // Request State
   const [method, setMethod] = useState(initialMethod || api?.endpoints?.[0]?.method || 'GET');
+  const [isMethodDropdownOpen, setIsMethodDropdownOpen] = useState(false);
   const [endpointUrl, setEndpointUrl] = useState(() => {
     if (initialEndpoint) {
       return initialEndpoint.startsWith('http')
@@ -562,6 +564,18 @@ export const Playground: React.FC<PlaygroundProps> = ({
     }
   };
 
+  // Keyboard shortcut: Ctrl+Enter / Cmd+Enter to execute test
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleRunTest();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [endpointUrl, method, params, headers, requestBody]);
+
   const handleSelectPreset = (preset: EndpointPreset) => {
     setSelectedPresetId(preset.id);
     const presetEp = preset.endpoint || '';
@@ -589,7 +603,6 @@ export const Playground: React.FC<PlaygroundProps> = ({
       setActiveParamTab('params');
     }
 
-    // Auto-execute preset for instant feedback
     setTimeout(() => {
       handleRunTest(newUrl, preset.method, newBody);
     }, 40);
@@ -608,7 +621,6 @@ export const Playground: React.FC<PlaygroundProps> = ({
     } else if (parsed.headers.length > 0) {
       setActiveParamTab('headers');
     }
-    // Auto-run imported command
     setTimeout(() => {
       handleRunTest(parsed.url, parsed.method, parsed.body || '');
     }, 50);
@@ -773,8 +785,16 @@ export const Playground: React.FC<PlaygroundProps> = ({
     return res.slice(0, 100);
   }, [response?.data]);
 
+  // Popular vs additional snippet languages
+  const isPopularLang = POPULAR_LANG_LIST.some((l) => l.id === activeSnippetLang);
+  const additionalLanguages = useMemo(() => {
+    return SUPPORTED_LANGUAGES.filter((l) => !POPULAR_LANG_LIST.some((p) => p.id === l.id));
+  }, []);
+
+  const activeMethodStyle = METHOD_STYLES[method] || METHOD_STYLES.GET;
+
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-4 font-sans">
       {/* cURL Import Modal */}
       <CurlImportModal
         isOpen={isCurlModalOpen}
@@ -784,60 +804,69 @@ export const Playground: React.FC<PlaygroundProps> = ({
       />
 
       {/* Top Request Section */}
-      <div className="bg-[#28292A] rounded-2xl p-4 sm:p-5 border border-[#3C4043] space-y-3.5">
+      <div className="bg-surface rounded-2xl p-4 sm:p-5 border border-border shadow-sm space-y-4 transition-colors">
         {/* Presets Bar */}
         {presets.length > 0 && (
-          <div className="space-y-1.5 pb-1 border-b border-[#3C4043]/50">
+          <div className="space-y-2 pb-3 border-b border-border">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-[11px] font-mono text-slate-400 flex items-center gap-1.5 font-medium">
-                <Sparkles className="h-3 w-3 text-[#8AB4F8]" />
-                <span>1-Click Scenarios & Presets:</span>
-              </span>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsCurlModalOpen(true)}
-                  className="text-[11px] font-mono text-[#8AB4F8] hover:text-[#A8C7FA] flex items-center gap-1 hover:underline transition-colors"
-                >
-                  <Terminal className="h-3 w-3" />
-                  <span>Import cURL</span>
-                </button>
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-accent/10 text-accent border border-accent/20">
+                  <Sparkles className="h-3.5 w-3.5" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-text-base tracking-tight">Preset Scenarios</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-surface-elevated text-text-muted border border-border">
+                    {presets.length} available
+                  </span>
+                </div>
               </div>
+              <button
+                type="button"
+                onClick={() => setIsCurlModalOpen(true)}
+                className="text-xs font-mono text-accent hover:text-accent-hover flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
+                title="Paste and import any cURL command"
+              >
+                <Terminal className="h-3.5 w-3.5" />
+                <span>Import cURL</span>
+              </button>
             </div>
 
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-none">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
               {presets.map((preset) => {
                 const isActive = selectedPresetId === preset.id;
+                const mStyle = METHOD_STYLES[preset.method] || METHOD_STYLES.GET;
                 return (
                   <button
                     key={preset.id}
                     type="button"
                     onClick={() => handleSelectPreset(preset)}
-                    className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono transition-all border ${isActive
-                        ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold border-[#8AB4F8] shadow-sm'
-                        : 'bg-[#1F1F1F] text-slate-300 hover:text-white border-[#3C4043] hover:border-[#5F6368] hover:bg-[#303134]'
-                      }`}
+                    className={`flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono transition-all border cursor-pointer ${
+                      isActive
+                        ? 'bg-accent text-background font-bold border-accent shadow-sm shadow-accent/20'
+                        : 'bg-surface-elevated text-text-base hover:text-text-base border-border hover:border-border-light hover:bg-surface-hover'
+                    }`}
                     title={preset.description}
                   >
                     <span
-                      className={`text-[9px] uppercase font-bold px-1 py-0.2 rounded ${isActive
-                          ? 'bg-[#1F1F1F]/20 text-[#1F1F1F]'
-                          : preset.method === 'POST'
-                            ? 'bg-sky-500/10 text-sky-400'
-                            : 'bg-emerald-500/10 text-emerald-400'
-                        }`}
+                      className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded ${
+                        isActive
+                          ? 'bg-black/20 text-background'
+                          : `${mStyle.bg} ${mStyle.text} border ${mStyle.border}`
+                      }`}
                     >
                       {preset.method}
                     </span>
-                    <span>{preset.label}</span>
+                    <span className="font-medium">{preset.label}</span>
                     {preset.badge && (
                       <span
-                        className={`text-[9px] px-1 py-0.2 rounded-full ${isActive
-                            ? 'bg-[#1F1F1F] text-[#8AB4F8]'
-                            : 'bg-[#8AB4F8]/15 text-[#8AB4F8]'
-                          }`}
+                        className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-1 ${
+                          isActive
+                            ? 'bg-black/15 text-background'
+                            : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                        }`}
                       >
-                        {preset.badge}
+                        <Check className="h-2.5 w-2.5" />
+                        <span>{preset.badge}</span>
                       </span>
                     )}
                   </button>
@@ -847,100 +876,162 @@ export const Playground: React.FC<PlaygroundProps> = ({
           </div>
         )}
 
-        {/* Request Input Bar */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+        {/* Omnibar Request Input Bar */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-surface-elevated/70 p-2 rounded-2xl border border-border focus-within:border-accent/60 focus-within:ring-2 focus-within:ring-accent/15 transition-all">
           {/* Method Selector Dropdown */}
-          <div className="w-28 flex-shrink-0">
-            <CustomSelect
-              value={method}
-              onChange={(val) => {
-                setMethod(val);
-                if (['POST', 'PUT', 'PATCH'].includes(val) && !requestBody) {
-                  setRequestBody('{\n  "exampleKey": "value"\n}');
-                  setActiveParamTab('body');
-                }
-              }}
-              options={HTTP_METHOD_OPTIONS}
-              size="md"
-              variant="default"
-            />
+          <div className="relative flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => setIsMethodDropdownOpen(!isMethodDropdownOpen)}
+              className={`flex items-center justify-between gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-bold border cursor-pointer transition-all ${activeMethodStyle.bg} ${activeMethodStyle.text} ${activeMethodStyle.border} min-w-[92px]`}
+              title="Change HTTP Request Verb"
+            >
+              <span>{method}</span>
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isMethodDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isMethodDropdownOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setIsMethodDropdownOpen(false)}
+                />
+                <div className="absolute left-0 top-full mt-1.5 w-32 bg-surface border border-border rounded-xl shadow-xl z-50 p-1 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
+                  {HTTP_METHODS.map((m) => {
+                    const style = METHOD_STYLES[m];
+                    const isSelected = method === m;
+                    return (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => {
+                          setMethod(m);
+                          setIsMethodDropdownOpen(false);
+                          if (['POST', 'PUT', 'PATCH'].includes(m) && !requestBody) {
+                            setRequestBody('{\n  "exampleKey": "value"\n}');
+                            setActiveParamTab('body');
+                          }
+                        }}
+                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-colors cursor-pointer ${
+                          isSelected
+                            ? `${style.bg} ${style.text}`
+                            : 'text-text-base hover:bg-surface-elevated'
+                        }`}
+                      >
+                        <span className={style.text}>{m}</span>
+                        {isSelected && <Check className="h-3 w-3 text-accent" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </div>
 
           {/* URL Input */}
-          <div className="flex-1 relative">
+          <div className="flex-1 relative flex items-center min-w-0">
+            <div className="pl-2 pr-1 text-text-muted shrink-0" title={endpointUrl.startsWith('https://') ? 'Secure HTTPS Endpoint' : 'HTTP Endpoint'}>
+              {endpointUrl.startsWith('https://') ? (
+                <Lock className="h-3.5 w-3.5 text-emerald-400" />
+              ) : (
+                <Globe className="h-3.5 w-3.5 text-accent" />
+              )}
+            </div>
             <input
               type="text"
               value={endpointUrl}
               onChange={(e) => handleEndpointUrlChange(e.target.value)}
-              className="w-full bg-[#1F1F1F] border border-[#3C4043] rounded-lg px-3.5 py-2 text-xs font-mono text-slate-100 focus:border-[#8AB4F8] focus:outline-none transition-colors"
-              placeholder="https://api.example.com/v1/..."
+              spellCheck={false}
+              autoCorrect="off"
+              autoCapitalize="off"
+              className="w-full bg-transparent border-0 px-2.5 py-2 text-xs font-mono text-text-base focus:outline-none placeholder:text-text-muted/50"
+              placeholder="https://api.example.com/v1/resource..."
             />
+            {endpointUrl && (
+              <button
+                type="button"
+                onClick={() => handleEndpointUrlChange('')}
+                className="text-text-muted hover:text-text-base p-1 mr-1 rounded-lg hover:bg-surface-elevated transition-colors cursor-pointer shrink-0"
+                title="Clear URL"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
 
-          {/* Import cURL quick button */}
-          <button
-            type="button"
-            onClick={() => setIsCurlModalOpen(true)}
-            className="hidden lg:flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#1F1F1F] hover:bg-[#303134] text-slate-300 hover:text-white border border-[#3C4043] text-xs font-mono transition-colors"
-            title="Paste and import a cURL command"
-          >
-            <Terminal className="h-3.5 w-3.5 text-[#8AB4F8]" />
-            <span>cURL</span>
-          </button>
-
-          {/* Run Button */}
+          {/* Run / Send Request Button */}
           <button
             onClick={() => handleRunTest()}
             disabled={isLoading}
-            className="flex items-center justify-center gap-2 px-5 py-2 rounded-lg bg-[#8AB4F8] hover:bg-[#A8C7FA] text-[#1F1F1F] font-bold text-xs transition-colors disabled:opacity-50 shadow-sm"
+            className="flex items-center justify-center gap-2 px-5 py-2 rounded-xl bg-accent hover:bg-accent-hover text-background font-bold text-xs shadow-md shadow-accent/25 transition-all cursor-pointer disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98] shrink-0"
+            title="Execute live proxy request (Ctrl + Enter)"
           >
             <Play className={`h-3.5 w-3.5 fill-current ${isLoading ? 'animate-spin' : ''}`} />
-            <span>{isLoading ? 'Running...' : 'Run Test'}</span>
+            <span>{isLoading ? 'Sending...' : 'Run Test'}</span>
+            <span className="hidden md:inline-block text-[10px] font-mono px-1.5 py-0.2 rounded bg-black/15 text-background font-normal ml-0.5">
+              ⌘↵
+            </span>
           </button>
         </div>
 
         {/* Real-time URL Validation Error Banner */}
         {urlValidationError && (
-          <div className="p-3 bg-[#F28B82]/10 border border-[#F28B82]/30 rounded-xl flex items-center gap-2.5 text-xs text-[#F28B82]">
-            <ShieldAlert className="h-4 w-4 text-[#F28B82] flex-shrink-0" />
+          <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center gap-2.5 text-xs text-rose-400">
+            <ShieldAlert className="h-4 w-4 text-rose-400 flex-shrink-0" />
             <span>{urlValidationError}</span>
           </div>
         )}
 
         {/* Parameter & Header Tabs Navigation */}
-        <div className="pt-2 border-t border-[#3C4043] space-y-3">
+        <div className="pt-2 border-t border-border space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5 bg-[#1F1F1F] p-1 rounded-xl border border-[#3C4043]">
+            <div className="flex items-center gap-1 bg-surface-elevated p-1 rounded-xl border border-border">
               <button
                 type="button"
                 onClick={() => setActiveParamTab('params')}
-                className={`px-3 py-1 rounded-lg text-xs font-mono transition-colors ${activeParamTab === 'params'
-                    ? 'bg-[#8AB4F8] text-[#1F1F1F] font-semibold'
-                    : 'text-slate-400 hover:text-white'
-                  }`}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                  activeParamTab === 'params'
+                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
+                    : 'text-text-muted hover:text-text-base'
+                }`}
               >
-                Query Params {params.length > 0 && `(${params.length})`}
+                <span>Query Params</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                  activeParamTab === 'params' ? 'bg-black/20 text-background' : 'bg-surface text-text-muted border border-border'
+                }`}>
+                  {params.length}
+                </span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveParamTab('headers')}
-                className={`px-3 py-1 rounded-lg text-xs font-mono transition-colors ${activeParamTab === 'headers'
-                    ? 'bg-[#8AB4F8] text-[#1F1F1F] font-semibold'
-                    : 'text-slate-400 hover:text-white'
-                  }`}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                  activeParamTab === 'headers'
+                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
+                    : 'text-text-muted hover:text-text-base'
+                }`}
               >
-                Headers {headers.length > 0 && `(${headers.length})`}
+                <span>Headers</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                  activeParamTab === 'headers' ? 'bg-black/20 text-background' : 'bg-surface text-text-muted border border-border'
+                }`}>
+                  {headers.length}
+                </span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveParamTab('body')}
-                className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-mono transition-colors ${activeParamTab === 'body'
-                    ? 'bg-[#8AB4F8] text-[#1F1F1F] font-semibold'
-                    : 'text-slate-400 hover:text-white'
-                  }`}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                  activeParamTab === 'body'
+                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
+                    : 'text-text-muted hover:text-text-base'
+                }`}
               >
                 <Braces className="h-3 w-3" />
-                <span>Body {requestBody.trim() ? '(JSON)' : ''}</span>
+                <span>Body</span>
+                {requestBody.trim() && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                )}
               </button>
             </div>
 
@@ -948,9 +1039,9 @@ export const Playground: React.FC<PlaygroundProps> = ({
               <button
                 type="button"
                 onClick={() => handleUpdateParams((prev) => [...prev, { key: '', value: '' }])}
-                className="text-xs text-[#8AB4F8] hover:text-[#A8C7FA] flex items-center gap-1 px-2.5 py-1 rounded bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] transition-colors"
+                className="text-xs text-accent hover:text-accent-hover font-medium flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
               >
-                <Plus className="h-3 w-3" />
+                <Plus className="h-3.5 w-3.5" />
                 <span>Add Query Param</span>
               </button>
             )}
@@ -959,9 +1050,9 @@ export const Playground: React.FC<PlaygroundProps> = ({
               <button
                 type="button"
                 onClick={() => setHeaders((prev) => [...prev, { key: '', value: '' }])}
-                className="text-xs text-[#8AB4F8] hover:text-[#A8C7FA] flex items-center gap-1 px-2.5 py-1 rounded bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] transition-colors"
+                className="text-xs text-accent hover:text-accent-hover font-medium flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
               >
-                <Plus className="h-3 w-3" />
+                <Plus className="h-3.5 w-3.5" />
                 <span>Add Header</span>
               </button>
             )}
@@ -971,16 +1062,17 @@ export const Playground: React.FC<PlaygroundProps> = ({
                 <button
                   type="button"
                   onClick={handleFormatRequestBody}
-                  className="text-xs text-slate-300 hover:text-white flex items-center gap-1 px-2.5 py-1 rounded bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] transition-colors"
-                  title="Format JSON"
+                  className="text-xs text-text-base hover:text-accent flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
+                  title="Pretty-format JSON syntax"
                 >
-                  <Sparkles className="h-3 w-3 text-[#8AB4F8]" />
+                  <Sparkles className="h-3 w-3 text-accent" />
                   <span>Format JSON</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setRequestBody('')}
-                  className="text-xs text-slate-400 hover:text-rose-400 flex items-center gap-1 px-2.5 py-1 rounded bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] transition-colors"
+                  className="text-xs text-text-muted hover:text-rose-400 flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
+                  title="Clear body"
                 >
                   <Trash2 className="h-3 w-3" />
                   <span>Clear</span>
@@ -992,13 +1084,14 @@ export const Playground: React.FC<PlaygroundProps> = ({
           {/* Active Tab View: Params */}
           {activeParamTab === 'params' && (
             params.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                 {params.map((p, index) => (
-                  <div key={index} className="flex items-center gap-1.5 bg-[#1F1F1F] px-2.5 py-1.5 rounded-lg border border-[#3C4043]">
+                  <div key={index} className="flex items-center gap-1.5 bg-surface-elevated px-3 py-2 rounded-xl border border-border hover:border-border-light transition-all">
                     <input
                       type="text"
                       placeholder="key"
                       value={p.key}
+                      spellCheck={false}
                       onChange={(e) => {
                         const val = e.target.value;
                         handleUpdateParams((prev) => {
@@ -1007,13 +1100,14 @@ export const Playground: React.FC<PlaygroundProps> = ({
                           return copy;
                         });
                       }}
-                      className="w-24 bg-transparent text-xs font-mono text-[#8AB4F8] outline-none placeholder:text-slate-600"
+                      className="w-24 bg-transparent text-xs font-mono text-accent font-medium outline-none placeholder:text-text-muted/40"
                     />
-                    <span className="text-slate-500 font-mono">=</span>
+                    <span className="text-text-muted/60 font-mono text-xs">=</span>
                     <input
                       type="text"
                       placeholder="value"
                       value={p.value}
+                      spellCheck={false}
                       onChange={(e) => {
                         const val = e.target.value;
                         handleUpdateParams((prev) => {
@@ -1022,22 +1116,41 @@ export const Playground: React.FC<PlaygroundProps> = ({
                           return copy;
                         });
                       }}
-                      className="flex-1 bg-transparent text-xs font-mono text-slate-200 outline-none placeholder:text-slate-600"
+                      className="flex-1 bg-transparent text-xs font-mono text-text-base outline-none placeholder:text-text-muted/40"
                     />
                     <button
                       type="button"
                       onClick={() => handleUpdateParams((prev) => prev.filter((_, i) => i !== index))}
-                      className="text-slate-500 hover:text-rose-400 p-0.5 rounded transition-colors"
+                      className="text-text-muted hover:text-rose-400 p-1 rounded-lg hover:bg-rose-500/10 transition-colors cursor-pointer"
                       title="Remove parameter"
                     >
-                      <Trash2 className="h-3 w-3" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-[11px] font-mono text-slate-500 py-1">
-                No query parameters attached. Click "+ Add Query Param" or pick a preset scenario above.
+              <div className="p-4 rounded-xl bg-surface-elevated/40 border border-border border-dashed flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-text-muted">
+                <div>
+                  <span className="font-semibold text-text-base">No query parameters attached.</span>
+                  <p className="text-[11px] text-text-muted mt-0.5">Parameters will automatically sync with the URL bar above.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateParams((prev) => [...prev, { key: 'limit', value: '10' }])}
+                    className="text-[11px] font-mono px-2 py-1 rounded-lg bg-surface border border-border hover:border-accent text-text-base transition-colors cursor-pointer"
+                  >
+                    + limit=10
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateParams((prev) => [...prev, { key: 'format', value: 'json' }])}
+                    className="text-[11px] font-mono px-2 py-1 rounded-lg bg-surface border border-border hover:border-accent text-text-base transition-colors cursor-pointer"
+                  >
+                    + format=json
+                  </button>
+                </div>
               </div>
             )
           )}
@@ -1045,46 +1158,48 @@ export const Playground: React.FC<PlaygroundProps> = ({
           {/* Active Tab View: Headers */}
           {activeParamTab === 'headers' && (
             headers.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                 {headers.map((h, index) => (
-                  <div key={index} className="flex items-center gap-1.5 bg-[#1F1F1F] px-2.5 py-1.5 rounded-lg border border-[#3C4043]">
+                  <div key={index} className="flex items-center gap-1.5 bg-surface-elevated px-3 py-2 rounded-xl border border-border hover:border-border-light transition-all">
                     <input
                       type="text"
                       placeholder="Header-Name"
                       value={h.key}
+                      spellCheck={false}
                       onChange={(e) => {
                         const updated = [...headers];
                         updated[index].key = e.target.value;
                         setHeaders(updated);
                       }}
-                      className="w-28 bg-transparent text-xs font-mono text-emerald-400 font-medium outline-none placeholder:text-slate-600"
+                      className="w-28 bg-transparent text-xs font-mono text-emerald-400 font-medium outline-none placeholder:text-text-muted/40"
                     />
-                    <span className="text-slate-500 font-mono">:</span>
+                    <span className="text-text-muted/60 font-mono text-xs">:</span>
                     <input
                       type="text"
                       placeholder="Value"
                       value={h.value}
+                      spellCheck={false}
                       onChange={(e) => {
                         const updated = [...headers];
                         updated[index].value = e.target.value;
                         setHeaders(updated);
                       }}
-                      className="flex-1 bg-transparent text-xs font-mono text-slate-200 outline-none placeholder:text-slate-600"
+                      className="flex-1 bg-transparent text-xs font-mono text-text-base outline-none placeholder:text-text-muted/40"
                     />
                     <button
                       type="button"
                       onClick={() => setHeaders((prev) => prev.filter((_, i) => i !== index))}
-                      className="text-slate-500 hover:text-rose-400 p-0.5 rounded transition-colors"
+                      className="text-text-muted hover:text-rose-400 p-1 rounded-lg hover:bg-rose-500/10 transition-colors cursor-pointer"
                       title="Remove header"
                     >
-                      <Trash2 className="h-3 w-3" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-[11px] font-mono text-slate-500 py-1">
-                No custom headers specified. Standard headers are automatically set by the proxy relay.
+              <div className="p-4 rounded-xl bg-surface-elevated/40 border border-border border-dashed text-xs text-text-muted">
+                No custom headers specified. Standard headers (Accept, User-Agent) are automatically supplied by the proxy.
               </div>
             )
           )}
@@ -1092,14 +1207,14 @@ export const Playground: React.FC<PlaygroundProps> = ({
           {/* Active Tab View: Body */}
           {activeParamTab === 'body' && (
             <div className="space-y-2">
-              <div className="flex items-center justify-between text-[11px] text-slate-400">
-                <span>Request Payload Body (Raw JSON for POST/PUT/PATCH):</span>
-                <div className="flex items-center gap-1 text-[10px] text-slate-500">
+              <div className="flex items-center justify-between text-xs text-text-muted">
+                <span>Request Payload Body (JSON for POST/PUT/PATCH):</span>
+                <div className="flex items-center gap-1.5 text-[11px]">
                   <span>Templates:</span>
                   <button
                     type="button"
                     onClick={() => setRequestBody(JSON.stringify({ query: 'search', limit: 10 }, null, 2))}
-                    className="hover:text-[#8AB4F8] underline"
+                    className="text-accent hover:underline cursor-pointer"
                   >
                     Query
                   </button>
@@ -1107,7 +1222,7 @@ export const Playground: React.FC<PlaygroundProps> = ({
                   <button
                     type="button"
                     onClick={() => setRequestBody(JSON.stringify({ name: 'Test Item', status: 'active' }, null, 2))}
-                    className="hover:text-[#8AB4F8] underline"
+                    className="text-accent hover:underline cursor-pointer"
                   >
                     Object
                   </button>
@@ -1118,7 +1233,8 @@ export const Playground: React.FC<PlaygroundProps> = ({
                 onChange={(e) => setRequestBody(e.target.value)}
                 placeholder={'{\n  "key": "value"\n}'}
                 rows={4}
-                className="w-full bg-[#1F1F1F] border border-[#3C4043] rounded-lg p-3 text-xs font-mono text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-[#8AB4F8]"
+                spellCheck={false}
+                className="w-full bg-surface-elevated border border-border rounded-xl p-3 text-xs font-mono text-text-base placeholder:text-text-muted/40 focus:outline-none focus:border-accent resize-none transition-all"
               />
             </div>
           )}
@@ -1127,47 +1243,57 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
       {/* Main Response & Snippets Area */}
       <div
-        className={`grid gap-4 transition-all duration-300 ${viewLayout === 'focus'
+        className={`grid gap-4 transition-all duration-300 ${
+          viewLayout === 'focus'
             ? 'grid-cols-1'
             : viewLayout === 'stacked'
               ? 'grid-cols-1'
               : 'grid-cols-1 lg:grid-cols-2'
-          }`}
+        }`}
       >
         {/* Response Payload Inspector */}
-        <div className="bg-[#28292A] rounded-2xl border border-[#3C4043] flex flex-col min-h-[460px] h-[520px] overflow-hidden">
+        <div className="bg-surface rounded-2xl border border-border flex flex-col min-h-[480px] h-[540px] overflow-hidden shadow-sm transition-colors">
           {/* Header Bar */}
-          <div className="px-4 py-2.5 border-b border-[#3C4043] bg-[#28292A] flex flex-wrap items-center justify-between gap-2">
+          <div className="px-4 py-3 border-b border-border bg-surface-elevated/60 flex flex-wrap items-center justify-between gap-2">
             {/* Left Title & Status */}
-            <div className="flex items-center gap-2">
-              <Database className="h-4 w-4 text-[#8AB4F8]" />
-              <span className="text-xs font-bold text-slate-200">Response Payload</span>
+            <div className="flex items-center gap-2.5">
+              <div className="p-1 rounded-lg bg-accent/10 text-accent">
+                <Database className="h-4 w-4" />
+              </div>
+              <span className="text-xs font-bold text-text-base tracking-tight">Response Payload</span>
 
               {/* Status Code badge */}
-              {response && (
-                <div className="flex items-center gap-1.5 ml-1">
+              {response ? (
+                <div className="flex items-center gap-2 ml-1">
                   <span
-                    className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${response.status_code >= 200 && response.status_code < 300
-                        ? 'bg-[#81C995]/10 text-[#81C995] border-[#81C995]/30'
+                    className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border flex items-center gap-1.5 ${
+                      response.status_code >= 200 && response.status_code < 300
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                         : response.status_code >= 400
-                          ? 'bg-[#F28B82]/10 text-[#F28B82] border-[#F28B82]/30'
-                          : 'bg-[#FDD663]/10 text-[#FDD663] border-[#FDD663]/30'
-                      }`}
+                          ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                          : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                    }`}
                   >
-                    {response.status_code} {response.status_code === 200 ? 'OK' : ''}
+                    <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
+                    <span>{response.status_code} {response.status_code === 200 ? 'OK' : ''}</span>
                   </span>
 
-                  <span className="text-[10px] font-mono text-slate-400 flex items-center gap-1">
+                  <span className="text-[10px] font-mono text-text-muted flex items-center gap-1">
                     <Clock className="h-3 w-3" />
                     {response.latency_ms} ms
                   </span>
 
                   {Boolean(response?.data) && (
-                    <span className="text-[10px] font-mono text-slate-400 px-1.5 py-0.5 rounded bg-[#1F1F1F] border border-[#3C4043]">
+                    <span className="text-[10px] font-mono text-text-muted px-2 py-0.5 rounded-md bg-surface border border-border">
                       {getPayloadSize(response.data)}
                     </span>
                   )}
                 </div>
+              ) : (
+                <span className="text-[10px] font-mono text-text-muted/70 px-2 py-0.5 rounded-full bg-surface border border-border flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-text-muted/40" />
+                  <span>Awaiting Request</span>
+                </span>
               )}
             </div>
 
@@ -1177,55 +1303,61 @@ export const Playground: React.FC<PlaygroundProps> = ({
                 <>
                   <button
                     onClick={() => setIsSearchOpen(!isSearchOpen)}
-                    className={`p-1.5 rounded text-xs transition-colors border border-[#3C4043] ${isSearchOpen ? 'bg-[#8AB4F8]/20 text-[#8AB4F8]' : 'bg-[#1F1F1F] text-slate-400 hover:text-white'
-                      }`}
-                    title="Search in response"
+                    className={`p-1.5 rounded-lg text-xs transition-colors border cursor-pointer ${
+                      isSearchOpen
+                        ? 'bg-accent/20 text-accent border-accent/40'
+                        : 'bg-surface hover:bg-surface-elevated text-text-muted hover:text-text-base border-border'
+                    }`}
+                    title="Search in response payload"
                   >
-                    <Search className="h-3 w-3" />
+                    <Search className="h-3.5 w-3.5" />
                   </button>
 
                   <button
                     onClick={handleCopyJson}
-                    className="text-xs text-slate-400 hover:text-white flex items-center gap-1 px-2 py-1 rounded bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] transition-colors"
+                    className="text-xs text-text-muted hover:text-text-base flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-elevated border border-border transition-colors cursor-pointer"
                     title="Copy full JSON"
                   >
-                    {copiedJson ? <Check className="h-3 w-3 text-[#81C995]" /> : <Copy className="h-3 w-3" />}
+                    {copiedJson ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
                     <span className="hidden sm:inline">{copiedJson ? 'Copied' : 'Copy'}</span>
                   </button>
 
                   <button
                     onClick={handleDownloadJson}
-                    className="text-xs text-slate-400 hover:text-white flex items-center gap-1 px-2 py-1 rounded bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] transition-colors"
+                    className="text-xs text-text-muted hover:text-text-base flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-elevated border border-border transition-colors cursor-pointer"
                     title="Download JSON file"
                   >
-                    <Download className="h-3 w-3" />
+                    <Download className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline">Export</span>
                   </button>
                 </>
               )}
 
               {/* Layout Switcher (Split, Focus, Stacked) */}
-              <div className="flex items-center bg-[#1F1F1F] p-0.5 rounded-lg border border-[#3C4043] ml-1">
+              <div className="flex items-center bg-surface p-0.5 rounded-xl border border-border ml-1">
                 <button
                   onClick={() => setViewLayout('split')}
-                  className={`p-1 rounded transition-colors ${viewLayout === 'split' ? 'bg-[#8AB4F8] text-[#1F1F1F]' : 'text-slate-400 hover:text-white'
-                    }`}
+                  className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                    viewLayout === 'split' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
+                  }`}
                   title="Side-by-side Split View"
                 >
                   <Columns className="h-3 w-3" />
                 </button>
                 <button
                   onClick={() => setViewLayout('focus')}
-                  className={`p-1 rounded transition-colors ${viewLayout === 'focus' ? 'bg-[#8AB4F8] text-[#1F1F1F]' : 'text-slate-400 hover:text-white'
-                    }`}
+                  className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                    viewLayout === 'focus' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
+                  }`}
                   title="Full Width Focus View"
                 >
                   <Maximize2 className="h-3 w-3" />
                 </button>
                 <button
                   onClick={() => setViewLayout('stacked')}
-                  className={`p-1 rounded transition-colors ${viewLayout === 'stacked' ? 'bg-[#8AB4F8] text-[#1F1F1F]' : 'text-slate-400 hover:text-white'
-                    }`}
+                  className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                    viewLayout === 'stacked' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
+                  }`}
                   title="Stacked Top/Bottom View"
                 >
                   <Rows className="h-3 w-3" />
@@ -1234,15 +1366,16 @@ export const Playground: React.FC<PlaygroundProps> = ({
             </div>
           </div>
 
-          {/* Response View Selector Tabs (JSON, Preview, Media, Headers, Schema, Types, Raw, History) */}
-          <div className="px-3 py-1.5 bg-[#232425] border-b border-[#3C4043] flex items-center justify-between gap-1 overflow-x-auto scrollbar-none">
+          {/* Response View Selector Tabs */}
+          <div className="px-3 py-1.5 bg-surface-elevated/40 border-b border-border flex items-center justify-between gap-1 overflow-x-auto scrollbar-none">
             <div className="flex items-center gap-1 flex-wrap">
               <button
                 onClick={() => setActiveResponseTab('json')}
-                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'json'
-                    ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
-                    : 'text-slate-400 hover:text-white hover:bg-[#303134]'
-                  }`}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
+                  activeResponseTab === 'json'
+                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
+                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
+                }`}
               >
                 <Code2 className="h-3 w-3" />
                 <span>JSON</span>
@@ -1250,10 +1383,11 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
               <button
                 onClick={() => setActiveResponseTab('preview')}
-                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'preview'
-                    ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
-                    : 'text-slate-400 hover:text-white hover:bg-[#303134]'
-                  }`}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
+                  activeResponseTab === 'preview'
+                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
+                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
+                }`}
               >
                 <Globe className="h-3 w-3" />
                 <span>Preview</span>
@@ -1266,15 +1400,18 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
               <button
                 onClick={() => setActiveResponseTab('media')}
-                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'media'
-                    ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
-                    : 'text-slate-400 hover:text-white hover:bg-[#303134]'
-                  }`}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
+                  activeResponseTab === 'media'
+                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
+                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
+                }`}
               >
                 <ImageIcon className="h-3 w-3" />
                 <span>Media</span>
                 {mediaItems.length > 0 && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-[#8AB4F8] text-[#1F1F1F]">
+                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
+                    activeResponseTab === 'media' ? 'bg-black/20 text-background' : 'bg-accent/20 text-accent'
+                  }`}>
                     {mediaItems.length}
                   </span>
                 )}
@@ -1282,15 +1419,18 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
               <button
                 onClick={() => setActiveResponseTab('headers')}
-                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'headers'
-                    ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
-                    : 'text-slate-400 hover:text-white hover:bg-[#303134]'
-                  }`}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
+                  activeResponseTab === 'headers'
+                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
+                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
+                }`}
               >
                 <FileText className="h-3 w-3" />
                 <span>Headers</span>
                 {response?.headers && Object.keys(response.headers).length > 0 && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-slate-700 text-slate-300">
+                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
+                    activeResponseTab === 'headers' ? 'bg-black/20 text-background' : 'bg-surface text-text-muted border border-border'
+                  }`}>
                     {Object.keys(response.headers).length}
                   </span>
                 )}
@@ -1298,22 +1438,23 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
               <button
                 onClick={() => setActiveResponseTab('table')}
-                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'table'
-                    ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
-                    : 'text-slate-400 hover:text-white hover:bg-[#303134]'
-                  }`}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
+                  activeResponseTab === 'table'
+                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
+                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
+                }`}
               >
                 <TableIcon className="h-3 w-3" />
                 <span>Schema</span>
               </button>
 
-              {/* TypeScript & Schema Tab */}
               <button
                 onClick={() => setActiveResponseTab('types')}
-                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'types'
-                    ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
-                    : 'text-slate-400 hover:text-white hover:bg-[#303134]'
-                  }`}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
+                  activeResponseTab === 'types'
+                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
+                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
+                }`}
               >
                 <FileCode className="h-3 w-3" />
                 <span>Types</span>
@@ -1321,10 +1462,11 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
               <button
                 onClick={() => setActiveResponseTab('raw')}
-                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'raw'
-                    ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
-                    : 'text-slate-400 hover:text-white hover:bg-[#303134]'
-                  }`}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
+                  activeResponseTab === 'raw'
+                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
+                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
+                }`}
               >
                 <AlignLeft className="h-3 w-3" />
                 <span>Raw</span>
@@ -1332,18 +1474,18 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
               <button
                 onClick={() => setActiveResponseTab('history')}
-                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'history'
-                    ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
-                    : 'text-slate-400 hover:text-white hover:bg-[#303134]'
-                  }`}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
+                  activeResponseTab === 'history'
+                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
+                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
+                }`}
               >
                 <History className="h-3 w-3" />
                 <span>History</span>
                 {history.length > 0 && (
-                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${activeResponseTab === 'history'
-                      ? 'bg-[#1F1F1F] text-[#8AB4F8]'
-                      : 'bg-[#1F1F1F] text-slate-300 border border-[#3C4043]'
-                    }`}>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
+                    activeResponseTab === 'history' ? 'bg-black/20 text-background' : 'bg-surface text-text-muted border border-border'
+                  }`}>
                     {history.length}
                   </span>
                 )}
@@ -1352,18 +1494,20 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
             {/* Tree vs Raw text toggle if on JSON tab */}
             {activeResponseTab === 'json' && Boolean(response?.data) && (
-              <div className="flex items-center bg-[#1F1F1F] p-0.5 rounded-lg border border-[#3C4043]">
+              <div className="flex items-center bg-surface p-0.5 rounded-lg border border-border">
                 <button
                   onClick={() => setJsonDisplayMode('tree')}
-                  className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors ${jsonDisplayMode === 'tree' ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold' : 'text-slate-400 hover:text-white'
-                    }`}
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-mono transition-colors cursor-pointer ${
+                    jsonDisplayMode === 'tree' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
+                  }`}
                 >
                   Tree
                 </button>
                 <button
                   onClick={() => setJsonDisplayMode('raw')}
-                  className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors ${jsonDisplayMode === 'raw' ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold' : 'text-slate-400 hover:text-white'
-                    }`}
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-mono transition-colors cursor-pointer ${
+                    jsonDisplayMode === 'raw' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
+                  }`}
                 >
                   Plain
                 </button>
@@ -1371,22 +1515,23 @@ export const Playground: React.FC<PlaygroundProps> = ({
             )}
           </div>
 
-          {/* Quick Search Bar (Collapsible) */}
+          {/* Quick Search Bar */}
           {isSearchOpen && (
-            <div className="px-3 py-2 bg-[#1A1A1A] border-b border-[#3C4043] flex items-center gap-2">
-              <Search className="h-3.5 w-3.5 text-slate-400" />
+            <div className="px-3.5 py-2 bg-surface border-b border-border flex items-center gap-2">
+              <Search className="h-3.5 w-3.5 text-text-muted" />
               <input
                 type="text"
                 placeholder="Filter response JSON by keyword or property name..."
                 value={jsonSearchQuery}
                 onChange={(e) => setJsonSearchQuery(e.target.value)}
-                className="flex-1 bg-transparent text-xs font-mono text-slate-200 outline-none placeholder:text-slate-600"
+                spellCheck={false}
+                className="flex-1 bg-transparent text-xs font-mono text-text-base outline-none placeholder:text-text-muted/50"
                 autoFocus
               />
               {jsonSearchQuery && (
                 <button
                   onClick={() => setJsonSearchQuery('')}
-                  className="text-xs text-slate-500 hover:text-white"
+                  className="text-xs text-text-muted hover:text-text-base cursor-pointer"
                 >
                   Clear
                 </button>
@@ -1395,11 +1540,11 @@ export const Playground: React.FC<PlaygroundProps> = ({
           )}
 
           {/* Body Viewer Area */}
-          <div className="flex-1 p-4 overflow-auto font-mono text-xs bg-[#1F1F1F]">
+          <div className="flex-1 p-4 overflow-auto font-mono text-xs bg-surface dark:bg-[#131416] text-text-base transition-colors">
             {isLoading ? (
-              <div className="h-full flex flex-col items-center justify-center gap-3 text-slate-400">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#8AB4F8]" />
-                <p>Sending proxy probe to target endpoint...</p>
+              <div className="h-full flex flex-col items-center justify-center gap-3 text-text-muted">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent" />
+                <p className="text-xs font-medium">Executing live request through proxy...</p>
               </div>
             ) : activeResponseTab === 'history' ? (
               <RequestHistoryView
@@ -1424,10 +1569,10 @@ export const Playground: React.FC<PlaygroundProps> = ({
                 return (
                   <div className="space-y-4 font-sans">
                     {/* Diagnostic Summary Card */}
-                    <div className="p-4 rounded-xl bg-[#28292A] border border-[#F28B82]/30 text-[#F28B82] space-y-3">
-                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#3C4043] pb-3">
-                        <div className="flex items-center gap-2 font-semibold text-[#F28B82] text-xs">
-                          <AlertCircle className="h-4 w-4 text-[#F28B82] flex-shrink-0" />
+                    <div className="p-4 rounded-xl bg-surface border border-rose-500/30 text-rose-400 space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
+                        <div className="flex items-center gap-2 font-semibold text-rose-400 text-xs">
+                          <AlertCircle className="h-4 w-4 text-rose-400 flex-shrink-0" />
                           <span>{diag.title}</span>
                         </div>
                         <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded border ${diag.badgeColor}`}>
@@ -1436,17 +1581,17 @@ export const Playground: React.FC<PlaygroundProps> = ({
                       </div>
 
                       {/* Descriptive error */}
-                      <p className="text-xs text-slate-200 leading-relaxed font-sans">
+                      <p className="text-xs text-text-base leading-relaxed">
                         {response.error || diag.description}
                       </p>
 
                       {/* Actionable Troubleshooting Steps */}
-                      <div className="bg-[#1F1F1F] p-3 rounded-lg border border-[#3C4043] space-y-2 font-sans">
-                        <div className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
-                          <HelpCircle className="h-3.5 w-3.5 text-[#8AB4F8]" />
+                      <div className="bg-surface-elevated p-3 rounded-xl border border-border space-y-2">
+                        <div className="text-[11px] font-semibold text-text-base flex items-center gap-1.5">
+                          <HelpCircle className="h-3.5 w-3.5 text-accent" />
                           <span>Troubleshooting & Recommendations:</span>
                         </div>
-                        <ul className="text-[11px] text-slate-400 space-y-1.5 list-disc list-inside">
+                        <ul className="text-[11px] text-text-muted space-y-1.5 list-disc list-inside">
                           {diag.tips.map((tip, idx) => (
                             <li key={idx} className="leading-relaxed">
                               {tip}
@@ -1459,18 +1604,18 @@ export const Playground: React.FC<PlaygroundProps> = ({
                       <div className="pt-1 flex flex-wrap items-center gap-2">
                         <button
                           onClick={handleCopyErrorReport}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#303134] hover:bg-[#3C4043] text-slate-200 hover:text-white text-xs font-medium border border-[#3C4043] transition-colors"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-elevated text-text-base text-xs font-medium border border-border transition-colors cursor-pointer"
                         >
-                          {copiedError ? <Check className="h-3.5 w-3.5 text-[#81C995]" /> : <Copy className="h-3.5 w-3.5 text-slate-400" />}
+                          {copiedError ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5 text-text-muted" />}
                           <span>{copiedError ? 'Diagnostics Copied!' : 'Copy Error Report'}</span>
                         </button>
 
                         <button
                           onClick={() => handleRunTest()}
                           disabled={isLoading}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#303134] hover:bg-[#3C4043] text-slate-200 hover:text-white text-xs font-medium border border-[#3C4043] transition-colors disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-elevated text-text-base text-xs font-medium border border-border transition-colors disabled:opacity-50 cursor-pointer"
                         >
-                          <Play className="h-3 w-3 fill-current text-slate-400" />
+                          <Play className="h-3 w-3 fill-current text-text-muted" />
                           <span>Retry Request</span>
                         </button>
 
@@ -1479,7 +1624,7 @@ export const Playground: React.FC<PlaygroundProps> = ({
                             href={api.documentation_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#8AB4F8]/10 hover:bg-[#8AB4F8]/20 text-[#8AB4F8] hover:text-white text-xs font-medium border border-[#8AB4F8]/30 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/10 hover:bg-accent/20 text-accent text-xs font-medium border border-accent/30 transition-colors"
                           >
                             <ExternalLink className="h-3.5 w-3.5" />
                             <span>View API Documentation</span>
@@ -1491,18 +1636,18 @@ export const Playground: React.FC<PlaygroundProps> = ({
                     {/* Upstream Server Payload */}
                     {Boolean(response.data) && (
                       <div className="space-y-1.5">
-                        <div className="flex items-center justify-between text-[11px] text-slate-400 px-1">
+                        <div className="flex items-center justify-between text-[11px] text-text-muted px-1">
                           <span className="font-mono flex items-center gap-1.5">
-                            <Info className="h-3 w-3 text-slate-400" />
+                            <Info className="h-3 w-3 text-text-muted" />
                             Upstream Server Payload ({typeof response.data === 'object' ? 'JSON' : 'Text'}):
                           </span>
                         </div>
-                        <div className="p-3 rounded-xl bg-[#141414] border border-[#3C4043] overflow-auto max-h-56">
-                          <pre className="text-slate-300 whitespace-pre-wrap leading-relaxed text-[11px] font-mono">
-                            {typeof response.data === 'object'
-                              ? JSON.stringify(response.data, null, 2)
-                              : String(response.data)}
-                          </pre>
+                        <div className="rounded-xl border border-border overflow-hidden">
+                          <CodeSnippetViewer
+                            code={typeof response.data === 'object' ? JSON.stringify(response.data, null, 2) : String(response.data)}
+                            language="json"
+                            showLineNumbers={true}
+                          />
                         </div>
                       </div>
                     )}
@@ -1522,16 +1667,16 @@ export const Playground: React.FC<PlaygroundProps> = ({
               ) : activeResponseTab === 'json' ? (
                 <div className="space-y-3">
                   {isHtmlResponse && (
-                    <div className="p-3 rounded-xl bg-[#8AB4F8]/10 border border-[#8AB4F8]/30 flex flex-wrap items-center justify-between gap-2.5 font-sans">
-                      <div className="flex items-center gap-2 text-slate-200 text-xs">
-                        <Globe className="h-4 w-4 text-[#8AB4F8] flex-shrink-0" />
+                    <div className="p-3 rounded-xl bg-accent/10 border border-accent/30 flex flex-wrap items-center justify-between gap-2.5 font-sans">
+                      <div className="flex items-center gap-2 text-text-base text-xs">
+                        <Globe className="h-4 w-4 text-accent flex-shrink-0" />
                         <span>
                           <strong>HTML Web Document Detected:</strong> This endpoint returned a rendered HTML web page ({response.status_code} OK).
                         </span>
                       </div>
                       <button
                         onClick={() => setActiveResponseTab('preview')}
-                        className="px-2.5 py-1 rounded-lg bg-[#8AB4F8] hover:bg-[#A8C7FA] text-[#1F1F1F] font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm"
+                        className="px-3 py-1 rounded-lg bg-accent hover:bg-accent-hover text-background font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
                       >
                         <span>Switch to Web Preview</span>
                         <ArrowRight className="h-3.5 w-3.5" />
@@ -1544,9 +1689,12 @@ export const Playground: React.FC<PlaygroundProps> = ({
                       searchQuery={jsonSearchQuery}
                     />
                   ) : (
-                    <pre className="text-slate-200 whitespace-pre-wrap leading-relaxed selection:bg-[#8AB4F8] selection:text-[#1F1F1F]">
-                      {filteredJsonContent}
-                    </pre>
+                    <CodeSnippetViewer
+                      code={filteredJsonContent}
+                      language="json"
+                      showLineNumbers={true}
+                      showCopyButton={true}
+                    />
                   )}
                 </div>
               ) : activeResponseTab === 'media' ? (
@@ -1561,25 +1709,25 @@ export const Playground: React.FC<PlaygroundProps> = ({
               ) : activeResponseTab === 'headers' ? (
                 /* Response Headers Tab */
                 <div className="space-y-2">
-                  <div className="text-[11px] font-sans text-slate-400 pb-1 border-b border-[#3C4043]">
+                  <div className="text-[11px] font-sans text-text-muted pb-1 border-b border-border">
                     HTTP Response Headers ({Object.keys(response.headers || {}).length}):
                   </div>
                   {response.headers && Object.keys(response.headers).length > 0 ? (
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="border-b border-[#3C4043] text-slate-500 text-[10px] uppercase">
-                            <th className="py-1.5 pr-4 font-mono">Header</th>
-                            <th className="py-1.5 font-mono">Value</th>
+                          <tr className="border-b border-border text-text-muted text-[10px] uppercase">
+                            <th className="py-2 pr-4 font-mono">Header</th>
+                            <th className="py-2 font-mono">Value</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-[#3C4043]/50">
+                        <tbody className="divide-y divide-border/60">
                           {Object.entries(response.headers).map(([key, value]) => (
-                            <tr key={key} className="hover:bg-[#28292A]/50 group">
-                              <td className="py-1.5 pr-4 text-[#8AB4F8] font-mono font-medium whitespace-nowrap align-top">
+                            <tr key={key} className="hover:bg-surface-elevated/40 group">
+                              <td className="py-2 pr-4 text-accent font-mono font-medium whitespace-nowrap align-top">
                                 {key}
                               </td>
-                              <td className="py-1.5 text-slate-300 font-mono break-all selection:bg-[#8AB4F8] selection:text-[#1F1F1F]">
+                              <td className="py-2 text-text-base font-mono break-all">
                                 {value}
                               </td>
                             </tr>
@@ -1588,29 +1736,31 @@ export const Playground: React.FC<PlaygroundProps> = ({
                       </table>
                     </div>
                   ) : (
-                    <p className="text-slate-500 font-sans text-xs">No explicit headers forwarded by target server.</p>
+                    <p className="text-text-muted font-sans text-xs py-4 text-center">No explicit headers forwarded by target server.</p>
                   )}
                 </div>
               ) : activeResponseTab === 'types' ? (
                 /* TypeScript / JSON Schema Generator View */
                 <div className="space-y-3 font-sans h-full flex flex-col">
-                  <div className="flex items-center justify-between pb-2 border-b border-[#3C4043]">
-                    <div className="flex items-center gap-1.5 bg-[#28292A] p-0.5 rounded-lg border border-[#3C4043]">
+                  <div className="flex items-center justify-between pb-2 border-b border-border">
+                    <div className="flex items-center gap-1.5 bg-surface p-1 rounded-xl border border-border">
                       <button
                         onClick={() => setTypesDisplayMode('typescript')}
-                        className={`px-2.5 py-1 rounded text-xs font-mono transition-colors ${typesDisplayMode === 'typescript'
-                            ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
-                            : 'text-slate-400 hover:text-white'
-                          }`}
+                        className={`px-3 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                          typesDisplayMode === 'typescript'
+                            ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
+                            : 'text-text-muted hover:text-text-base'
+                        }`}
                       >
                         TypeScript Interface
                       </button>
                       <button
                         onClick={() => setTypesDisplayMode('schema')}
-                        className={`px-2.5 py-1 rounded text-xs font-mono transition-colors ${typesDisplayMode === 'schema'
-                            ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
-                            : 'text-slate-400 hover:text-white'
-                          }`}
+                        className={`px-3 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                          typesDisplayMode === 'schema'
+                            ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
+                            : 'text-text-muted hover:text-text-base'
+                        }`}
                       >
                         JSON Schema
                       </button>
@@ -1618,44 +1768,46 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
                     <button
                       onClick={handleCopyTypes}
-                      className="text-xs text-slate-300 hover:text-white flex items-center gap-1.5 px-3 py-1 rounded bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] transition-colors"
+                      className="text-xs text-text-base hover:text-accent flex items-center gap-1.5 px-3 py-1 rounded-lg bg-surface hover:bg-surface-elevated border border-border transition-colors cursor-pointer"
                     >
-                      {copiedTypes ? <Check className="h-3 w-3 text-[#81C995]" /> : <Copy className="h-3 w-3" />}
-                      <span>{copiedTypes ? 'Copied Types!' : 'Copy Types'}</span>
+                      {copiedTypes ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                      <span>{copiedTypes ? 'Copied Types!' : 'Copy Code'}</span>
                     </button>
                   </div>
 
-                  <div className="flex-1 overflow-auto bg-[#141414] p-3 rounded-xl border border-[#3C4043]">
-                    <pre className="font-mono text-xs text-slate-200 whitespace-pre-wrap leading-relaxed selection:bg-[#8AB4F8] selection:text-[#1F1F1F]">
-                      {generatedTypesCode}
-                    </pre>
+                  <div className="flex-1 overflow-auto rounded-xl border border-border">
+                    <CodeSnippetViewer
+                      code={generatedTypesCode}
+                      language={typesDisplayMode === 'typescript' ? 'typescript' : 'json'}
+                      showLineNumbers={true}
+                    />
                   </div>
                 </div>
               ) : activeResponseTab === 'table' ? (
                 /* Flattened Structure Inspector */
                 <div className="space-y-2">
-                  <div className="text-[11px] font-sans text-slate-400 pb-1 border-b border-[#3C4043]">
+                  <div className="text-[11px] font-sans text-text-muted pb-1 border-b border-border">
                     Flattened Property Hierarchy ({flattenedTableData.length} entries):
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse text-[11px]">
                       <thead>
-                        <tr className="border-b border-[#3C4043] text-slate-500 text-[10px] uppercase font-mono">
-                          <th className="py-1.5 pr-3">Property Path</th>
-                          <th className="py-1.5 pr-3">Type</th>
-                          <th className="py-1.5">Value</th>
+                        <tr className="border-b border-border text-text-muted text-[10px] uppercase font-mono">
+                          <th className="py-2 pr-3">Property Path</th>
+                          <th className="py-2 pr-3">Type</th>
+                          <th className="py-2">Value</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#3C4043]/40 font-mono">
+                      <tbody className="divide-y divide-border/40 font-mono">
                         {flattenedTableData.map((row, idx) => (
-                          <tr key={idx} className="hover:bg-[#28292A]/60">
-                            <td className="py-1.5 pr-3 text-[#8AB4F8] font-semibold whitespace-nowrap">
+                          <tr key={idx} className="hover:bg-surface-elevated/40">
+                            <td className="py-1.5 pr-3 text-accent font-semibold whitespace-nowrap">
                               {row.key || '(root)'}
                             </td>
-                            <td className="py-1.5 pr-3 text-slate-500 text-[10px]">
+                            <td className="py-1.5 pr-3 text-text-muted text-[10px]">
                               {row.type}
                             </td>
-                            <td className="py-1.5 text-slate-300 break-all">
+                            <td className="py-1.5 text-text-base break-all">
                               {row.value}
                             </td>
                           </tr>
@@ -1666,70 +1818,100 @@ export const Playground: React.FC<PlaygroundProps> = ({
                 </div>
               ) : (
                 /* Raw text representation */
-                <pre className="text-slate-200 whitespace-pre-wrap leading-relaxed font-mono">
-                  {typeof response.data === 'string' ? response.data : JSON.stringify(response.data)}
-                </pre>
+                <CodeSnippetViewer
+                  code={typeof response.data === 'string' ? response.data : JSON.stringify(response.data, null, 2)}
+                  language="json"
+                  showLineNumbers={true}
+                  showCopyButton={true}
+                />
               )
             ) : (
-              /* Enhanced Empty State / 1-Click Starter */
-              <div className="h-full flex flex-col items-center justify-center gap-3 text-slate-400 text-center px-4 font-sans">
-                <div className="p-3.5 rounded-2xl bg-[#28292A] border border-[#3C4043] text-[#8AB4F8]">
-                  <Play className="h-7 w-7 fill-current" />
+              /* Enhanced Developer Empty State */
+              <div className="h-full flex flex-col items-center justify-center gap-4 text-center px-4 font-sans py-8">
+                {/* Visual Hero Orb */}
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-accent/20 via-sky-500/10 to-indigo-500/20 border border-accent/30 flex items-center justify-center text-accent shadow-lg shadow-accent/10">
+                    <Play className="h-7 w-7 fill-current ml-0.5" />
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 p-1 rounded-full bg-emerald-500 text-white ring-4 ring-surface dark:ring-[#131416]">
+                    <Zap className="h-3 w-3 fill-current" />
+                  </div>
                 </div>
-                <div className="space-y-1 max-w-sm">
-                  <p className="font-bold text-slate-200 text-sm">Ready to Test Endpoint</p>
-                  <p className="text-xs text-slate-400 leading-relaxed">
+
+                <div className="space-y-1.5 max-w-sm">
+                  <p className="font-bold text-text-base text-base tracking-tight">Ready to Test Endpoint</p>
+                  <p className="text-xs text-text-muted leading-relaxed">
                     Send a live HTTP request to inspect response trees, extract media, generate TypeScript interfaces, and test edge cases.
                   </p>
                 </div>
 
-                <div className="pt-2 flex flex-col sm:flex-row items-center gap-2">
+                <div className="pt-2 flex flex-col sm:flex-row items-center gap-2.5">
                   <button
                     onClick={() => handleRunTest()}
                     disabled={isLoading}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#8AB4F8] hover:bg-[#A8C7FA] text-[#1F1F1F] font-bold text-xs transition-colors shadow-sm"
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-background font-bold text-xs transition-all shadow-md shadow-accent/25 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                   >
                     <Zap className="h-3.5 w-3.5 fill-current" />
                     <span>Run Sample Request</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-black/15 font-normal ml-0.5">
+                      ⌘↵
+                    </span>
                   </button>
+
                   {presets[0] && (
                     <button
                       onClick={() => handleSelectPreset(presets[0])}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#28292A] hover:bg-[#303134] text-slate-300 hover:text-white border border-[#3C4043] text-xs font-mono transition-colors"
+                      className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-surface-elevated hover:bg-surface-hover text-text-base border border-border text-xs font-mono transition-colors cursor-pointer"
                     >
-                      <span>Try preset: {presets[0].label}</span>
-                      <ArrowRight className="h-3 w-3 text-[#8AB4F8]" />
+                      <span className="text-accent font-semibold">{presets[0].method}</span>
+                      <span className="truncate max-w-[150px]">{presets[0].label}</span>
+                      <ArrowRight className="h-3 w-3 text-accent" />
                     </button>
                   )}
+                </div>
+
+                {/* Developer Feature Checklist */}
+                <div className="pt-4 flex flex-wrap items-center justify-center gap-2 text-[11px] text-text-muted">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface border border-border">
+                    <span className="text-emerald-400">✓</span> Live Proxy Telemetry
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface border border-border">
+                    <span className="text-accent">✓</span> Auto TypeScript Generator
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface border border-border">
+                    <span className="text-purple-400">✓</span> HTML & Media Preview
+                  </span>
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Integration Client Code (Hidden if focus mode is active) */}
+        {/* Integration Client Code Panel */}
         {viewLayout !== 'focus' && (
-          <div className="bg-[#28292A] rounded-2xl border border-[#3C4043] flex flex-col min-h-[460px] h-[520px] overflow-hidden">
+          <div className="bg-surface rounded-2xl border border-border flex flex-col min-h-[480px] h-[540px] overflow-hidden shadow-sm transition-colors">
             {/* Header with Language Tabs */}
-            <div className="px-4 py-2.5 border-b border-[#3C4043] bg-[#28292A] space-y-2.5">
+            <div className="px-4 py-3 border-b border-border bg-surface-elevated/60 space-y-2.5">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Terminal className="h-4 w-4 text-[#8AB4F8]" />
-                  <span className="text-xs font-bold text-slate-200">Integration Client Code</span>
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1 rounded-lg bg-accent/10 text-accent">
+                    <Terminal className="h-4 w-4" />
+                  </div>
+                  <span className="text-xs font-bold text-text-base tracking-tight">Integration Client Code</span>
                 </div>
 
                 {/* Copy Code Button */}
                 <button
                   onClick={handleCopySnippet}
-                  className="text-xs text-slate-300 hover:text-white flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] transition-colors"
+                  className="text-xs text-text-base hover:text-accent flex items-center gap-1.5 px-3 py-1 rounded-lg bg-surface hover:bg-surface-elevated border border-border transition-colors cursor-pointer"
                 >
-                  {copiedSnippet ? <Check className="h-3 w-3 text-[#81C995]" /> : <Copy className="h-3 w-3" />}
+                  {copiedSnippet ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5 text-text-muted" />}
                   <span>{copiedSnippet ? 'Copied' : 'Copy Code'}</span>
                 </button>
               </div>
 
-              {/* Clean Language Pill Selector with Quick Selector + Dropdown */}
-              <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-none">
+              {/* Language Pill Selector with Quick Tabs + Clean Dropdown (NO Duplicate cURL!) */}
+              <div className="flex items-center justify-between gap-2 overflow-x-auto pb-0.5 scrollbar-none">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {POPULAR_LANG_LIST.map((lang) => {
                     const isActive = activeSnippetLang === lang.id;
@@ -1738,10 +1920,10 @@ export const Playground: React.FC<PlaygroundProps> = ({
                         key={lang.id}
                         type="button"
                         onClick={() => setActiveSnippetLang(lang.id)}
-                        className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-medium whitespace-nowrap transition-colors ${
+                        className={`px-3 py-1 rounded-lg text-xs font-mono font-medium whitespace-nowrap transition-all cursor-pointer ${
                           isActive
-                            ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold shadow-sm'
-                            : 'text-slate-400 hover:text-white hover:bg-[#303134]'
+                            ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
+                            : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
                         }`}
                       >
                         {lang.label}
@@ -1749,54 +1931,60 @@ export const Playground: React.FC<PlaygroundProps> = ({
                     );
                   })}
 
+                  {/* Clean Secondary Dropdown */}
                   <div className="relative">
                     <select
-                      value={activeSnippetLang}
-                      onChange={(e) => setActiveSnippetLang(e.target.value as SnippetLanguage)}
-                      className={`px-2 py-1 rounded-md text-[11px] font-mono transition-colors outline-none cursor-pointer border ${
-                        !POPULAR_LANG_LIST.some((l) => l.id === activeSnippetLang)
-                          ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold border-[#8AB4F8]'
-                          : 'bg-[#1F1F1F] text-slate-300 hover:text-white border-[#3C4043] hover:border-[#5F6368]'
+                      value={isPopularLang ? '' : activeSnippetLang}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          setActiveSnippetLang(e.target.value as SnippetLanguage);
+                        }
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-mono transition-all outline-none cursor-pointer border ${
+                        !isPopularLang
+                          ? 'bg-accent text-background font-bold border-accent shadow-sm shadow-accent/20'
+                          : 'bg-surface text-text-muted hover:text-text-base border-border hover:border-border-light'
                       }`}
-                      title="Select from all supported languages"
+                      title="Choose from additional languages"
                     >
-                      <optgroup label="Popular">
-                        <option value="curl">cURL</option>
-                        <option value="js">JavaScript (Fetch)</option>
-                        <option value="axios">Node.js (Axios)</option>
-                        <option value="ts">TypeScript</option>
-                        <option value="python">Python (requests)</option>
-                        <option value="go">Go (net/http)</option>
-                      </optgroup>
-                      <optgroup label="More Languages">
-                        <option value="python-async">Python (httpx async)</option>
-                        <option value="php">PHP (cURL)</option>
-                        <option value="java">Java (HttpClient)</option>
-                        <option value="csharp">C# (.NET)</option>
-                        <option value="rust">Rust (reqwest)</option>
-                        <option value="dart">Dart / Flutter</option>
-                        <option value="swift">Swift (URLSession)</option>
-                        <option value="ruby">Ruby (Net::HTTP)</option>
-                      </optgroup>
+                      <option value="" disabled>
+                        {isPopularLang ? 'More...' : SUPPORTED_LANGUAGES.find((l) => l.id === activeSnippetLang)?.label || 'More...'}
+                      </option>
+                      {additionalLanguages.map((lang) => (
+                        <option key={lang.id} value={lang.id}>
+                          {lang.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Snippet Code Box */}
-            <div className="flex-1 p-4 overflow-auto font-mono text-xs bg-[#1F1F1F] text-slate-200 relative group">
-              <pre className="whitespace-pre-wrap leading-relaxed selection:bg-[#8AB4F8] selection:text-[#1F1F1F]">
-                {getActiveSnippet()}
-              </pre>
+            {/* Snippet Code Box with Line Numbers & Syntax Highlighting */}
+            <div className="flex-1 overflow-auto font-mono text-xs bg-[#16181D] text-slate-200 relative group">
+              <CodeSnippetViewer
+                code={getActiveSnippet()}
+                language={
+                  activeSnippetLang === 'curl'
+                    ? 'curl'
+                    : ['js', 'axios', 'ts'].includes(activeSnippetLang)
+                      ? 'javascript'
+                      : activeSnippetLang.includes('python')
+                        ? 'python'
+                        : 'text'
+                }
+                showLineNumbers={true}
+              />
             </div>
 
             {/* Snippet Footer Info */}
-            <div className="px-4 py-2 bg-[#232425] border-t border-[#3C4043] flex items-center justify-between text-[11px] text-slate-400 font-sans">
-              <span className="font-mono text-[#8AB4F8]">
-                {SUPPORTED_LANGUAGES.find((l) => l.id === activeSnippetLang)?.label} snippet
-              </span>
-              <span>Production ready • Timeout: 10s • Auto-serialized</span>
+            <div className="px-4 py-2 bg-surface-elevated/40 border-t border-border flex items-center justify-between text-[11px] text-text-muted font-sans">
+              <div className="flex items-center gap-1.5 font-mono text-accent">
+                <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                <span>{SUPPORTED_LANGUAGES.find((l) => l.id === activeSnippetLang)?.label} snippet</span>
+              </div>
+              <span className="hidden sm:inline">Production ready • Timeout: 10s • Auto-serialized</span>
             </div>
           </div>
         )}

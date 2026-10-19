@@ -9,9 +9,7 @@ import {
   Copy,
   Check,
   ExternalLink,
-  Zap,
-  Globe,
-  Lock
+  Zap
 } from 'lucide-react';
 
 interface ApiCardProps {
@@ -52,31 +50,31 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
       );
     }
     return (
-      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">
         Free Key
       </span>
     );
   };
 
   const getLatencyColor = (ms?: number | null) => {
-    if (!ms) return 'text-slate-500';
-    if (ms <= 150) return 'text-[#81C995]';
-    if (ms <= 300) return 'text-[#8AB4F8]';
-    return 'text-[#FDD663]';
+    if (!ms) return 'text-text-muted';
+    if (ms <= 150) return 'text-emerald-400';
+    if (ms <= 300) return 'text-accent';
+    return 'text-amber-400';
   };
 
   if (viewMode === 'compact') {
     return (
-      <div className="bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] rounded-xl px-4 py-3 flex items-center justify-between gap-4 transition-all group">
+      <div className="bg-surface hover:bg-surface-elevated border border-border hover:border-border-light rounded-2xl px-4 py-3 flex items-center justify-between gap-4 transition-all group shadow-sm">
         <div className="flex items-center gap-3.5 min-w-0 flex-1">
           <button
             onClick={handleToggleBookmark}
             title={bookmarked ? 'Remove from Saved' : 'Save API'}
-            className="p-1 rounded-lg hover:bg-[#1F1F1F] transition-colors text-slate-400 hover:text-[#FDD663]"
+            className="p-1 rounded-lg hover:bg-surface-hover transition-colors text-text-muted hover:text-amber-400 cursor-pointer"
           >
             <Star
               className={`h-4 w-4 ${
-                bookmarked ? 'text-[#FDD663] fill-[#FDD663]' : ''
+                bookmarked ? 'text-amber-400 fill-amber-400' : ''
               }`}
             />
           </button>
@@ -85,23 +83,24 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
             <div className="flex items-center gap-2 flex-wrap">
               <Link
                 to={`/api/${api.slug}`}
-                className="font-bold text-sm text-white group-hover:text-slate-200 transition-colors truncate"
+                className="font-bold text-sm text-text-base group-hover:text-accent transition-colors truncate"
               >
                 {api.name}
               </Link>
-              <span className="text-[10px] uppercase font-mono text-slate-300 px-1.5 py-0.5 rounded bg-[#1F1F1F] border border-[#3C4043]">
+              <span className="text-[10px] uppercase font-mono text-text-muted px-1.5 py-0.5 rounded-md bg-surface-elevated border border-border">
                 {api.category}
               </span>
               {getAuthBadge()}
             </div>
-            <p className="text-xs text-slate-400 truncate mt-0.5">
+            <p className="text-xs text-text-muted truncate mt-0.5">
               {api.description}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 flex-shrink-0 text-xs">
-          <div className="hidden sm:flex items-center gap-2 font-mono text-slate-400">
+        {/* Right action group */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-text-muted">
             <LivePingBadge
               status={api.health.status}
               uptimePercent={api.health.uptime_percent ?? undefined}
@@ -109,8 +108,8 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
             />
             {api.health.avg_latency_ms != null && (
               <>
-                <span className="text-[#3C4043]">•</span>
-                <span className={getLatencyColor(api.health.avg_latency_ms)}>
+                <span>•</span>
+                <span className={`font-semibold ${getLatencyColor(api.health.avg_latency_ms)}`}>
                   {api.health.avg_latency_ms}ms
                 </span>
               </>
@@ -120,10 +119,10 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
           <button
             onClick={handleCopyEndpoint}
             title="Copy sample endpoint URL"
-            className="p-1.5 rounded-lg bg-[#1F1F1F] hover:bg-[#3C4043] text-slate-300 hover:text-white border border-[#3C4043] transition-colors"
+            className="p-1.5 rounded-lg bg-surface hover:bg-surface-hover text-text-muted hover:text-text-base border border-border transition-colors cursor-pointer"
           >
             {copied ? (
-              <Check className="h-3.5 w-3.5 text-[#81C995]" />
+              <Check className="h-3.5 w-3.5 text-emerald-400" />
             ) : (
               <Copy className="h-3.5 w-3.5" />
             )}
@@ -131,7 +130,7 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
 
           <Link
             to={`/api/${api.slug}`}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] text-slate-200 hover:text-white font-medium text-xs transition-colors"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-hover border border-border hover:border-accent text-text-base hover:text-accent font-medium text-xs transition-colors cursor-pointer"
           >
             <span>Test</span>
             <ArrowRight className="h-3 w-3" />
@@ -142,17 +141,17 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
   }
 
   return (
-    <div className="bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] rounded-2xl p-5 flex flex-col justify-between transition-all duration-150 group relative h-full">
+    <div className="bg-surface hover:bg-surface-elevated border border-border hover:border-border-light rounded-2xl p-5 flex flex-col justify-between transition-all duration-150 group relative h-full shadow-sm hover:shadow-md">
       <div>
         {/* Top meta tags */}
         <div className="flex items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] uppercase tracking-wider text-slate-300 font-mono px-2 py-0.5 rounded-md bg-[#1F1F1F] border border-[#3C4043]">
+            <span className="text-[10px] uppercase tracking-wider text-text-muted font-mono px-2 py-0.5 rounded-md bg-surface-elevated border border-border">
               {api.category}
             </span>
             {getAuthBadge()}
             {api.cors_supported && (
-              <span className="text-[10px] text-slate-300 font-mono px-2 py-0.5 rounded bg-[#1F1F1F] border border-[#3C4043]" title="CORS Enabled - callable directly from browser">
+              <span className="text-[10px] text-text-muted font-mono px-2 py-0.5 rounded-md bg-surface-elevated border border-border" title="CORS Enabled - callable directly from browser">
                 CORS
               </span>
             )}
@@ -162,21 +161,21 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
             <button
               onClick={handleToggleBookmark}
               title={bookmarked ? 'Saved to bookmarks' : 'Add to bookmarks'}
-              className="p-1.5 rounded-lg hover:bg-[#1F1F1F] text-slate-400 hover:text-[#FDD663] transition-colors"
+              className="p-1.5 rounded-lg hover:bg-surface-hover text-text-muted hover:text-amber-400 transition-colors cursor-pointer"
             >
               <Star
                 className={`h-4 w-4 ${
-                  bookmarked ? 'text-[#FDD663] fill-[#FDD663]' : ''
+                  bookmarked ? 'text-amber-400 fill-amber-400' : ''
                 }`}
               />
             </button>
             <button
               onClick={handleCopyEndpoint}
               title="Copy endpoint URL"
-              className="p-1.5 rounded-lg hover:bg-[#1F1F1F] text-slate-400 hover:text-white transition-colors"
+              className="p-1.5 rounded-lg hover:bg-surface-hover text-text-muted hover:text-text-base transition-colors cursor-pointer"
             >
               {copied ? (
-                <Check className="h-3.5 w-3.5 text-[#81C995]" />
+                <Check className="h-3.5 w-3.5 text-emerald-400" />
               ) : (
                 <Copy className="h-3.5 w-3.5" />
               )}
@@ -184,17 +183,17 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
           </div>
         </div>
 
-        {/* Title */}
+        {/* Name / Title */}
         <Link to={`/api/${api.slug}`} className="block">
-          <h3 className="text-base font-bold text-white group-hover:text-slate-200 transition-colors flex items-center justify-between">
+          <h3 className="font-bold text-base text-text-base group-hover:text-accent transition-colors flex items-center justify-between">
             <span className="line-clamp-1">{api.name}</span>
-            <ArrowRight className="h-4 w-4 text-slate-500 group-hover:text-slate-300 transition-transform group-hover:translate-x-1 flex-shrink-0 ml-2" />
+            <ArrowRight className="h-4 w-4 text-text-muted group-hover:text-accent transition-transform group-hover:translate-x-1 flex-shrink-0 ml-2" />
           </h3>
         </Link>
 
         {/* Description */}
         <p
-          className="mt-2 text-xs text-slate-400 group-hover:text-slate-300 line-clamp-2 leading-relaxed min-h-[2.5rem]"
+          className="mt-2 text-xs text-text-muted group-hover:text-text-base line-clamp-2 leading-relaxed min-h-[2.5rem]"
           title={api.description}
         >
           {api.description}
@@ -206,13 +205,13 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
             {api.tags.slice(0, 3).map((tag) => (
               <span
                 key={tag}
-                className="text-[10px] font-mono text-slate-400 bg-[#1F1F1F] px-2 py-0.5 rounded border border-[#3C4043]"
+                className="text-[10px] font-mono text-text-muted bg-surface-elevated px-2 py-0.5 rounded-md border border-border"
               >
                 #{tag}
               </span>
             ))}
             {api.tags.length > 3 && (
-              <span className="text-[10px] font-mono text-slate-500 self-center">
+              <span className="text-[10px] font-mono text-text-muted self-center">
                 +{api.tags.length - 3}
               </span>
             )}
@@ -221,8 +220,8 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
       </div>
 
       {/* Footer bar */}
-      <div className="mt-5 pt-3.5 border-t border-[#3C4043] flex items-center justify-between text-xs">
-        <div className="flex items-center gap-2 text-slate-400 font-mono flex-wrap">
+      <div className="mt-5 pt-3.5 border-t border-border flex items-center justify-between text-xs">
+        <div className="flex items-center gap-2 text-text-muted font-mono flex-wrap">
           <LivePingBadge
             status={api.health.status}
             uptimePercent={api.health.uptime_percent ?? undefined}
@@ -230,7 +229,7 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
           />
           {api.health.avg_latency_ms != null && (
             <>
-              <span className="text-[#3C4043]">•</span>
+              <span className="text-border">•</span>
               <span className={`font-semibold ${getLatencyColor(api.health.avg_latency_ms)}`}>
                 {api.health.avg_latency_ms}ms
               </span>
@@ -244,7 +243,7 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
               href={api.documentation_url}
               target="_blank"
               rel="noreferrer"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#1F1F1F] transition-colors"
+              className="p-1.5 rounded-lg text-text-muted hover:text-text-base hover:bg-surface-hover transition-colors cursor-pointer"
               title="Official Documentation"
             >
               <ExternalLink className="h-3.5 w-3.5" />
@@ -252,7 +251,7 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
           )}
           <Link
             to={`/api/${api.slug}`}
-            className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] hover:border-[#5F6368] text-xs font-semibold text-slate-200 hover:text-white transition-colors"
+            className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-surface-elevated hover:bg-surface-hover border border-border hover:border-accent text-xs font-semibold text-text-base hover:text-accent transition-colors cursor-pointer"
           >
             <span>Playground</span>
           </Link>
