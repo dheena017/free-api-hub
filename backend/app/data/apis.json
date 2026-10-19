@@ -2375,11 +2375,11 @@
   {
     "slug": "open-library",
     "name": "Open Library Books API",
-    "description": "Comprehensive book catalogue data indexed by ISBN, LCCN, and OCLC from the Internet Archive.",
-    "detailed_description": "Open Library is an open catalog project from the Internet Archive indexing millions of published books.\n\nQuery by ISBN or title to receive cover image URLs, author bios, publisher names, publication year, and subject classifications.\n\nEssential for barcode book scanner apps, personal library trackers, and book club community applications.",
+    "description": "Comprehensive, open-source book and author metadata catalog powered by the Internet Archive with no API key requirements.",
+    "detailed_description": "Open Library is an open catalog project from the Internet Archive indexing millions of published books.\n\nQuery by Work ID, Edition ID, ISBN, or perform full-text search across titles and authors to receive cover image URLs, author bios, publisher names, publication year, and subject classifications.\n\nSupports both modern REST/JSON endpoints (Works, Editions, ISBN, Search) and legacy dynamic links API without requiring authentication or payment.",
     "category": "education-books",
     "base_url": "https://openlibrary.org",
-    "endpoint": "/api/books?bibkeys=ISBN:0451526538&format=json&jscmd=data",
+    "endpoint": "/works/OL45804W.json",
     "auth_required": false,
     "auth_type": "none",
     "pricing_tier": "open",
@@ -2394,6 +2394,7 @@
       "library",
       "authors",
       "literature",
+      "internet-archive",
       "no-auth"
     ],
     "health": {
@@ -2408,38 +2409,88 @@
     "default_headers": {},
     "endpoints": [
       {
-        "id": "primary-sample",
-        "name": "Open Library Books API (Primary Endpoint)",
-        "path": "/api/books?bibkeys=ISBN:0451526538&format=json&jscmd=data",
+        "id": "works-by-id",
+        "name": "Get Work by Work ID",
+        "path": "/works/OL45804W.json",
         "method": "GET",
-        "description": "Verified endpoint: /api/books?bibkeys=ISBN:0451526538&format=json&jscmd=data",
+        "description": "Fetch umbrella metadata for a work including title, subjects, description, and authors.",
         "params": {},
-        "headers": {},
+        "headers": {
+          "Accept": "application/json"
+        },
         "body": null,
-        "badge": "Verified"
+        "badge": "Work Details"
       },
       {
-        "id": "base-path",
-        "name": "Base Path (Unfiltered)",
+        "id": "book-search",
+        "name": "Book Search (Preferred)",
+        "path": "/search.json",
+        "method": "GET",
+        "description": "Search across millions of books by general query, title, or author name.",
+        "params": {
+          "q": "fantastic mr fox",
+          "limit": 5
+        },
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": null,
+        "badge": "Search"
+      },
+      {
+        "id": "editions-by-work",
+        "name": "Get Work Editions",
+        "path": "/works/OL45804W/editions.json",
+        "method": "GET",
+        "description": "Returns all editions and translations associated with a specific work ID.",
+        "params": {},
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": null,
+        "badge": "Editions"
+      },
+      {
+        "id": "isbn-lookup",
+        "name": "Get Edition by ISBN",
+        "path": "/isbn/9780140328721.json",
+        "method": "GET",
+        "description": "Lookup edition details directly by ISBN-10 or ISBN-13 (redirects to edition JSON).",
+        "params": {},
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": null,
+        "badge": "ISBN Lookup"
+      },
+      {
+        "id": "legacy-books-api",
+        "name": "Legacy Book API (Bibkeys)",
         "path": "/api/books",
         "method": "GET",
-        "description": "Query base resource without query parameter filters: /api/books",
-        "params": {},
-        "headers": {},
+        "description": "Legacy multi-key endpoint returning structured book data by ISBN, LCCN, or OCLC.",
+        "params": {
+          "bibkeys": "ISBN:0451526538",
+          "format": "json",
+          "jscmd": "data"
+        },
+        "headers": {
+          "Accept": "application/json"
+        },
         "body": null,
-        "badge": "Base Resource"
+        "badge": "Legacy"
       }
     ],
     "use_cases": [
-      "Direct application integration consuming live Open Library Books API data",
-      "Automated querying of /api/books?bibkeys=ISBN:0451526538&format=json&jscmd=data for dynamic data feeds",
-      "Interactive developer widgets and dashboards in the reference domain"
+      "Direct application integration consuming live Open Library book catalog data",
+      "Barcode book scanner apps and personal library tracking widgets",
+      "Book club community feeds and literature discovery interfaces"
     ],
     "features": [
       "Zero authentication or API key required",
       "Native CORS enabled for direct browser client requests",
       "Strict HTTPS / TLS encrypted communications",
-      "Clean structured JSON data payloads"
+      "Clean structured JSON data payloads covering Works, Editions, and ISBNs"
     ],
     "rate_limit": "Public access: Open fair usage policy (recommended < 60 requests/minute).",
     "sample_response": null

@@ -12,7 +12,7 @@ import { MediaPreviewViewer } from './MediaPreviewViewer';
 import { HtmlPreviewViewer } from './HtmlPreviewViewer';
 import { JsonTreeViewer } from './JsonTreeViewer';
 import { CurlImportModal } from './CurlImportModal';
-import { RequestHistoryBar, HistoryItem } from './RequestHistoryBar';
+import { RequestHistoryView, HistoryItem } from './RequestHistoryBar';
 import { getEndpointPresets, EndpointPreset } from '../utils/endpointPresets';
 import { generateTypeScriptTypes, generateJsonSchema } from '../utils/typeGenerator';
 import { ParsedCurl } from '../utils/curlParser';
@@ -48,6 +48,7 @@ import {
   ArrowRight,
   Globe,
   BookOpen,
+  History,
   X
 } from 'lucide-react';
 import { logger } from '../utils/logger';
@@ -280,7 +281,7 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
   // Response Inspector Tabs
   const [activeResponseTab, setActiveResponseTab] = useState<
-    'json' | 'preview' | 'media' | 'headers' | 'table' | 'types' | 'raw'
+    'json' | 'preview' | 'media' | 'headers' | 'table' | 'types' | 'raw' | 'history'
   >('json');
   const [jsonDisplayMode, setJsonDisplayMode] = useState<'tree' | 'raw'>('tree');
   const [typesDisplayMode, setTypesDisplayMode] = useState<'typescript' | 'schema'>('typescript');
@@ -1048,17 +1049,6 @@ export const Playground: React.FC<PlaygroundProps> = ({
         </div>
       </div>
 
-      {/* Session Request History Bar */}
-      <RequestHistoryBar
-        history={history}
-        onSelect={handleSelectHistoryItem}
-        onClear={() => {
-          setHistory([]);
-          sessionStorage.removeItem(`fah_history_${api?.slug || 'api'}`);
-        }}
-        currentHistoryId={currentHistoryId}
-      />
-
       {/* Main Response & Snippets Area */}
       <div
         className={`grid gap-4 transition-all duration-300 ${viewLayout === 'focus'
@@ -1263,6 +1253,25 @@ export const Playground: React.FC<PlaygroundProps> = ({
                 <AlignLeft className="h-3 w-3" />
                 <span>Raw</span>
               </button>
+
+              <button
+                onClick={() => setActiveResponseTab('history')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'history'
+                    ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
+                    : 'text-slate-400 hover:text-white hover:bg-[#303134]'
+                  }`}
+              >
+                <History className="h-3 w-3" />
+                <span>History</span>
+                {history.length > 0 && (
+                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${activeResponseTab === 'history'
+                      ? 'bg-[#1F1F1F] text-[#8AB4F8]'
+                      : 'bg-[#1F1F1F] text-slate-300 border border-[#3C4043]'
+                    }`}>
+                    {history.length}
+                  </span>
+                )}
+              </button>
             </div>
 
             {/* Tree vs Raw text toggle if on JSON tab */}
@@ -1316,6 +1325,23 @@ export const Playground: React.FC<PlaygroundProps> = ({
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#8AB4F8]" />
                 <p>Sending proxy probe to target endpoint...</p>
               </div>
+            ) : activeResponseTab === 'history' ? (
+              <RequestHistoryView
+                history={history}
+                onSelect={(item) => {
+                  handleSelectHistoryItem(item);
+                  setActiveResponseTab('json');
+                }}
+                onReRun={(item) => {
+                  handleSelectHistoryItem(item);
+                  handleRunTest(item.url, item.method, item.body);
+                }}
+                onClear={() => {
+                  setHistory([]);
+                  sessionStorage.removeItem(`fah_history_${api?.slug || 'api'}`);
+                }}
+                currentHistoryId={currentHistoryId}
+              />
             ) : response?.error || (response?.status_code && response.status_code >= 400) ? (
               (() => {
                 const diag = getErrorDiagnostics(response.status_code, response.error);
