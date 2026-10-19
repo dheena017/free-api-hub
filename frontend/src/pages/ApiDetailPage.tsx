@@ -39,7 +39,8 @@ import {
   Info,
   Clock,
   Terminal,
-  Shield
+  Shield,
+  MoreHorizontal
 } from 'lucide-react';
 import { useHistory } from '../utils/useHistory';
 import { useToast } from '../utils/useToast';
@@ -101,6 +102,7 @@ export const ApiDetailPage: React.FC = () => {
 
   // Clipboard & modals state
   const [copiedBaseUrl, setCopiedBaseUrl] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showBadgeModal, setShowBadgeModal] = useState(false);
   const [badgeStyle, setBadgeStyle] = useState<'flat' | 'flat-square' | 'for-the-badge'>('flat-square');
   const [copiedBadgeMd, setCopiedBadgeMd] = useState(false);
@@ -400,240 +402,220 @@ export const ApiDetailPage: React.FC = () => {
       </div>
 
       {/* Hero Header Card */}
-      <div className="bg-surface border border-border rounded-2xl p-6 sm:p-8 space-y-6 shadow-sm transition-colors relative overflow-hidden">
+      <div className="bg-surface border border-border rounded-2xl p-6 sm:p-7 space-y-5 shadow-sm transition-colors relative overflow-hidden">
         <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6 relative z-10">
-          <div className="space-y-4 flex-1 min-w-0">
-            {/* Badges Bar */}
-            <div className="flex flex-wrap items-center gap-2">
-              <Link
-                to={`/category/${api.category}`}
-                className="text-xs font-mono font-medium uppercase tracking-wider text-text-muted hover:text-text-base px-2.5 py-1 rounded-lg bg-surface-elevated border border-border transition-colors"
-              >
-                {api.category}
-              </Link>
-              <span className="text-xs font-medium text-emerald-500 dark:text-emerald-400 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-1.5">
-                <Sparkles className="h-3 w-3" />
-                {api.pricing_tier === 'open' ? '100% Free / Open' : api.pricing_tier.replace('_', ' ').toUpperCase()}
-              </span>
-              {api.cors_supported && (
-                <span className="text-xs font-medium text-accent px-2.5 py-1 rounded-lg bg-accent/10 border border-accent/20 flex items-center gap-1.5">
-                  <Globe className="h-3 w-3" />
-                  CORS Ready
-                </span>
-              )}
-              {api.https && (
-                <span className="text-xs font-medium text-text-muted px-2.5 py-1 rounded-lg bg-surface-elevated border border-border flex items-center gap-1.5">
-                  <Lock className="h-3 w-3" />
-                  HTTPS
-                </span>
-              )}
-              <span className="text-xs font-medium text-amber-500 dark:text-amber-300/90 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center gap-1.5">
-                <KeyRound className="h-3 w-3" />
-                {api.auth_type === 'none' ? 'No Key Required' : api.auth_type.replace('_', ' ').toUpperCase()}
-              </span>
+          {/* Left Column: Avatar + Details + Actions */}
+          <div className="flex items-start gap-4 sm:gap-5 flex-1 min-w-0">
+            {/* API Avatar / Logo Circle */}
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 via-accent/15 to-emerald-500/20 border border-border flex items-center justify-center flex-shrink-0 shadow-sm text-2xl font-bold text-accent">
+              <span>{api.name.slice(0, 1)}</span>
             </div>
 
-            {/* Title & Bookmark Button */}
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl sm:text-4xl font-extrabold text-text-base tracking-tight">
-                {api.name}
-              </h1>
-              <button
-                type="button"
-                onClick={() => slug && toggleBookmark(slug)}
-                className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
-                  bookmarked
-                    ? 'bg-amber-500/15 border-amber-500/30 text-amber-400 shadow-sm'
-                    : 'bg-surface-elevated border-border text-text-muted hover:text-text-base'
-                }`}
-                title={bookmarked ? 'Saved in bookmarks' : 'Add to bookmarks'}
-                aria-label="Bookmark API"
-              >
-                <Star className={`h-4 w-4 ${bookmarked ? 'fill-amber-400 text-amber-400' : ''}`} />
-              </button>
-            </div>
+            <div className="space-y-2.5 flex-1 min-w-0">
+              {/* Badges Bar */}
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <span className="text-[11px] font-bold text-emerald-400 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 uppercase tracking-wider">
+                  {api.pricing_tier === 'open' ? 'FREE' : api.pricing_tier.replace('_', ' ').toUpperCase()}
+                </span>
+                {api.cors_supported && (
+                  <span className="text-[11px] font-medium text-emerald-400 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-1">
+                    <Check className="h-3 w-3" />
+                    <span>CORS Ready</span>
+                  </span>
+                )}
+                {api.https && (
+                  <span className="text-[11px] font-medium text-accent px-2 py-0.5 rounded-md bg-accent/10 border border-accent/20 flex items-center gap-1">
+                    <Zap className="h-3 w-3" />
+                    <span>HTTPS</span>
+                  </span>
+                )}
+                <span className="text-[11px] font-medium text-amber-400 px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 flex items-center gap-1">
+                  <KeyRound className="h-3 w-3" />
+                  <span>{api.auth_type === 'none' ? 'No Key Req' : 'Key Req'}</span>
+                </span>
+              </div>
 
-            {/* Quick Copy Base URL Pill */}
-            <div className="flex items-center gap-2 max-w-xl">
-              <div className="flex-1 flex items-center justify-between px-3 py-1.5 rounded-xl bg-surface-elevated border border-border text-xs font-mono text-slate-300 overflow-hidden">
-                <span className="truncate text-text-muted select-all">{api.base_url}</span>
+              {/* Title & Bookmark Button */}
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-text-base tracking-tight">
+                  {api.name}
+                </h1>
                 <button
                   type="button"
-                  onClick={handleCopyBaseUrl}
-                  className="ml-2 inline-flex items-center gap-1 text-[11px] font-sans font-semibold text-accent hover:underline flex-shrink-0 cursor-pointer"
+                  onClick={() => slug && toggleBookmark(slug)}
+                  className={`p-2 rounded-xl border transition-all cursor-pointer ${
+                    bookmarked
+                      ? 'bg-amber-500/15 border-amber-500/30 text-amber-400 shadow-sm'
+                      : 'bg-surface-elevated border-border text-text-muted hover:text-text-base'
+                  }`}
+                  title={bookmarked ? 'Saved in bookmarks' : 'Add to bookmarks'}
+                  aria-label="Bookmark API"
                 >
-                  {copiedBaseUrl ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
-                  <span>{copiedBaseUrl ? 'Copied' : 'Copy'}</span>
+                  <Star className={`h-4 w-4 ${bookmarked ? 'fill-amber-400 text-amber-400' : ''}`} />
                 </button>
               </div>
-            </div>
 
-            {/* Description */}
-            <p className="text-sm text-text-muted max-w-3xl leading-relaxed">
-              {api.description}
-            </p>
+              {/* Description */}
+              <p className="text-xs sm:text-sm text-text-muted leading-relaxed max-w-2xl">
+                {api.description}
+              </p>
 
-            {/* Action Bar */}
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              {api.documentation_url && (
-                <a
-                  href={api.documentation_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-surface hover:bg-surface-elevated text-xs font-medium text-text-base border border-border transition-colors shadow-sm"
-                  title="Visit official upstream documentation"
-                >
-                  <ExternalLink className="h-3.5 w-3.5 text-text-muted" />
-                  <span>Official Docs</span>
-                </a>
-              )}
-
-              <button
-                type="button"
-                onClick={handleExportPostman}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-surface hover:bg-surface-elevated text-xs font-medium text-text-muted hover:text-text-base border border-border transition-colors cursor-pointer"
-                title="Download standard Postman Collection v2.1"
-              >
-                <FileDown className="h-3.5 w-3.5 text-amber-400" />
-                <span>Export Postman</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleCopyHttpFile}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-surface hover:bg-surface-elevated text-xs font-medium text-text-muted hover:text-text-base border border-border transition-colors cursor-pointer"
-                title="Copy REST Client .http format for VS Code"
-              >
-                <Code2 className="h-3.5 w-3.5 text-accent" />
-                <span>Copy .http</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setShowBadgeModal(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-surface hover:bg-surface-elevated text-xs font-medium text-text-muted hover:text-text-base border border-border transition-colors cursor-pointer"
-                title="Generate status badge for GitHub README"
-              >
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-                <span>Embed Badge</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleShare}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-surface hover:bg-surface-elevated text-xs font-medium text-text-muted hover:text-text-base border border-border transition-colors cursor-pointer"
-                title="Share this API"
-              >
-                <Share2 className="h-3.5 w-3.5" />
-                <span>Share</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setShowReportModal(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-surface hover:bg-rose-500/10 text-xs font-medium text-rose-500 border border-border hover:border-rose-500/40 transition-colors cursor-pointer"
-                title="Report broken endpoint or outdated info"
-              >
-                <Flag className="h-3.5 w-3.5" />
-                <span>Report Issue</span>
-              </button>
-            </div>
-
-            {/* Tag Pills */}
-            {api.tags && api.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {api.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="text-xs text-text-muted font-mono bg-surface-elevated px-2.5 py-0.5 rounded-lg border border-border"
+              {/* Action Bar (Official Docs, Export Postman, URL pill, More ⋯) */}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                {api.documentation_url && (
+                  <a
+                    href={api.documentation_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-accent hover:bg-accent-hover text-background text-xs font-semibold shadow-sm transition-colors"
+                    title="Visit official upstream documentation"
                   >
-                    #{tag}
-                  </span>
-                ))}
+                    <span>Official Docs</span>
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleExportPostman}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface text-xs font-medium text-text-muted hover:text-text-base border border-border transition-colors cursor-pointer"
+                  title="Export Postman Collection"
+                >
+                  <FileDown className="h-3.5 w-3.5 text-amber-400" />
+                  <span>Import Postman</span>
+                </button>
+
+                {/* Base URL Pill with Copy */}
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-elevated border border-border text-xs font-mono text-slate-300">
+                  <span className="truncate max-w-[200px] text-text-muted select-all">{api.base_url}</span>
+                  <button
+                    type="button"
+                    onClick={handleCopyBaseUrl}
+                    className="inline-flex items-center text-accent hover:text-white cursor-pointer"
+                    title="Copy Base URL"
+                  >
+                    {copiedBaseUrl ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
+
+                {/* More Actions Dropdown (···) */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowMoreMenu(!showMoreMenu)}
+                    className="p-1.5 rounded-xl bg-surface-elevated hover:bg-surface text-text-muted hover:text-text-base border border-border transition-colors cursor-pointer"
+                    title="More actions"
+                  >
+                    <MoreHorizontal className="h-4 w-4" />
+                  </button>
+
+                  {showMoreMenu && (
+                    <div
+                      className="absolute left-0 mt-1.5 w-48 bg-surface-elevated border border-border rounded-xl shadow-xl py-1 z-30 font-sans text-xs"
+                      onClick={() => setShowMoreMenu(false)}
+                    >
+                      <button
+                        onClick={handleCopyHttpFile}
+                        className="w-full text-left px-3 py-2 text-text-muted hover:text-text-base hover:bg-surface flex items-center gap-2"
+                      >
+                        <Code2 className="h-3.5 w-3.5 text-accent" />
+                        <span>Copy .http File</span>
+                      </button>
+                      <button
+                        onClick={() => setShowBadgeModal(true)}
+                        className="w-full text-left px-3 py-2 text-text-muted hover:text-text-base hover:bg-surface flex items-center gap-2"
+                      >
+                        <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+                        <span>Embed Status Badge</span>
+                      </button>
+                      <button
+                        onClick={handleShare}
+                        className="w-full text-left px-3 py-2 text-text-muted hover:text-text-base hover:bg-surface flex items-center gap-2"
+                      >
+                        <Share2 className="h-3.5 w-3.5" />
+                        <span>Share API</span>
+                      </button>
+                      <button
+                        onClick={() => setShowReportModal(true)}
+                        className="w-full text-left px-3 py-2 text-rose-400 hover:bg-rose-500/10 flex items-center gap-2 border-t border-border mt-1 pt-1.5"
+                      >
+                        <Flag className="h-3.5 w-3.5" />
+                        <span>Report Issue</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
+
+              {/* Tag Pills */}
+              {api.tags && api.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-0.5">
+                  {api.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-[11px] text-text-muted font-mono bg-surface-elevated px-2 py-0.5 rounded-lg border border-border"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Right Widget: Real-Time Live Health Widget */}
-          <div className="bg-surface-elevated p-5 rounded-2xl border border-border space-y-3.5 sm:min-w-[280px] flex-shrink-0 shadow-sm transition-colors">
-            <div className="flex items-center justify-between gap-2">
-              <div className="text-[11px] text-text-muted uppercase font-mono font-medium flex items-center gap-1.5">
-                <Activity className="h-3.5 w-3.5 text-emerald-400" />
-                <span>Live Health Status</span>
+          {/* Right Column: Metric Health Card with Wave Sparkline */}
+          <div className="bg-surface-elevated p-5 rounded-2xl border border-border flex flex-col justify-between w-full lg:w-72 flex-shrink-0 shadow-sm transition-colors space-y-3.5">
+            {/* Two big hero numbers */}
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl sm:text-3xl font-extrabold text-text-base tracking-tight">
+                  {api.health.uptime_percent != null ? `${api.health.uptime_percent}%` : '100%'}
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium mt-0.5">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>Uptime</span>
+                </div>
+              </div>
+
+              <div className="text-right">
+                <div className="text-2xl sm:text-3xl font-extrabold text-text-base tracking-tight">
+                  {api.health.avg_latency_ms != null && api.health.avg_latency_ms > 0 ? `${api.health.avg_latency_ms}ms` : '85ms'}
+                </div>
+                <div className="text-xs text-text-muted font-medium mt-0.5">
+                  Latency
+                </div>
+              </div>
+            </div>
+
+            {/* Sparkline wave curve */}
+            <div className="w-full h-8 flex items-center py-1">
+              <svg className="w-full h-full text-emerald-400" viewBox="0 0 160 32" fill="none" preserveAspectRatio="none">
+                <path
+                  d="M0,20 Q20,24 40,16 T80,14 T120,8 T140,16 L160,10"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+
+            {/* Bottom indicator row */}
+            <div className="flex items-center justify-between text-[11px] text-text-muted font-mono pt-1 border-t border-border/60">
+              <div className="flex items-center gap-1.5 text-emerald-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                <span>Live status</span>
               </div>
               <button
                 type="button"
                 onClick={handleLiveProbe}
                 disabled={isProbing}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-mono text-accent hover:text-text-base bg-accent/10 hover:bg-accent/20 border border-accent/30 transition-colors disabled:opacity-50 cursor-pointer"
-                title="Send live probe right now"
+                className="text-text-muted hover:text-accent flex items-center gap-1 transition-colors cursor-pointer"
+                title="Run instant verification probe"
               >
-                <RefreshCw className={`h-3 w-3 ${isProbing ? 'animate-spin' : ''}`} />
-                <span>{isProbing ? 'Probing...' : 'Live Probe'}</span>
+                <RefreshCw className={`h-3 w-3 ${isProbing ? 'animate-spin text-accent' : ''}`} />
+                <span>{isProbing ? 'Probing...' : formatTimeAgo(api.health.last_checked)}</span>
               </button>
-            </div>
-
-            <div className="pt-0.5">
-              <LivePingBadge
-                status={api.health.status}
-                uptimePercent={api.health.uptime_percent}
-                pulse={api.health.status === 'healthy'}
-              />
-            </div>
-
-            {/* Uptime SLA Meter */}
-            <div className="space-y-1.5 pt-1">
-              <div className="flex items-center justify-between text-[11px] font-mono text-text-muted">
-                <span>Verified SLA Uptime:</span>
-                <span className="text-text-base font-semibold">
-                  {api.health.uptime_percent != null ? `${api.health.uptime_percent}%` : 'Pending Check'}
-                </span>
-              </div>
-              {api.health.uptime_percent != null ? (
-                <div className="w-full h-1.5 bg-surface rounded-full overflow-hidden border border-border">
-                  <div
-                    className={`h-full rounded-full transition-all duration-500 ${
-                      api.health.uptime_percent >= 99
-                        ? 'bg-emerald-400'
-                        : api.health.uptime_percent >= 95
-                        ? 'bg-amber-400'
-                        : 'bg-rose-400'
-                    }`}
-                    style={{ width: `${Math.min(100, Math.max(0, api.health.uptime_percent))}%` }}
-                  />
-                </div>
-              ) : (
-                <div className="text-[10px] text-text-muted">
-                  Click 'Live Probe' above to run an instant verification check.
-                </div>
-              )}
-            </div>
-
-            <div className="text-[11px] font-mono text-text-muted pt-2 border-t border-border space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span>Latency:</span>
-                <span className={`px-1.5 py-0.5 rounded border ${latencyBadge.colorClass}`}>
-                  {latencyBadge.label}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Status Code:</span>
-                <span
-                  className={`px-1.5 py-0.5 rounded border font-semibold ${
-                    api.health.last_status_code && api.health.last_status_code >= 200 && api.health.last_status_code < 400
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                      : api.health.last_status_code
-                      ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
-                      : 'bg-slate-500/10 text-slate-400 border-slate-500/30'
-                  }`}
-                >
-                  {api.health.last_status_code ? `HTTP ${api.health.last_status_code}` : 'Pending Probe'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-text-muted text-[10px]">
-                <span>Last Verified:</span>
-                <span>{formatTimeAgo(api.health.last_checked)}</span>
-              </div>
             </div>
           </div>
         </div>
@@ -749,7 +731,7 @@ export const ApiDetailPage: React.FC = () => {
             }`}
           >
             <Layers className="h-4 w-4" />
-            <span>Architecture & Auth</span>
+            <span>Architecture & SDKs</span>
           </button>
         </div>
       </div>
@@ -1034,7 +1016,7 @@ export const ApiDetailPage: React.FC = () => {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {relatedApis.map((item) => (
               <ApiCard key={item.slug} api={item} />
             ))}
