@@ -18,6 +18,19 @@ import { generateTypeScriptTypes, generateJsonSchema } from '../utils/typeGenera
 import { ParsedCurl } from '../utils/curlParser';
 import { CodeSnippetViewer } from './CodeSnippetViewer';
 import {
+  ParamsTab,
+  HeadersTab,
+  BodyTab,
+  AuthTab,
+  SettingsTab,
+  CodeSnippetsTab,
+  ResponseInspector,
+  PlaygroundTabsNav,
+  RequestTab,
+  WorkbenchLayout,
+  RequestAuthMode
+} from './playground-tabs';
+import {
   Play,
   Copy,
   Check,
@@ -304,9 +317,7 @@ export const Playground: React.FC<PlaygroundProps> = ({
     }
     return [];
   });
-  type RequestTab = 'params' | 'headers' | 'body' | 'response' | 'snippets' | 'auth' | 'settings';
-  type RequestAuthMode = 'none' | 'apiKey' | 'bearer' | 'basic';
-  type WorkbenchLayout = 'tabs' | 'split';
+
 
   const [workbenchLayout, setWorkbenchLayout] = useState<WorkbenchLayout>('tabs');
   const [requestBody, setRequestBody] = useState<string>(initialBody || '');
@@ -862,749 +873,6 @@ export const Playground: React.FC<PlaygroundProps> = ({
   }, []);
 
 
-  const renderResponseInspector = (isUnified: boolean = false) => {
-    return (
-      <div className={`${isUnified ? "rounded-xl border border-border bg-surface-elevated/20 flex flex-col min-h-[460px] h-[540px] overflow-hidden shadow-sm transition-colors" : "bg-surface rounded-2xl border border-border flex flex-col min-h-[480px] h-[540px] overflow-hidden shadow-sm transition-colors"}`}>
-          {/* Header Bar */}
-          <div className="px-4 py-3 border-b border-border bg-surface-elevated/60 flex flex-wrap items-center justify-between gap-2">
-            {/* Left Title & Status */}
-            <div className="flex items-center gap-2.5">
-              <div className="p-1 rounded-lg bg-accent/10 text-accent">
-                <Database className="h-4 w-4" />
-              </div>
-              <span className="text-xs font-bold text-text-base tracking-tight">Response Payload</span>
-
-              {/* Status Code badge */}
-              {response ? (
-                <div className="flex items-center gap-2 ml-1">
-                  <span
-                    className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border flex items-center gap-1.5 ${
-                      response.status_code >= 200 && response.status_code < 300
-                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                        : response.status_code >= 400
-                          ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
-                          : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                    }`}
-                  >
-                    <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
-                    <span>{response.status_code} {response.status_code === 200 ? 'OK' : ''}</span>
-                  </span>
-
-                  <span className="text-[10px] font-mono text-text-muted flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {response.latency_ms} ms
-                  </span>
-
-                  {Boolean(response?.data) && (
-                    <span className="text-[10px] font-mono text-text-muted px-2 py-0.5 rounded-md bg-surface border border-border">
-                      {getPayloadSize(response.data)}
-                    </span>
-                  )}
-                </div>
-              ) : (
-                <span className="text-[10px] font-mono text-text-muted/70 px-2 py-0.5 rounded-full bg-surface border border-border flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-text-muted/40" />
-                  <span>Awaiting Request</span>
-                </span>
-              )}
-            </div>
-
-            {/* Header Right Actions (Search, Copy, Download, Layout controls) */}
-            <div className="flex items-center gap-1.5">
-              {Boolean(response?.data) && (
-                <>
-                  <button
-                    onClick={() => setIsSearchOpen(!isSearchOpen)}
-                    className={`p-1.5 rounded-lg text-xs transition-colors border cursor-pointer ${
-                      isSearchOpen
-                        ? 'bg-accent/20 text-accent border-accent/40'
-                        : 'bg-surface hover:bg-surface-elevated text-text-muted hover:text-text-base border-border'
-                    }`}
-                    title="Search in response payload"
-                  >
-                    <Search className="h-3.5 w-3.5" />
-                  </button>
-
-                  <button
-                    onClick={handleCopyJson}
-                    className="text-xs text-text-muted hover:text-text-base flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-elevated border border-border transition-colors cursor-pointer"
-                    title="Copy full JSON"
-                  >
-                    {copiedJson ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-                    <span className="hidden sm:inline">{copiedJson ? 'Copied' : 'Copy'}</span>
-                  </button>
-
-                  <button
-                    onClick={handleDownloadJson}
-                    className="text-xs text-text-muted hover:text-text-base flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-elevated border border-border transition-colors cursor-pointer"
-                    title="Download JSON file"
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Export</span>
-                  </button>
-                </>
-              )}
-
-              {!isUnified && (
-                <div className="flex items-center bg-surface p-0.5 rounded-xl border border-border ml-1">
-                <button
-                  onClick={() => setViewLayout('split')}
-                  className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                    viewLayout === 'split' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
-                  }`}
-                  title="Side-by-side Split View"
-                >
-                  <Columns className="h-3 w-3" />
-                </button>
-                <button
-                  onClick={() => setViewLayout('focus')}
-                  className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                    viewLayout === 'focus' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
-                  }`}
-                  title="Full Width Focus View"
-                >
-                  <Maximize2 className="h-3 w-3" />
-                </button>
-                <button
-                  onClick={() => setViewLayout('stacked')}
-                  className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                    viewLayout === 'stacked' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
-                  }`}
-                  title="Stacked Top/Bottom View"
-                >
-                  <Rows className="h-3 w-3" />
-                </button>
-              </div>
-              )}
-            </div>
-          </div>
-
-          {/* Response View Selector Tabs */}
-          <div className="px-3 py-1.5 bg-surface-elevated/40 border-b border-border flex items-center justify-between gap-1 overflow-x-auto scrollbar-none">
-            <div className="flex items-center gap-1 flex-wrap">
-              <button
-                onClick={() => setActiveResponseTab('json')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
-                  activeResponseTab === 'json'
-                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
-                }`}
-              >
-                <Code2 className="h-3 w-3" />
-                <span>JSON</span>
-              </button>
-
-              <button
-                onClick={() => setActiveResponseTab('preview')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
-                  activeResponseTab === 'preview'
-                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
-                }`}
-              >
-                <Globe className="h-3 w-3" />
-                <span>Preview</span>
-                {isHtmlResponse && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                    HTML
-                  </span>
-                )}
-              </button>
-
-              <button
-                onClick={() => setActiveResponseTab('media')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
-                  activeResponseTab === 'media'
-                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
-                }`}
-              >
-                <ImageIcon className="h-3 w-3" />
-                <span>Media</span>
-                {mediaItems.length > 0 && (
-                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
-                    activeResponseTab === 'media' ? 'bg-black/20 text-background' : 'bg-accent/20 text-accent'
-                  }`}>
-                    {mediaItems.length}
-                  </span>
-                )}
-              </button>
-
-              <button
-                onClick={() => setActiveResponseTab('headers')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
-                  activeResponseTab === 'headers'
-                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
-                }`}
-              >
-                <FileText className="h-3 w-3" />
-                <span>Headers</span>
-                {response?.headers && Object.keys(response.headers).length > 0 && (
-                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
-                    activeResponseTab === 'headers' ? 'bg-black/20 text-background' : 'bg-surface text-text-muted border border-border'
-                  }`}>
-                    {Object.keys(response.headers).length}
-                  </span>
-                )}
-              </button>
-
-              <button
-                onClick={() => setActiveResponseTab('table')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
-                  activeResponseTab === 'table'
-                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
-                }`}
-              >
-                <TableIcon className="h-3 w-3" />
-                <span>Schema</span>
-              </button>
-
-              <button
-                onClick={() => setActiveResponseTab('types')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
-                  activeResponseTab === 'types'
-                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
-                }`}
-              >
-                <FileCode className="h-3 w-3" />
-                <span>Types</span>
-              </button>
-
-              <button
-                onClick={() => setActiveResponseTab('raw')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
-                  activeResponseTab === 'raw'
-                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
-                }`}
-              >
-                <AlignLeft className="h-3 w-3" />
-                <span>Raw</span>
-              </button>
-
-              <button
-                onClick={() => setActiveResponseTab('history')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
-                  activeResponseTab === 'history'
-                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
-                }`}
-              >
-                <History className="h-3 w-3" />
-                <span>History</span>
-                {history.length > 0 && (
-                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
-                    activeResponseTab === 'history' ? 'bg-black/20 text-background' : 'bg-surface text-text-muted border border-border'
-                  }`}>
-                    {history.length}
-                  </span>
-                )}
-              </button>
-            </div>
-
-            {/* Tree vs Raw text toggle if on JSON tab */}
-            {activeResponseTab === 'json' && Boolean(response?.data) && (
-              <div className="flex items-center bg-surface p-0.5 rounded-lg border border-border">
-                <button
-                  onClick={() => setJsonDisplayMode('tree')}
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-mono transition-colors cursor-pointer ${
-                    jsonDisplayMode === 'tree' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
-                  }`}
-                >
-                  Tree
-                </button>
-                <button
-                  onClick={() => setJsonDisplayMode('raw')}
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-mono transition-colors cursor-pointer ${
-                    jsonDisplayMode === 'raw' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
-                  }`}
-                >
-                  Plain
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Quick Search Bar */}
-          {isSearchOpen && (
-            <div className="px-3.5 py-2 bg-surface border-b border-border flex items-center gap-2">
-              <Search className="h-3.5 w-3.5 text-text-muted" />
-              <input
-                type="text"
-                placeholder="Filter response JSON by keyword or property name..."
-                value={jsonSearchQuery}
-                onChange={(e) => setJsonSearchQuery(e.target.value)}
-                spellCheck={false}
-                className="flex-1 bg-transparent text-xs font-mono text-text-base outline-none placeholder:text-text-muted/50"
-                autoFocus
-              />
-              {jsonSearchQuery && (
-                <button
-                  onClick={() => setJsonSearchQuery('')}
-                  className="text-xs text-text-muted hover:text-text-base cursor-pointer"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Body Viewer Area */}
-          <div className="flex-1 p-4 overflow-auto font-mono text-xs bg-surface dark:bg-[#131416] text-text-base transition-colors">
-            {isLoading ? (
-              <div className="h-full flex flex-col items-center justify-center gap-3 text-text-muted">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent" />
-                <p className="text-xs font-medium">Executing live request through proxy...</p>
-              </div>
-            ) : activeResponseTab === 'history' ? (
-              <RequestHistoryView
-                history={history}
-                onSelect={(item) => {
-                  handleSelectHistoryItem(item);
-                  setActiveResponseTab('json');
-                }}
-                onReRun={(item) => {
-                  handleSelectHistoryItem(item);
-                  handleRunTest(item.url, item.method, item.body);
-                }}
-                onClear={() => {
-                  setHistory([]);
-                  sessionStorage.removeItem(`fah_history_${api?.slug || 'api'}`);
-                }}
-                currentHistoryId={currentHistoryId}
-              />
-            ) : response?.error || (response?.status_code && response.status_code >= 400) ? (
-              (() => {
-                const diag = getErrorDiagnostics(response.status_code, response.error);
-                return (
-                  <div className="space-y-4 font-sans">
-                    {/* Diagnostic Summary Card */}
-                    <div className="p-4 rounded-xl bg-surface border border-rose-500/30 text-rose-400 space-y-3">
-                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
-                        <div className="flex items-center gap-2 font-semibold text-rose-400 text-xs">
-                          <AlertCircle className="h-4 w-4 text-rose-400 flex-shrink-0" />
-                          <span>{diag.title}</span>
-                        </div>
-                        <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded border ${diag.badgeColor}`}>
-                          {diag.badge}
-                        </span>
-                      </div>
-
-                      {/* Descriptive error */}
-                      <p className="text-xs text-text-base leading-relaxed">
-                        {response.error || diag.description}
-                      </p>
-
-                      {/* Actionable Troubleshooting Steps */}
-                      <div className="bg-surface-elevated p-3 rounded-xl border border-border space-y-2">
-                        <div className="text-[11px] font-semibold text-text-base flex items-center gap-1.5">
-                          <HelpCircle className="h-3.5 w-3.5 text-accent" />
-                          <span>Troubleshooting & Recommendations:</span>
-                        </div>
-                        <ul className="text-[11px] text-text-muted space-y-1.5 list-disc list-inside">
-                          {diag.tips.map((tip, idx) => (
-                            <li key={idx} className="leading-relaxed">
-                              {tip}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      {/* Action Links & Tools */}
-                      <div className="pt-1 flex flex-wrap items-center gap-2">
-                        <button
-                          onClick={handleCopyErrorReport}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-elevated text-text-base text-xs font-medium border border-border transition-colors cursor-pointer"
-                        >
-                          {copiedError ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5 text-text-muted" />}
-                          <span>{copiedError ? 'Diagnostics Copied!' : 'Copy Error Report'}</span>
-                        </button>
-
-                        <button
-                          onClick={() => handleRunTest()}
-                          disabled={isLoading}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-elevated text-text-base text-xs font-medium border border-border transition-colors disabled:opacity-50 cursor-pointer"
-                        >
-                          <Play className="h-3 w-3 fill-current text-text-muted" />
-                          <span>Retry Request</span>
-                        </button>
-
-                        {api.documentation_url && (
-                          <a
-                            href={api.documentation_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/10 hover:bg-accent/20 text-accent text-xs font-medium border border-accent/30 transition-colors"
-                          >
-                            <ExternalLink className="h-3.5 w-3.5" />
-                            <span>View API Documentation</span>
-                          </a>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Upstream Server Payload */}
-                    {Boolean(response.data) && (
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between text-[11px] text-text-muted px-1">
-                          <span className="font-mono flex items-center gap-1.5">
-                            <Info className="h-3 w-3 text-text-muted" />
-                            Upstream Server Payload ({typeof response.data === 'object' ? 'JSON' : 'Text'}):
-                          </span>
-                        </div>
-                        <div className="rounded-xl border border-border overflow-hidden">
-                          <CodeSnippetViewer
-                            code={typeof response.data === 'object' ? JSON.stringify(response.data, null, 2) : String(response.data)}
-                            language="json"
-                            showLineNumbers={true}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })()
-            ) : response ? (
-              /* Success Response Views */
-              activeResponseTab === 'preview' ? (
-                /* Web Page / HTML Preview Tab */
-                <HtmlPreviewViewer
-                  html={typeof response.data === 'string' ? response.data : JSON.stringify(response.data, null, 2)}
-                  url={endpointUrl}
-                  statusCode={response.status_code}
-                  latencyMs={response.latency_ms}
-                />
-              ) : activeResponseTab === 'json' ? (
-                <div className="space-y-3">
-                  {isHtmlResponse && (
-                    <div className="p-3 rounded-xl bg-accent/10 border border-accent/30 flex flex-wrap items-center justify-between gap-2.5 font-sans">
-                      <div className="flex items-center gap-2 text-text-base text-xs">
-                        <Globe className="h-4 w-4 text-accent flex-shrink-0" />
-                        <span>
-                          <strong>HTML Web Document Detected:</strong> This endpoint returned a rendered HTML web page ({response.status_code} OK).
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => setActiveResponseTab('preview')}
-                        className="px-3 py-1 rounded-lg bg-accent hover:bg-accent-hover text-background font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
-                      >
-                        <span>Switch to Web Preview</span>
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  )}
-                  {jsonDisplayMode === 'tree' ? (
-                    <JsonTreeViewer
-                      data={response.data}
-                      searchQuery={jsonSearchQuery}
-                    />
-                  ) : (
-                    <CodeSnippetViewer
-                      code={filteredJsonContent}
-                      language="json"
-                      showLineNumbers={true}
-                      showCopyButton={true}
-                    />
-                  )}
-                </div>
-              ) : activeResponseTab === 'media' ? (
-                /* Media Preview Tab */
-                <MediaPreviewViewer
-                  mediaItems={mediaItems}
-                  onLoadSampleEndpoint={(url) => {
-                    setEndpointUrl(url);
-                    handleRunTest(url);
-                  }}
-                />
-              ) : activeResponseTab === 'headers' ? (
-                /* Response Headers Tab */
-                <div className="space-y-2">
-                  <div className="text-[11px] font-sans text-text-muted pb-1 border-b border-border">
-                    HTTP Response Headers ({Object.keys(response.headers || {}).length}):
-                  </div>
-                  {response.headers && Object.keys(response.headers).length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse">
-                        <thead>
-                          <tr className="border-b border-border text-text-muted text-[10px] uppercase">
-                            <th className="py-2 pr-4 font-mono">Header</th>
-                            <th className="py-2 font-mono">Value</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/60">
-                          {Object.entries(response.headers).map(([key, value]) => (
-                            <tr key={key} className="hover:bg-surface-elevated/40 group">
-                              <td className="py-2 pr-4 text-accent font-mono font-medium whitespace-nowrap align-top">
-                                {key}
-                              </td>
-                              <td className="py-2 text-text-base font-mono break-all">
-                                {value}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <p className="text-text-muted font-sans text-xs py-4 text-center">No explicit headers forwarded by target server.</p>
-                  )}
-                </div>
-              ) : activeResponseTab === 'types' ? (
-                /* TypeScript / JSON Schema Generator View */
-                <div className="space-y-3 font-sans h-full flex flex-col">
-                  <div className="flex items-center justify-between pb-2 border-b border-border">
-                    <div className="flex items-center gap-1.5 bg-surface p-1 rounded-xl border border-border">
-                      <button
-                        onClick={() => setTypesDisplayMode('typescript')}
-                        className={`px-3 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-                          typesDisplayMode === 'typescript'
-                            ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                            : 'text-text-muted hover:text-text-base'
-                        }`}
-                      >
-                        TypeScript Interface
-                      </button>
-                      <button
-                        onClick={() => setTypesDisplayMode('schema')}
-                        className={`px-3 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-                          typesDisplayMode === 'schema'
-                            ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                            : 'text-text-muted hover:text-text-base'
-                        }`}
-                      >
-                        JSON Schema
-                      </button>
-                    </div>
-
-                    <button
-                      onClick={handleCopyTypes}
-                      className="text-xs text-text-base hover:text-accent flex items-center gap-1.5 px-3 py-1 rounded-lg bg-surface hover:bg-surface-elevated border border-border transition-colors cursor-pointer"
-                    >
-                      {copiedTypes ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
-                      <span>{copiedTypes ? 'Copied Types!' : 'Copy Code'}</span>
-                    </button>
-                  </div>
-
-                  <div className="flex-1 overflow-auto rounded-xl border border-border">
-                    <CodeSnippetViewer
-                      code={generatedTypesCode}
-                      language={typesDisplayMode === 'typescript' ? 'typescript' : 'json'}
-                      showLineNumbers={true}
-                    />
-                  </div>
-                </div>
-              ) : activeResponseTab === 'table' ? (
-                /* Flattened Structure Inspector */
-                <div className="space-y-2">
-                  <div className="text-[11px] font-sans text-text-muted pb-1 border-b border-border">
-                    Flattened Property Hierarchy ({flattenedTableData.length} entries):
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse text-[11px]">
-                      <thead>
-                        <tr className="border-b border-border text-text-muted text-[10px] uppercase font-mono">
-                          <th className="py-2 pr-3">Property Path</th>
-                          <th className="py-2 pr-3">Type</th>
-                          <th className="py-2">Value</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border/40 font-mono">
-                        {flattenedTableData.map((row, idx) => (
-                          <tr key={idx} className="hover:bg-surface-elevated/40">
-                            <td className="py-1.5 pr-3 text-accent font-semibold whitespace-nowrap">
-                              {row.key || '(root)'}
-                            </td>
-                            <td className="py-1.5 pr-3 text-text-muted text-[10px]">
-                              {row.type}
-                            </td>
-                            <td className="py-1.5 text-text-base break-all">
-                              {row.value}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              ) : (
-                /* Raw text representation */
-                <CodeSnippetViewer
-                  code={typeof response.data === 'string' ? response.data : JSON.stringify(response.data, null, 2)}
-                  language="json"
-                  showLineNumbers={true}
-                  showCopyButton={true}
-                />
-              )
-            ) : (
-              /* Enhanced Developer Empty State */
-              <div className="h-full flex flex-col items-center justify-center gap-4 text-center px-4 font-sans py-8">
-                {/* Visual Hero Orb */}
-                <div className="relative">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-accent/20 via-sky-500/10 to-indigo-500/20 border border-accent/30 flex items-center justify-center text-accent shadow-lg shadow-accent/10">
-                    <Play className="h-7 w-7 fill-current ml-0.5" />
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 p-1 rounded-full bg-emerald-500 text-white ring-4 ring-surface dark:ring-[#131416]">
-                    <Zap className="h-3 w-3 fill-current" />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5 max-w-sm">
-                  <p className="font-bold text-text-base text-base tracking-tight">Ready to Test Endpoint</p>
-                  <p className="text-xs text-text-muted leading-relaxed">
-                    Send a live HTTP request to inspect response trees, extract media, generate TypeScript interfaces, and test edge cases.
-                  </p>
-                </div>
-
-                <div className="pt-2 flex flex-col sm:flex-row items-center gap-2.5">
-                  <button
-                    onClick={() => handleRunTest()}
-                    disabled={isLoading}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-background font-bold text-xs transition-all shadow-md shadow-accent/25 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-                  >
-                    <Zap className="h-3.5 w-3.5 fill-current" />
-                    <span>Run Sample Request</span>
-                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-black/15 font-normal ml-0.5">
-                      ⌘↵
-                    </span>
-                  </button>
-
-                  {presets[0] && (
-                    <button
-                      onClick={() => handleSelectPreset(presets[0])}
-                      className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-surface-elevated hover:bg-surface-hover text-text-base border border-border text-xs font-mono transition-colors cursor-pointer"
-                    >
-                      <span className="text-accent font-semibold">{presets[0].method}</span>
-                      <span className="truncate max-w-[150px]">{presets[0].label}</span>
-                      <ArrowRight className="h-3 w-3 text-accent" />
-                    </button>
-                  )}
-                </div>
-
-                {/* Developer Feature Checklist */}
-                <div className="pt-4 flex flex-wrap items-center justify-center gap-2 text-[11px] text-text-muted">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface border border-border">
-                    <span className="text-emerald-400">✓</span> Live Proxy Telemetry
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface border border-border">
-                    <span className="text-accent">✓</span> Auto TypeScript Generator
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface border border-border">
-                    <span className="text-purple-400">✓</span> HTML & Media Preview
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-    );
-  };
-
-  const renderSnippetsPanel = (isUnified: boolean = false) => {
-    return (
-      <div className={`${isUnified ? "rounded-xl border border-border bg-surface-elevated/20 flex flex-col min-h-[460px] h-[540px] overflow-hidden shadow-sm transition-colors" : "bg-surface rounded-2xl border border-border flex flex-col min-h-[480px] h-[540px] overflow-hidden shadow-sm transition-colors"}`}>
-            {/* Header with Language Tabs */}
-            <div className="px-4 py-3 border-b border-border bg-surface-elevated/60 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-1 rounded-lg bg-accent/10 text-accent">
-                    <Terminal className="h-4 w-4" />
-                  </div>
-                  <span className="text-xs font-bold text-text-base tracking-tight">Integration Client Code</span>
-                </div>
-
-                {/* Copy Code Button */}
-                <button
-                  onClick={handleCopySnippet}
-                  className="text-xs text-text-base hover:text-accent flex items-center gap-1.5 px-3 py-1 rounded-lg bg-surface hover:bg-surface-elevated border border-border transition-colors cursor-pointer"
-                >
-                  {copiedSnippet ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5 text-text-muted" />}
-                  <span>{copiedSnippet ? 'Copied' : 'Copy Code'}</span>
-                </button>
-              </div>
-
-              {/* Language Pill Selector with Quick Tabs + Clean Dropdown (NO Duplicate cURL!) */}
-              <div className="flex items-center justify-between gap-2 overflow-x-auto pb-0.5 scrollbar-none">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {POPULAR_LANG_LIST.map((lang) => {
-                    const isActive = activeSnippetLang === lang.id;
-                    return (
-                      <button
-                        key={lang.id}
-                        type="button"
-                        onClick={() => setActiveSnippetLang(lang.id)}
-                        className={`px-3 py-1 rounded-lg text-xs font-mono font-medium whitespace-nowrap transition-all cursor-pointer ${
-                          isActive
-                            ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                            : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
-                        }`}
-                      >
-                        {lang.label}
-                      </button>
-                    );
-                  })}
-
-                  {/* Clean Secondary Dropdown */}
-                  <div className="relative">
-                    <select
-                      value={isPopularLang ? '' : activeSnippetLang}
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          setActiveSnippetLang(e.target.value as SnippetLanguage);
-                        }
-                      }}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-mono transition-all outline-none cursor-pointer border ${
-                        !isPopularLang
-                          ? 'bg-accent text-background font-bold border-accent shadow-sm shadow-accent/20'
-                          : 'bg-surface text-text-muted hover:text-text-base border-border hover:border-border-light'
-                      }`}
-                      title="Choose from additional languages"
-                    >
-                      <option value="" disabled>
-                        {isPopularLang ? 'More...' : SUPPORTED_LANGUAGES.find((l) => l.id === activeSnippetLang)?.label || 'More...'}
-                      </option>
-                      {additionalLanguages.map((lang) => (
-                        <option key={lang.id} value={lang.id}>
-                          {lang.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Snippet Code Box with Line Numbers & Syntax Highlighting */}
-            <div className="flex-1 overflow-auto font-mono text-xs bg-[#16181D] text-slate-200 relative group">
-              <CodeSnippetViewer
-                code={getActiveSnippet()}
-                language={
-                  activeSnippetLang === 'curl'
-                    ? 'curl'
-                    : ['js', 'axios', 'ts'].includes(activeSnippetLang)
-                      ? 'javascript'
-                      : activeSnippetLang.includes('python')
-                        ? 'python'
-                        : 'text'
-                }
-                showLineNumbers={true}
-              />
-            </div>
-
-            {/* Snippet Footer Info */}
-            <div className="px-4 py-2 bg-surface-elevated/40 border-t border-border flex items-center justify-between text-[11px] text-text-muted font-sans">
-              <div className="flex items-center gap-1.5 font-mono text-accent">
-                <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                <span>{SUPPORTED_LANGUAGES.find((l) => l.id === activeSnippetLang)?.label} snippet</span>
-              </div>
-              <span className="hidden sm:inline">Production ready • Timeout: 10s • Auto-serialized</span>
-            </div>
-          </div>
-    );
-  };
-
     const activeMethodStyle = METHOD_STYLES[method] || METHOD_STYLES.GET;
 
   return (
@@ -1798,747 +1066,127 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
         {/* Parameter & Header Tabs Navigation */}
         <div className="pt-2 border-t border-border space-y-3">
-          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5">
-            {/* The Request & Response Tabs */}
-            <div className="flex items-center gap-1 bg-surface-elevated p-1 rounded-xl border border-border overflow-x-auto scrollbar-none flex-nowrap shrink max-w-full">
-              {/* Tab 1: Params */}
-              <button
-                type="button"
-                onClick={() => setActiveParamTab('params')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap ${
-                  activeParamTab === 'params'
-                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                    : 'text-text-muted hover:text-text-base'
-                }`}
-              >
-                <SlidersHorizontal className="h-3 w-3" />
-                <span>Params</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                  activeParamTab === 'params' ? 'bg-black/20 text-background' : 'bg-surface text-text-muted border border-border'
-                }`}>
-                  {params.length}
-                </span>
-              </button>
+          <PlaygroundTabsNav
+            activeTab={activeParamTab}
+            onSelectTab={setActiveParamTab}
+            workbenchLayout={workbenchLayout}
+            onSetWorkbenchLayout={handleSetWorkbenchLayout}
+            paramsCount={params.length}
+            headersCount={headers.length}
+            hasBody={Boolean(requestBody.trim())}
+            authType={authType}
+            bypassCache={bypassCache}
+            isLoading={isLoading}
+            response={response}
+            activeSnippetLang={activeSnippetLang}
+            onAddParam={() => handleUpdateParams((prev) => [...prev, { key: '', value: '' }])}
+            onAddHeader={() => setHeaders((prev) => [...prev, { key: '', value: '' }])}
+            onFormatBody={handleFormatRequestBody}
+            onClearBody={() => setRequestBody('')}
+            onClearAuth={() => {
+              setAuthType('none');
+              setApiKeyValue('');
+              setBearerToken('');
+              setBasicUsername('');
+              setBasicPassword('');
+            }}
+            onResetSettings={() => {
+              setRequestTimeout(10000);
+              setFollowRedirects(true);
+              setBypassCache(false);
+            }}
+            onCopyJson={handleCopyJson}
+            copiedJson={copiedJson}
+            onDownloadJson={handleDownloadJson}
+            onCopySnippet={handleCopySnippet}
+            copiedSnippet={copiedSnippet}
+          />
 
-              {/* Tab 2: Headers */}
-              <button
-                type="button"
-                onClick={() => setActiveParamTab('headers')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap ${
-                  activeParamTab === 'headers'
-                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                    : 'text-text-muted hover:text-text-base'
-                }`}
-              >
-                <FileText className="h-3 w-3" />
-                <span>Headers</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                  activeParamTab === 'headers' ? 'bg-black/20 text-background' : 'bg-surface text-text-muted border border-border'
-                }`}>
-                  {headers.length}
-                </span>
-              </button>
-
-              {/* Tab 3: Body */}
-              <button
-                type="button"
-                onClick={() => setActiveParamTab('body')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap ${
-                  activeParamTab === 'body'
-                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                    : 'text-text-muted hover:text-text-base'
-                }`}
-              >
-                <Braces className="h-3 w-3" />
-                <span>Body</span>
-                {requestBody.trim() && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                )}
-              </button>
-
-              {/* Tab 4: Auth */}
-              <button
-                type="button"
-                onClick={() => setActiveParamTab('auth')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap ${
-                  activeParamTab === 'auth'
-                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                    : 'text-text-muted hover:text-text-base'
-                }`}
-              >
-                <KeyRound className="h-3 w-3" />
-                <span>Auth</span>
-                {authType !== 'none' && (
-                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
-                    activeParamTab === 'auth' ? 'bg-black/20 text-background' : 'bg-emerald-500/20 text-emerald-400'
-                  }`}>
-                    ✓
-                  </span>
-                )}
-              </button>
-
-              {/* Tab 5: Settings */}
-              <button
-                type="button"
-                onClick={() => setActiveParamTab('settings')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap ${
-                  activeParamTab === 'settings'
-                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                    : 'text-text-muted hover:text-text-base'
-                }`}
-              >
-                <Settings2 className="h-3 w-3" />
-                <span>Settings</span>
-                {bypassCache && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                )}
-              </button>
-
-              {/* Divider and Result Tabs (Only shown in Tabs mode) */}
-              {workbenchLayout === 'tabs' && (
-                <>
-                  <div className="h-4 w-px bg-border mx-1 self-center shrink-0" />
-
-                  {/* Tab 6: Response */}
-                  <button
-                    type="button"
-                    onClick={() => setActiveParamTab('response')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap ${
-                      activeParamTab === 'response'
-                        ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                        : 'text-text-muted hover:text-text-base'
-                    }`}
-                  >
-                    <Database className="h-3 w-3" />
-                    <span>Response</span>
-                    {isLoading ? (
-                      <Loader2 className="h-3 w-3 animate-spin text-current" />
-                    ) : response ? (
-                      <span
-                        className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full font-mono ${
-                          activeParamTab === 'response'
-                            ? 'bg-black/20 text-background'
-                            : response.status_code >= 200 && response.status_code < 300
-                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                              : response.status_code >= 400
-                                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                                : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                        }`}
-                      >
-                        {response.status_code}
-                      </span>
-                    ) : null}
-                  </button>
-
-                  {/* Tab 7: Client Code */}
-                  <button
-                    type="button"
-                    onClick={() => setActiveParamTab('snippets')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap ${
-                      activeParamTab === 'snippets'
-                        ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                        : 'text-text-muted hover:text-text-base'
-                    }`}
-                  >
-                    <Terminal className="h-3 w-3" />
-                    <span>Client Code</span>
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                      activeParamTab === 'snippets' ? 'bg-black/20 text-background' : 'bg-surface text-text-muted border border-border'
-                    }`}>
-                      {SUPPORTED_LANGUAGES.find((l) => l.id === activeSnippetLang)?.label || 'cURL'}
-                    </span>
-                  </button>
-                </>
-              )}
-            </div>
-
-            {/* Contextual Action Buttons & Mode Switcher */}
-            <div className="flex items-center gap-2 flex-wrap justify-end shrink-0">
-              {activeParamTab === 'params' && (
-                <button
-                  type="button"
-                  onClick={() => handleUpdateParams((prev) => [...prev, { key: '', value: '' }])}
-                  className="text-xs text-accent hover:text-accent-hover font-medium flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>Add Query Param</span>
-                </button>
-              )}
-
-              {activeParamTab === 'headers' && (
-                <button
-                  type="button"
-                  onClick={() => setHeaders((prev) => [...prev, { key: '', value: '' }])}
-                  className="text-xs text-accent hover:text-accent-hover font-medium flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>Add Header</span>
-                </button>
-              )}
-
-              {activeParamTab === 'body' && (
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleFormatRequestBody}
-                    className="text-xs text-text-base hover:text-accent flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
-                    title="Pretty-format JSON syntax"
-                  >
-                    <Sparkles className="h-3 w-3 text-accent" />
-                    <span>Format JSON</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRequestBody('')}
-                    className="text-xs text-text-muted hover:text-rose-400 flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
-                    title="Clear body"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                    <span>Clear</span>
-                  </button>
-                </div>
-              )}
-
-              {activeParamTab === 'response' && Boolean(response?.data) && (
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={handleCopyJson}
-                    className="text-xs text-text-base hover:text-accent flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
-                    title="Copy full JSON"
-                  >
-                    {copiedJson ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5 text-text-muted" />}
-                    <span>{copiedJson ? 'Copied' : 'Copy JSON'}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleDownloadJson}
-                    className="text-xs text-text-base hover:text-accent flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
-                    title="Download JSON file"
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                    <span>Export</span>
-                  </button>
-                </div>
-              )}
-
-              {activeParamTab === 'snippets' && (
-                <button
-                  type="button"
-                  onClick={handleCopySnippet}
-                  className="text-xs text-text-base hover:text-accent flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
-                  title="Copy integration code"
-                >
-                  {copiedSnippet ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5 text-text-muted" />}
-                  <span>{copiedSnippet ? 'Copied' : 'Copy Code'}</span>
-                </button>
-              )}
-
-              {activeParamTab === 'auth' && authType !== 'none' && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAuthType('none');
-                    setApiKeyValue('');
-                    setBearerToken('');
-                    setBasicUsername('');
-                    setBasicPassword('');
-                  }}
-                  className="text-xs text-text-muted hover:text-rose-400 font-medium flex items-center gap-1 px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  <span>Clear Auth</span>
-                </button>
-              )}
-
-              {activeParamTab === 'settings' && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRequestTimeout(10000);
-                    setFollowRedirects(true);
-                    setBypassCache(false);
-                  }}
-                  className="text-xs text-text-muted hover:text-text-base flex items-center gap-1 px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
-                >
-                  <span>Reset Defaults</span>
-                </button>
-              )}
-
-              {/* Workbench Mode Toggle: Tabs vs Split */}
-              <div className="flex items-center bg-surface-elevated p-0.5 rounded-xl border border-border ml-1 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => handleSetWorkbenchLayout('tabs')}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-                    workbenchLayout === 'tabs'
-                      ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                      : 'text-text-muted hover:text-text-base'
-                  }`}
-                  title="Single Tabbed Workbench"
-                >
-                  <LayoutTemplate className="h-3 w-3" />
-                  <span className="hidden sm:inline">Tabs</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSetWorkbenchLayout('split')}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-                    workbenchLayout === 'split'
-                      ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                      : 'text-text-muted hover:text-text-base'
-                  }`}
-                  title="Split Multi-Pane Layout"
-                >
-                  <Columns className="h-3 w-3" />
-                  <span className="hidden sm:inline">Split</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Tab View 1: Query Params */}
+          {/* Tab 1: Query Params */}
           {activeParamTab === 'params' && (
-            params.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                {params.map((p, index) => (
-                  <div key={index} className="flex items-center gap-1.5 bg-surface-elevated px-3 py-2 rounded-xl border border-border hover:border-border-light transition-all">
-                    <input
-                      type="text"
-                      placeholder="key"
-                      value={p.key}
-                      spellCheck={false}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        handleUpdateParams((prev) => {
-                          const copy = [...prev];
-                          copy[index] = { ...copy[index], key: val };
-                          return copy;
-                        });
-                      }}
-                      className="w-24 bg-transparent text-xs font-mono text-accent font-medium outline-none placeholder:text-text-muted/40"
-                    />
-                    <span className="text-text-muted/60 font-mono text-xs">=</span>
-                    <input
-                      type="text"
-                      placeholder="value"
-                      value={p.value}
-                      spellCheck={false}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        handleUpdateParams((prev) => {
-                          const copy = [...prev];
-                          copy[index] = { ...copy[index], value: val };
-                          return copy;
-                        });
-                      }}
-                      className="flex-1 bg-transparent text-xs font-mono text-text-base outline-none placeholder:text-text-muted/40"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateParams((prev) => prev.filter((_, i) => i !== index))}
-                      className="text-text-muted hover:text-rose-400 p-1 rounded-lg hover:bg-rose-500/10 transition-colors cursor-pointer"
-                      title="Remove parameter"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="p-4 rounded-xl bg-surface-elevated/40 border border-border border-dashed flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-text-muted">
-                <div>
-                  <span className="font-semibold text-text-base">No query parameters attached.</span>
-                  <p className="text-[11px] text-text-muted mt-0.5">Parameters will automatically sync with the URL bar above.</p>
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => handleUpdateParams((prev) => [...prev, { key: 'limit', value: '10' }])}
-                    className="text-[11px] font-mono px-2 py-1 rounded-lg bg-surface border border-border hover:border-accent text-text-base transition-colors cursor-pointer"
-                  >
-                    + limit=10
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleUpdateParams((prev) => [...prev, { key: 'format', value: 'json' }])}
-                    className="text-[11px] font-mono px-2 py-1 rounded-lg bg-surface border border-border hover:border-accent text-text-base transition-colors cursor-pointer"
-                  >
-                    + format=json
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleUpdateParams((prev) => [...prev, { key: 'page', value: '1' }])}
-                    className="text-[11px] font-mono px-2 py-1 rounded-lg bg-surface border border-border hover:border-accent text-text-base transition-colors cursor-pointer"
-                  >
-                    + page=1
-                  </button>
-                </div>
-              </div>
-            )
+            <ParamsTab params={params} onUpdateParams={handleUpdateParams} />
           )}
 
-          {/* Tab View 2: Auth */}
-          {activeParamTab === 'auth' && (
-            <div className="p-4 rounded-xl bg-surface-elevated/40 border border-border space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/60">
-                <div>
-                  <span className="text-xs font-bold text-text-base">Authorization Type</span>
-                  <p className="text-[11px] text-text-muted mt-0.5">Configure authentication headers or API keys for remote endpoint authorization.</p>
-                </div>
-
-                {/* Auth Type Pills */}
-                <div className="flex items-center gap-1.5 bg-surface p-1 rounded-xl border border-border overflow-x-auto scrollbar-none">
-                  {(['none', 'apiKey', 'bearer', 'basic'] as const).map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setAuthType(t)}
-                      className={`px-3 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer capitalize ${
-                        authType === t
-                          ? 'bg-accent text-background font-bold shadow-sm'
-                          : 'text-text-muted hover:text-text-base'
-                      }`}
-                    >
-                      {t === 'none' ? 'No Auth' : t === 'apiKey' ? 'API Key' : t === 'bearer' ? 'Bearer Token' : 'Basic Auth'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* No Auth State */}
-              {authType === 'none' && (
-                <div className="flex items-center justify-between text-xs text-text-muted py-2">
-                  <span>This request does not use any authentication credentials.</span>
-                  {api.auth_type !== 'none' && (
-                    <button
-                      type="button"
-                      onClick={() => setAuthType('apiKey')}
-                      className="text-accent hover:underline flex items-center gap-1 font-medium cursor-pointer"
-                    >
-                      <KeyRound className="h-3.5 w-3.5" />
-                      <span>This API lists {api.auth_type}. Click to configure API Key.</span>
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {/* API Key View */}
-              {authType === 'apiKey' && (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-mono text-text-muted mb-1">Key Name</label>
-                    <input
-                      type="text"
-                      placeholder="X-API-Key or api_key"
-                      value={apiKeyName}
-                      onChange={(e) => setApiKeyName(e.target.value)}
-                      spellCheck={false}
-                      className="w-full bg-surface border border-border rounded-xl px-3 py-2 text-xs font-mono text-text-base focus:outline-none focus:border-accent"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-mono text-text-muted mb-1">Key Value</label>
-                    <div className="relative flex items-center">
-                      <input
-                        type={showSecret ? 'text' : 'password'}
-                        placeholder="Paste your developer key..."
-                        value={apiKeyValue}
-                        onChange={(e) => setApiKeyValue(e.target.value)}
-                        spellCheck={false}
-                        className="w-full bg-surface border border-border rounded-xl px-3 py-2 pr-9 text-xs font-mono text-text-base focus:outline-none focus:border-accent"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowSecret(!showSecret)}
-                        className="absolute right-2.5 text-text-muted hover:text-text-base cursor-pointer"
-                        title={showSecret ? 'Hide key' : 'Show key'}
-                      >
-                        {showSecret ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-mono text-text-muted mb-1">Pass Key In</label>
-                    <div className="flex items-center gap-1.5 bg-surface p-1 rounded-xl border border-border h-[38px]">
-                      <button
-                        type="button"
-                        onClick={() => setApiKeyLocation('header')}
-                        className={`flex-1 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
-                          apiKeyLocation === 'header' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
-                        }`}
-                      >
-                        Header
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setApiKeyLocation('query')}
-                        className={`flex-1 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
-                          apiKeyLocation === 'query' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
-                        }`}
-                      >
-                        Query Param
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Bearer Token View */}
-              {authType === 'bearer' && (
-                <div className="space-y-2">
-                  <label className="block text-[11px] font-mono text-text-muted">Bearer Token</label>
-                  <div className="relative flex items-center">
-                    <input
-                      type={showSecret ? 'text' : 'password'}
-                      placeholder="eyJhbGciOi... or OAuth token"
-                      value={bearerToken}
-                      onChange={(e) => setBearerToken(e.target.value)}
-                      spellCheck={false}
-                      className="w-full bg-surface border border-border rounded-xl px-3.5 py-2 pr-9 text-xs font-mono text-text-base focus:outline-none focus:border-accent"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowSecret(!showSecret)}
-                      className="absolute right-3 text-text-muted hover:text-text-base cursor-pointer"
-                      title={showSecret ? 'Hide token' : 'Show token'}
-                    >
-                      {showSecret ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                    </button>
-                  </div>
-                  <p className="text-[11px] font-mono text-text-muted">
-                    Sends header: <span className="text-accent">Authorization: Bearer {bearerToken ? '••••••••' : '<token>'}</span>
-                  </p>
-                </div>
-              )}
-
-              {/* Basic Auth View */}
-              {authType === 'basic' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-mono text-text-muted mb-1">Username</label>
-                    <input
-                      type="text"
-                      placeholder="Username / Client ID"
-                      value={basicUsername}
-                      onChange={(e) => setBasicUsername(e.target.value)}
-                      spellCheck={false}
-                      className="w-full bg-surface border border-border rounded-xl px-3 py-2 text-xs font-mono text-text-base focus:outline-none focus:border-accent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-mono text-text-muted mb-1">Password</label>
-                    <input
-                      type="password"
-                      placeholder="Password / Secret"
-                      value={basicPassword}
-                      onChange={(e) => setBasicPassword(e.target.value)}
-                      spellCheck={false}
-                      className="w-full bg-surface border border-border rounded-xl px-3 py-2 text-xs font-mono text-text-base focus:outline-none focus:border-accent"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Tab View 3: Headers */}
+          {/* Tab 2: Headers */}
           {activeParamTab === 'headers' && (
-            headers.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                {headers.map((h, index) => (
-                  <div key={index} className="flex items-center gap-1.5 bg-surface-elevated px-3 py-2 rounded-xl border border-border hover:border-border-light transition-all">
-                    <input
-                      type="text"
-                      placeholder="Header-Name"
-                      value={h.key}
-                      spellCheck={false}
-                      onChange={(e) => {
-                        const updated = [...headers];
-                        updated[index].key = e.target.value;
-                        setHeaders(updated);
-                      }}
-                      className="w-28 bg-transparent text-xs font-mono text-emerald-400 font-medium outline-none placeholder:text-text-muted/40"
-                    />
-                    <span className="text-text-muted/60 font-mono text-xs">:</span>
-                    <input
-                      type="text"
-                      placeholder="Value"
-                      value={h.value}
-                      spellCheck={false}
-                      onChange={(e) => {
-                        const updated = [...headers];
-                        updated[index].value = e.target.value;
-                        setHeaders(updated);
-                      }}
-                      className="flex-1 bg-transparent text-xs font-mono text-text-base outline-none placeholder:text-text-muted/40"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setHeaders((prev) => prev.filter((_, i) => i !== index))}
-                      className="text-text-muted hover:text-rose-400 p-1 rounded-lg hover:bg-rose-500/10 transition-colors cursor-pointer"
-                      title="Remove header"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="p-4 rounded-xl bg-surface-elevated/40 border border-border border-dashed flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-text-muted">
-                <div>
-                  <span className="font-semibold text-text-base">No custom headers specified.</span>
-                  <p className="text-[11px] text-text-muted mt-0.5">Standard HTTP headers (Accept, User-Agent) are automatically supplied by the proxy.</p>
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => setHeaders((prev) => [...prev, { key: 'Accept', value: 'application/json' }])}
-                    className="text-[11px] font-mono px-2 py-1 rounded-lg bg-surface border border-border hover:border-accent text-text-base transition-colors cursor-pointer"
-                  >
-                    + Accept: application/json
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setHeaders((prev) => [...prev, { key: 'User-Agent', value: 'FreeApiHub-Client/1.0' }])}
-                    className="text-[11px] font-mono px-2 py-1 rounded-lg bg-surface border border-border hover:border-accent text-text-base transition-colors cursor-pointer"
-                  >
-                    + User-Agent
-                  </button>
-                </div>
-              </div>
-            )
+            <HeadersTab headers={headers} onSetHeaders={setHeaders} />
           )}
 
-          {/* Tab View 4: Body */}
+          {/* Tab 3: Body */}
           {activeParamTab === 'body' && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs text-text-muted">
-                <span>Request Payload Body (JSON for POST/PUT/PATCH):</span>
-                <div className="flex items-center gap-1.5 text-[11px]">
-                  <span>Templates:</span>
-                  <button
-                    type="button"
-                    onClick={() => setRequestBody(JSON.stringify({ query: 'search', limit: 10 }, null, 2))}
-                    className="text-accent hover:underline cursor-pointer"
-                  >
-                    Query
-                  </button>
-                  <span>•</span>
-                  <button
-                    type="button"
-                    onClick={() => setRequestBody(JSON.stringify({ name: 'Test Item', status: 'active' }, null, 2))}
-                    className="text-accent hover:underline cursor-pointer"
-                  >
-                    Object
-                  </button>
-                  <span>•</span>
-                  <button
-                    type="button"
-                    onClick={() => setRequestBody('{\n  \n}')}
-                    className="text-accent hover:underline cursor-pointer"
-                  >
-                    Empty
-                  </button>
-                </div>
-              </div>
-              <textarea
-                value={requestBody}
-                onChange={(e) => setRequestBody(e.target.value)}
-                placeholder={'{\n  "key": "value"\n}'}
-                rows={4}
-                spellCheck={false}
-                className="w-full bg-surface-elevated border border-border rounded-xl p-3 text-xs font-mono text-text-base placeholder:text-text-muted/40 focus:outline-none focus:border-accent resize-none transition-all"
+            <BodyTab requestBody={requestBody} onSetRequestBody={setRequestBody} />
+          )}
+
+          {/* Tab 4: Auth */}
+          {activeParamTab === 'auth' && (
+            <AuthTab
+              apiAuthType={api?.auth_type}
+              authType={authType}
+              onSetAuthType={setAuthType}
+              apiKeyName={apiKeyName}
+              onSetApiKeyName={setApiKeyName}
+              apiKeyValue={apiKeyValue}
+              onSetApiKeyValue={setApiKeyValue}
+              apiKeyLocation={apiKeyLocation}
+              onSetApiKeyLocation={setApiKeyLocation}
+              bearerToken={bearerToken}
+              onSetBearerToken={setBearerToken}
+              basicUsername={basicUsername}
+              onSetBasicUsername={setBasicUsername}
+              basicPassword={basicPassword}
+              onSetBasicPassword={setBasicPassword}
+              showSecret={showSecret}
+              onToggleShowSecret={() => setShowSecret(!showSecret)}
+            />
+          )}
+
+          {/* Tab 5: Settings */}
+          {activeParamTab === 'settings' && (
+            <SettingsTab
+              requestTimeout={requestTimeout}
+              onSetRequestTimeout={setRequestTimeout}
+              bypassCache={bypassCache}
+              onToggleBypassCache={() => setBypassCache(!bypassCache)}
+              followRedirects={followRedirects}
+              onToggleFollowRedirects={() => setFollowRedirects(!followRedirects)}
+            />
+          )}
+
+          {/* Tab 6: Response Payload (when in tabs mode) */}
+          {workbenchLayout === 'tabs' && activeParamTab === 'response' && (
+            <div className="pt-1">
+              <ResponseInspector
+                response={response}
+                isLoading={isLoading}
+                endpointUrl={endpointUrl}
+                api={api}
+                presets={presets}
+                onSelectPreset={handleSelectPreset}
+                history={history}
+                onSelectHistoryItem={handleSelectHistoryItem}
+                onRunTest={handleRunTest}
+                onClearHistory={() => {
+                  setHistory([]);
+                  sessionStorage.removeItem(`fah_history_${api?.slug || 'api'}`);
+                }}
+                currentHistoryId={currentHistoryId}
+                isUnified={true}
+                setEndpointUrl={setEndpointUrl}
               />
             </div>
           )}
 
-          {/* Tab View 5: Settings */}
-          {activeParamTab === 'settings' && (
-            <div className="p-4 rounded-xl bg-surface-elevated/40 border border-border grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-sans">
-              {/* Timeout Setting */}
-              <div className="space-y-1.5">
-                <span className="font-bold text-text-base block">Request Timeout</span>
-                <p className="text-[11px] text-text-muted">Maximum duration before closing connection.</p>
-                <div className="flex items-center gap-1 pt-1">
-                  {[5000, 10000, 30000, 60000].map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setRequestTimeout(t)}
-                      className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all cursor-pointer ${
-                        requestTimeout === t
-                          ? 'bg-accent text-background font-bold shadow-sm'
-                          : 'bg-surface text-text-muted hover:text-text-base border border-border'
-                      }`}
-                    >
-                      {t / 1000}s
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Cache Bypass Setting */}
-              <div className="space-y-1.5">
-                <span className="font-bold text-text-base block">Bypass Cache</span>
-                <p className="text-[11px] text-text-muted">Send Cache-Control: no-cache to force fresh upstream data.</p>
-                <button
-                  type="button"
-                  onClick={() => setBypassCache(!bypassCache)}
-                  className={`mt-1 inline-flex items-center gap-2 px-3 py-1 rounded-xl font-mono text-xs font-semibold border transition-all cursor-pointer ${
-                    bypassCache
-                      ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
-                      : 'bg-surface text-text-muted border-border hover:text-text-base'
-                  }`}
-                >
-                  <span className={`h-2 w-2 rounded-full ${bypassCache ? 'bg-amber-400 animate-pulse' : 'bg-text-muted/40'}`} />
-                  <span>{bypassCache ? 'Bypass Active' : 'Default Cache'}</span>
-                </button>
-              </div>
-
-              {/* Follow Redirects Setting */}
-              <div className="space-y-1.5">
-                <span className="font-bold text-text-base block">Follow Redirects</span>
-                <p className="text-[11px] text-text-muted">Automatically follow HTTP 301 and 302 responses.</p>
-                <button
-                  type="button"
-                  onClick={() => setFollowRedirects(!followRedirects)}
-                  className={`mt-1 inline-flex items-center gap-2 px-3 py-1 rounded-xl font-mono text-xs font-semibold border transition-all cursor-pointer ${
-                    followRedirects
-                      ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-                      : 'bg-surface text-text-muted border-border hover:text-text-base'
-                  }`}
-                >
-                  <span className={`h-2 w-2 rounded-full ${followRedirects ? 'bg-emerald-400' : 'bg-text-muted/40'}`} />
-                  <span>{followRedirects ? 'Follow (Enabled)' : 'Do Not Follow'}</span>
-                </button>
-              </div>
-
-              {/* CORS Proxy Status */}
-              <div className="space-y-1.5">
-                <span className="font-bold text-text-base block">Proxy CORS Relay</span>
-                <p className="text-[11px] text-text-muted">Bypasses browser CORS restrictions via server relay.</p>
-                <div className="mt-1 inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-mono font-medium">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  <span>Active & Verified</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Tab View 6: Response Payload (when in tabs mode) */}
-          {workbenchLayout === 'tabs' && activeParamTab === 'response' && (
-            <div className="pt-1">
-              {renderResponseInspector(true)}
-            </div>
-          )}
-
-          {/* Tab View 7: Integration Client Code (when in tabs mode) */}
+          {/* Tab 7: Integration Client Code (when in tabs mode) */}
           {workbenchLayout === 'tabs' && activeParamTab === 'snippets' && (
             <div className="pt-1">
-              {renderSnippetsPanel(true)}
+              <CodeSnippetsTab
+                activeSnippetLang={activeSnippetLang}
+                onSetActiveSnippetLang={setActiveSnippetLang}
+                snippetCode={getActiveSnippet()}
+                copiedSnippet={copiedSnippet}
+                onCopySnippet={handleCopySnippet}
+                isUnified={true}
+              />
             </div>
           )}
         </div>
@@ -2555,8 +1203,36 @@ export const Playground: React.FC<PlaygroundProps> = ({
                 : 'grid-cols-1 lg:grid-cols-2'
           }`}
         >
-          {renderResponseInspector(false)}
-          {viewLayout !== 'focus' && renderSnippetsPanel(false)}
+          <ResponseInspector
+            response={response}
+            isLoading={isLoading}
+            endpointUrl={endpointUrl}
+            api={api}
+            presets={presets}
+            onSelectPreset={handleSelectPreset}
+            history={history}
+            onSelectHistoryItem={handleSelectHistoryItem}
+            onRunTest={handleRunTest}
+            onClearHistory={() => {
+              setHistory([]);
+              sessionStorage.removeItem(`fah_history_${api?.slug || 'api'}`);
+            }}
+            currentHistoryId={currentHistoryId}
+            isUnified={false}
+            viewLayout={viewLayout}
+            onSetViewLayout={setViewLayout}
+            setEndpointUrl={setEndpointUrl}
+          />
+          {viewLayout !== 'focus' && (
+            <CodeSnippetsTab
+              activeSnippetLang={activeSnippetLang}
+              onSetActiveSnippetLang={setActiveSnippetLang}
+              snippetCode={getActiveSnippet()}
+              copiedSnippet={copiedSnippet}
+              onCopySnippet={handleCopySnippet}
+              isUnified={false}
+            />
+          )}
         </div>
       )}
     </div>
