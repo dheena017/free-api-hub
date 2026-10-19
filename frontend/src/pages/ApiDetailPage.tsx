@@ -383,7 +383,7 @@ export const ApiDetailPage: React.FC = () => {
               title={`Previous API: ${prevApi.name}`}
             >
               <ChevronLeft className="h-3.5 w-3.5" />
-              <span className="truncate max-w-[120px]">{prevApi.name}</span>
+              <span className="truncate max-w-[160px] sm:max-w-[200px]">{prevApi.name}</span>
             </Link>
           )}
           {nextApi && (
@@ -392,7 +392,7 @@ export const ApiDetailPage: React.FC = () => {
               className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-elevated border border-border text-text-muted hover:text-text-base transition-colors text-xs"
               title={`Next API: ${nextApi.name}`}
             >
-              <span className="truncate max-w-[120px]">{nextApi.name}</span>
+              <span className="truncate max-w-[160px] sm:max-w-[200px]">{nextApi.name}</span>
               <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           )}

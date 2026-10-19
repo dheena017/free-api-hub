@@ -1,5 +1,6 @@
 from app.security import MAX_REQUEST_BODY_BYTES
 import asyncio
+import base64
 import json
 import os
 import time
@@ -634,16 +635,23 @@ class CatalogService:
                 timeout=float(settings.PROXY_TIMEOUT_SECONDS)
             )
 
-            # Attempt to parse json
+            # Attempt to parse response body (handling JSON, binary media/images, and text)
             data = None
             if raw_body:
-                try:
-                    data = json.loads(raw_body.decode("utf-8"))
-                except Exception:
+                content_type = res_headers.get("content-type", "").lower()
+                is_media = any(content_type.startswith(t) for t in ("image/", "audio/", "video/", "application/pdf"))
+                if is_media:
+                    b64 = base64.b64encode(raw_body).decode("ascii")
+                    mime = content_type.split(";")[0].strip() or "image/png"
+                    data = f"data:{mime};base64,{b64}"
+                else:
                     try:
-                        data = raw_body.decode("utf-8", errors="replace")
+                        data = json.loads(raw_body.decode("utf-8"))
                     except Exception:
-                        data = str(raw_body)
+                        try:
+                            data = raw_body.decode("utf-8", errors="replace")
+                        except Exception:
+                            data = str(raw_body)
 
             error_msg = None
             if status_code == 401:

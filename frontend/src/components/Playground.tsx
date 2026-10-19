@@ -193,6 +193,47 @@ const HTTP_METHOD_OPTIONS: SelectOption[] = [
   { value: 'PATCH', label: 'PATCH' }
 ];
 
+const POPULAR_LANG_LIST: Array<{ id: SnippetLanguage; label: string }> = [
+  { id: 'curl', label: 'cURL' },
+  { id: 'js', label: 'Fetch' },
+  { id: 'axios', label: 'Axios' },
+  { id: 'ts', label: 'TypeScript' },
+  { id: 'python', label: 'Python' },
+  { id: 'go', label: 'Go' }
+];
+
+function extractQueryParamsList(url: string): Array<{ key: string; value: string }> {
+  try {
+    const qIndex = url.indexOf('?');
+    if (qIndex === -1) return [];
+    const queryString = url.slice(qIndex + 1);
+    const searchParams = new URLSearchParams(queryString);
+    const list: Array<{ key: string; value: string }> = [];
+    searchParams.forEach((value, key) => {
+      list.push({ key, value });
+    });
+    return list;
+  } catch {
+    return [];
+  }
+}
+
+function applyParamsToUrl(url: string, newParams: Array<{ key: string; value: string }>): string {
+  try {
+    const qIndex = url.indexOf('?');
+    const basePath = qIndex !== -1 ? url.slice(0, qIndex) : url;
+    const validParams = newParams.filter((p) => p.key.trim());
+    if (validParams.length === 0) return basePath;
+    const searchParams = new URLSearchParams();
+    validParams.forEach((p) => {
+      searchParams.set(p.key.trim(), p.value);
+    });
+    return `${basePath}?${searchParams.toString()}`;
+  } catch {
+    return url;
+  }
+}
+
 interface PlaygroundProps {
   api: ApiItem;
   initialEndpoint?: string;
@@ -217,6 +258,12 @@ export const Playground: React.FC<PlaygroundProps> = ({
     : '';
   const fullInitialUrl = `${initialUrl}${initialEndpointStr}`;
 
+  // Presets State
+  const presets = useMemo(() => getEndpointPresets(api), [api]);
+  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(() => {
+    return presets.length > 0 ? presets[0].id : null;
+  });
+
   // Request State
   const [method, setMethod] = useState(initialMethod || api?.endpoints?.[0]?.method || 'GET');
   const [endpointUrl, setEndpointUrl] = useState(() => {
@@ -231,8 +278,13 @@ export const Playground: React.FC<PlaygroundProps> = ({
     if (initialParams) {
       return Object.entries(initialParams).map(([key, value]) => ({ key, value }));
     }
-    if (api?.default_params) {
+    if (api?.default_params && Object.keys(api.default_params).length > 0) {
       return Object.entries(api.default_params).map(([key, value]) => ({ key, value }));
+    }
+    const fromUrl = extractQueryParamsList(fullInitialUrl);
+    if (fromUrl.length > 0) return fromUrl;
+    if (presets[0]?.params) {
+      return Object.entries(presets[0].params).map(([key, value]) => ({ key, value }));
     }
     return [];
   });
@@ -247,15 +299,37 @@ export const Playground: React.FC<PlaygroundProps> = ({
     initialBody ? 'body' : 'params'
   );
 
+  // Synchronize params changes to URL
+  const handleUpdateParams = (
+    updater: (prev: Array<{ key: string; value: string }>) => Array<{ key: string; value: string }>
+  ) => {
+    setParams((prev) => {
+      const updated = updater(prev);
+      setEndpointUrl((curUrl) => applyParamsToUrl(curUrl, updated));
+      return updated;
+    });
+  };
+
+  // Synchronize URL change to params
+  const handleEndpointUrlChange = (newUrl: string) => {
+    setEndpointUrl(newUrl);
+    if (urlValidationError) setUrlValidationError(null);
+    const extracted = extractQueryParamsList(newUrl);
+    setParams(extracted);
+  };
+
   // Sync when initial props change
   useEffect(() => {
     if (initialEndpoint) {
       const base = (api?.base_url || '').replace(/\/+$/, '');
-      setEndpointUrl(
-        initialEndpoint.startsWith('http')
-          ? initialEndpoint
-          : `${base}${initialEndpoint.startsWith('/') ? initialEndpoint : `/${initialEndpoint}`}`
-      );
+      const fullUrl = initialEndpoint.startsWith('http')
+        ? initialEndpoint
+        : `${base}${initialEndpoint.startsWith('/') ? initialEndpoint : `/${initialEndpoint}`}`;
+      setEndpointUrl(fullUrl);
+      if (!initialParams) {
+        const fromUrl = extractQueryParamsList(fullUrl);
+        if (fromUrl.length > 0) setParams(fromUrl);
+      }
     }
     if (initialMethod) {
       setMethod(initialMethod);
@@ -272,10 +346,6 @@ export const Playground: React.FC<PlaygroundProps> = ({
   // Response State
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState<ProxyResponse | null>(null);
-
-  // Layout & Presets State
-  const presets = useMemo(() => getEndpointPresets(api), [api]);
-  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [viewLayout, setViewLayout] = useState<'split' | 'focus' | 'stacked'>('split');
   const [isCurlModalOpen, setIsCurlModalOpen] = useState(false);
 
@@ -801,7 +871,7 @@ export const Playground: React.FC<PlaygroundProps> = ({
             <input
               type="text"
               value={endpointUrl}
-              onChange={(e) => setEndpointUrl(e.target.value)}
+              onChange={(e) => handleEndpointUrlChange(e.target.value)}
               className="w-full bg-[#1F1F1F] border border-[#3C4043] rounded-lg px-3.5 py-2 text-xs font-mono text-slate-100 focus:border-[#8AB4F8] focus:outline-none transition-colors"
               placeholder="https://api.example.com/v1/..."
             />
@@ -877,7 +947,7 @@ export const Playground: React.FC<PlaygroundProps> = ({
             {activeParamTab === 'params' && (
               <button
                 type="button"
-                onClick={() => setParams((prev) => [...prev, { key: '', value: '' }])}
+                onClick={() => handleUpdateParams((prev) => [...prev, { key: '', value: '' }])}
                 className="text-xs text-[#8AB4F8] hover:text-[#A8C7FA] flex items-center gap-1 px-2.5 py-1 rounded bg-[#1F1F1F] hover:bg-[#303134] border border-[#3C4043] transition-colors"
               >
                 <Plus className="h-3 w-3" />
@@ -930,9 +1000,12 @@ export const Playground: React.FC<PlaygroundProps> = ({
                       placeholder="key"
                       value={p.key}
                       onChange={(e) => {
-                        const updated = [...params];
-                        updated[index].key = e.target.value;
-                        setParams(updated);
+                        const val = e.target.value;
+                        handleUpdateParams((prev) => {
+                          const copy = [...prev];
+                          copy[index] = { ...copy[index], key: val };
+                          return copy;
+                        });
                       }}
                       className="w-24 bg-transparent text-xs font-mono text-[#8AB4F8] outline-none placeholder:text-slate-600"
                     />
@@ -942,15 +1015,18 @@ export const Playground: React.FC<PlaygroundProps> = ({
                       placeholder="value"
                       value={p.value}
                       onChange={(e) => {
-                        const updated = [...params];
-                        updated[index].value = e.target.value;
-                        setParams(updated);
+                        const val = e.target.value;
+                        handleUpdateParams((prev) => {
+                          const copy = [...prev];
+                          copy[index] = { ...copy[index], value: val };
+                          return copy;
+                        });
                       }}
                       className="flex-1 bg-transparent text-xs font-mono text-slate-200 outline-none placeholder:text-slate-600"
                     />
                     <button
                       type="button"
-                      onClick={() => setParams((prev) => prev.filter((_, i) => i !== index))}
+                      onClick={() => handleUpdateParams((prev) => prev.filter((_, i) => i !== index))}
                       className="text-slate-500 hover:text-rose-400 p-0.5 rounded transition-colors"
                       title="Remove parameter"
                     >
@@ -1059,7 +1135,7 @@ export const Playground: React.FC<PlaygroundProps> = ({
           }`}
       >
         {/* Response Payload Inspector */}
-        <div className="bg-[#28292A] rounded-2xl border border-[#3C4043] flex flex-col h-[580px] overflow-hidden">
+        <div className="bg-[#28292A] rounded-2xl border border-[#3C4043] flex flex-col min-h-[460px] h-[520px] overflow-hidden">
           {/* Header Bar */}
           <div className="px-4 py-2.5 border-b border-[#3C4043] bg-[#28292A] flex flex-wrap items-center justify-between gap-2">
             {/* Left Title & Status */}
@@ -1158,12 +1234,12 @@ export const Playground: React.FC<PlaygroundProps> = ({
             </div>
           </div>
 
-          {/* Response View Selector Tabs (JSON, Media Preview, Headers, Structure, Types, Raw) */}
-          <div className="px-3 py-1.5 bg-[#232425] border-b border-[#3C4043] flex items-center justify-between gap-2 overflow-x-auto scrollbar-none">
-            <div className="flex items-center gap-1">
+          {/* Response View Selector Tabs (JSON, Preview, Media, Headers, Schema, Types, Raw, History) */}
+          <div className="px-3 py-1.5 bg-[#232425] border-b border-[#3C4043] flex items-center justify-between gap-1 overflow-x-auto scrollbar-none">
+            <div className="flex items-center gap-1 flex-wrap">
               <button
                 onClick={() => setActiveResponseTab('json')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'json'
+                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'json'
                     ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
                     : 'text-slate-400 hover:text-white hover:bg-[#303134]'
                   }`}
@@ -1174,13 +1250,13 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
               <button
                 onClick={() => setActiveResponseTab('preview')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'preview'
+                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'preview'
                     ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
                     : 'text-slate-400 hover:text-white hover:bg-[#303134]'
                   }`}
               >
                 <Globe className="h-3 w-3" />
-                <span>Web Preview</span>
+                <span>Preview</span>
                 {isHtmlResponse && (
                   <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                     HTML
@@ -1190,13 +1266,13 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
               <button
                 onClick={() => setActiveResponseTab('media')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'media'
+                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'media'
                     ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
                     : 'text-slate-400 hover:text-white hover:bg-[#303134]'
                   }`}
               >
                 <ImageIcon className="h-3 w-3" />
-                <span>Media Preview</span>
+                <span>Media</span>
                 {mediaItems.length > 0 && (
                   <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-[#8AB4F8] text-[#1F1F1F]">
                     {mediaItems.length}
@@ -1206,7 +1282,7 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
               <button
                 onClick={() => setActiveResponseTab('headers')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'headers'
+                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'headers'
                     ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
                     : 'text-slate-400 hover:text-white hover:bg-[#303134]'
                   }`}
@@ -1222,30 +1298,30 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
               <button
                 onClick={() => setActiveResponseTab('table')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'table'
+                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'table'
                     ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
                     : 'text-slate-400 hover:text-white hover:bg-[#303134]'
                   }`}
               >
                 <TableIcon className="h-3 w-3" />
-                <span>Structure</span>
+                <span>Schema</span>
               </button>
 
               {/* TypeScript & Schema Tab */}
               <button
                 onClick={() => setActiveResponseTab('types')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'types'
+                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'types'
                     ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
                     : 'text-slate-400 hover:text-white hover:bg-[#303134]'
                   }`}
               >
                 <FileCode className="h-3 w-3" />
-                <span>TS Types</span>
+                <span>Types</span>
               </button>
 
               <button
                 onClick={() => setActiveResponseTab('raw')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'raw'
+                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'raw'
                     ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
                     : 'text-slate-400 hover:text-white hover:bg-[#303134]'
                   }`}
@@ -1256,7 +1332,7 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
               <button
                 onClick={() => setActiveResponseTab('history')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'history'
+                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${activeResponseTab === 'history'
                     ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold'
                     : 'text-slate-400 hover:text-white hover:bg-[#303134]'
                   }`}
@@ -1633,7 +1709,7 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
         {/* Integration Client Code (Hidden if focus mode is active) */}
         {viewLayout !== 'focus' && (
-          <div className="bg-[#28292A] rounded-2xl border border-[#3C4043] flex flex-col h-[580px] overflow-hidden">
+          <div className="bg-[#28292A] rounded-2xl border border-[#3C4043] flex flex-col min-h-[460px] h-[520px] overflow-hidden">
             {/* Header with Language Tabs */}
             <div className="px-4 py-2.5 border-b border-[#3C4043] bg-[#28292A] space-y-2.5">
               <div className="flex items-center justify-between">
@@ -1652,20 +1728,59 @@ export const Playground: React.FC<PlaygroundProps> = ({
                 </button>
               </div>
 
-              {/* Clean Language Pill Selector (no ugly scrollbars) */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-                {SUPPORTED_LANGUAGES.map((lang) => (
-                  <button
-                    key={lang.id}
-                    onClick={() => setActiveSnippetLang(lang.id)}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-medium whitespace-nowrap transition-colors ${activeSnippetLang === lang.id
-                        ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold shadow-sm'
-                        : 'text-slate-400 hover:text-white hover:bg-[#303134]'
+              {/* Clean Language Pill Selector with Quick Selector + Dropdown */}
+              <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-none">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {POPULAR_LANG_LIST.map((lang) => {
+                    const isActive = activeSnippetLang === lang.id;
+                    return (
+                      <button
+                        key={lang.id}
+                        type="button"
+                        onClick={() => setActiveSnippetLang(lang.id)}
+                        className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-medium whitespace-nowrap transition-colors ${
+                          isActive
+                            ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold shadow-sm'
+                            : 'text-slate-400 hover:text-white hover:bg-[#303134]'
+                        }`}
+                      >
+                        {lang.label}
+                      </button>
+                    );
+                  })}
+
+                  <div className="relative">
+                    <select
+                      value={activeSnippetLang}
+                      onChange={(e) => setActiveSnippetLang(e.target.value as SnippetLanguage)}
+                      className={`px-2 py-1 rounded-md text-[11px] font-mono transition-colors outline-none cursor-pointer border ${
+                        !POPULAR_LANG_LIST.some((l) => l.id === activeSnippetLang)
+                          ? 'bg-[#8AB4F8] text-[#1F1F1F] font-bold border-[#8AB4F8]'
+                          : 'bg-[#1F1F1F] text-slate-300 hover:text-white border-[#3C4043] hover:border-[#5F6368]'
                       }`}
-                  >
-                    {lang.label}
-                  </button>
-                ))}
+                      title="Select from all supported languages"
+                    >
+                      <optgroup label="Popular">
+                        <option value="curl">cURL</option>
+                        <option value="js">JavaScript (Fetch)</option>
+                        <option value="axios">Node.js (Axios)</option>
+                        <option value="ts">TypeScript</option>
+                        <option value="python">Python (requests)</option>
+                        <option value="go">Go (net/http)</option>
+                      </optgroup>
+                      <optgroup label="More Languages">
+                        <option value="python-async">Python (httpx async)</option>
+                        <option value="php">PHP (cURL)</option>
+                        <option value="java">Java (HttpClient)</option>
+                        <option value="csharp">C# (.NET)</option>
+                        <option value="rust">Rust (reqwest)</option>
+                        <option value="dart">Dart / Flutter</option>
+                        <option value="swift">Swift (URLSession)</option>
+                        <option value="ruby">Ruby (Net::HTTP)</option>
+                      </optgroup>
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
 
