@@ -2,9 +2,8 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ApiItem, CategorySummary } from '../types/api';
 import { fetchApis, fetchCategories } from '../api/client';
-import { ApiCard } from '../components/ApiCard';
-import { SkeletonGrid } from '../components/SkeletonCard';
-import { CustomSelect } from '../components/CustomSelect';
+import { ApiCard } from '../components/api-detail';
+import { SkeletonGrid, CustomSelect } from '../components/ui';
 import { useBookmarks } from '../utils/useBookmarks';
 import {
   Search,

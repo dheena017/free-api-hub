@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ApiItem, CatalogStats, CategorySummary } from '../types/api';
 import { fetchApis, fetchStats, fetchCategories } from '../api/client';
-import { ApiCard } from '../components/ApiCard';
-import { SearchFilter } from '../components/SearchFilter';
-import { Logo } from '../components/Logo';
+import { ApiCard } from '../components/api-detail';
+import { SearchFilter } from '../components/ui';
+import { Logo } from '../components/layout';
 import { useBookmarks } from '../utils/useBookmarks';
 import {
   CloudSun,
@@ -48,7 +48,7 @@ import {
   Trophy,
   PawPrint
 } from 'lucide-react';
-import { SkeletonGrid } from '../components/SkeletonCard';
+import { SkeletonGrid } from '../components/ui';
 import { useHistory } from '../utils/useHistory';
 
 export const HomePage: React.FC = () => {

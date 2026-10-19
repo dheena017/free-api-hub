@@ -1,6 +1,6 @@
 import React from 'react';
 import { ApiItem } from '../../types/api';
-import { Playground } from '../Playground';
+import { Playground } from '../playground';
 
 export interface PlaygroundTabProps {
   api: ApiItem;

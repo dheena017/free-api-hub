@@ -1,6 +1,6 @@
 import React from 'react';
 import { Search, X } from 'lucide-react';
-import { CURATED_COLLECTIONS } from '../types/collections';
+import { CURATED_COLLECTIONS } from '../../types/collections';
 
 interface SearchFilterProps {
   searchTerm: string;

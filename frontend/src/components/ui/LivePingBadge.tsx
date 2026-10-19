@@ -1,5 +1,5 @@
 import React from 'react';
-import { HealthStatus } from '../types/api';
+import { HealthStatus } from '../../types/api';
 
 interface LivePingBadgeProps {
   status: HealthStatus;

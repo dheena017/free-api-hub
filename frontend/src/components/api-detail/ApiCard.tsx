@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ApiItem } from '../types/api';
-import { LivePingBadge } from './LivePingBadge';
-import { useBookmarks } from '../utils/useBookmarks';
+import { ApiItem } from '../../types/api';
+import { LivePingBadge } from '../ui/LivePingBadge';
+import { useBookmarks } from '../../utils/useBookmarks';
 import {
   ArrowRight,
   Star,

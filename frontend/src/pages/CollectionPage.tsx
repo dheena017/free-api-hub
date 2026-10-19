@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ApiItem } from '../types/api';
 import { fetchApis } from '../api/client';
-import { ApiCard } from '../components/ApiCard';
-import { SkeletonGrid } from '../components/SkeletonCard';
-import { CustomSelect, SelectOption } from '../components/CustomSelect';
+import { ApiCard } from '../components/api-detail';
+import { SkeletonGrid, CustomSelect, SelectOption } from '../components/ui';
 import {
   FolderTree,
   Zap,

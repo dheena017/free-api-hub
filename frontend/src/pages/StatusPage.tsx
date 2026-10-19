@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { CatalogStats, ApiItem } from '../types/api';
 import { fetchStats, fetchApis, checkApiHealth, checkBatchHealth } from '../api/client';
-import { LivePingBadge } from '../components/LivePingBadge';
+import { LivePingBadge, CustomSelect, SelectOption } from '../components/ui';
 import { formatLatencyBadge } from '../utils/codeSnippets';
-import { CustomSelect, SelectOption } from '../components/CustomSelect';
 import {
   Activity,
   ShieldCheck,
@@ -27,7 +26,7 @@ import {
   ChevronsRight,
   FilterX
 } from 'lucide-react';
-import { SkeletonCard } from '../components/SkeletonCard';
+import { SkeletonCard } from '../components/ui';
 
 const STATUS_SORT_OPTIONS: SelectOption[] = [
   { value: 'uptime', label: 'Highest Uptime %' },

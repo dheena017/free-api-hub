@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { parseCurlCommand, ParsedCurl } from '../utils/curlParser';
+import { parseCurlCommand, ParsedCurl } from '../../utils/curlParser';
 import { Terminal, X, AlertCircle, ArrowRight, Sparkles } from 'lucide-react';
 
 interface CurlImportModalProps {

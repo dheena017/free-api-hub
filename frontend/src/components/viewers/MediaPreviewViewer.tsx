@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MediaItem } from '../utils/mediaExtractor';
+import { MediaItem } from '../../utils/mediaExtractor';
 import {
   Image as ImageIcon,
   Video,

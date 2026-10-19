@@ -1,5 +1,5 @@
 import React from 'react';
-import { CategorySummary } from '../types/api';
+import { CategorySummary } from '../../types/api';
 import { Filter, RotateCcw, Shield, Tag, DollarSign, ArrowUpDown } from 'lucide-react';
 import { CustomSelect, SelectOption } from './CustomSelect';
 

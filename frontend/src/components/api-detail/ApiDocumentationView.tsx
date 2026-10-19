@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ApiItem } from '../types/api';
-import { getFullApiDocumentation, ApiEndpointDoc } from '../utils/apiDocumentationData';
+import { ApiItem } from '../../types/api';
+import { getFullApiDocumentation, ApiEndpointDoc } from '../../utils/apiDocumentationData';
 import {
   Globe,
   KeyRound,
@@ -18,7 +18,7 @@ import {
   Sparkles,
   Terminal
 } from 'lucide-react';
-import { useToast } from '../utils/useToast';
+import { useToast } from '../../utils/useToast';
 
 interface ApiDocumentationViewProps {
   api: ApiItem;

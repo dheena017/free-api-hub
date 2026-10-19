@@ -1,22 +1,24 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ApiItem, ProxyResponse } from '../types/api';
-import { executeProxy } from '../api/client';
+import { ApiItem, ProxyResponse } from '../../types/api';
+import { executeProxy } from '../../api/client';
 import {
   SUPPORTED_LANGUAGES,
   SnippetLanguage,
   generateSnippetForLanguage,
   buildFullUrl
-} from '../utils/codeSnippets';
-import { extractMediaItems } from '../utils/mediaExtractor';
-import { MediaPreviewViewer } from './MediaPreviewViewer';
-import { HtmlPreviewViewer } from './HtmlPreviewViewer';
-import { JsonTreeViewer } from './JsonTreeViewer';
-import { CurlImportModal } from './CurlImportModal';
+} from '../../utils/codeSnippets';
+import { extractMediaItems } from '../../utils/mediaExtractor';
+import {
+  MediaPreviewViewer,
+  HtmlPreviewViewer,
+  JsonTreeViewer,
+  CodeSnippetViewer
+} from '../viewers';
+import { CurlImportModal } from '../ui';
 import { RequestHistoryView, HistoryItem } from './RequestHistoryBar';
-import { getEndpointPresets, EndpointPreset } from '../utils/endpointPresets';
-import { generateTypeScriptTypes, generateJsonSchema } from '../utils/typeGenerator';
-import { ParsedCurl } from '../utils/curlParser';
-import { CodeSnippetViewer } from './CodeSnippetViewer';
+import { getEndpointPresets, EndpointPreset } from '../../utils/endpointPresets';
+import { generateTypeScriptTypes, generateJsonSchema } from '../../utils/typeGenerator';
+import { ParsedCurl } from '../../utils/curlParser';
 import {
   ParamsTab,
   HeadersTab,
@@ -29,7 +31,7 @@ import {
   RequestTab,
   WorkbenchLayout,
   RequestAuthMode
-} from './playground-tabs';
+} from './tabs';
 import {
   Play,
   Copy,
@@ -73,7 +75,7 @@ import {
   Loader2,
   LayoutTemplate
 } from 'lucide-react';
-import { logger } from '../utils/logger';
+import { logger } from '../../utils/logger';
 
 function getErrorDiagnostics(statusCode: number, errorMessage?: string | null) {
   if (statusCode === 400) {
@@ -257,7 +259,7 @@ function applyParamsToUrl(url: string, newParams: Array<{ key: string; value: st
   }
 }
 
-interface PlaygroundProps {
+export interface PlaygroundProps {
   api: ApiItem;
   initialEndpoint?: string;
   initialMethod?: string;

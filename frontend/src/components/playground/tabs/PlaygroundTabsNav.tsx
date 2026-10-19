@@ -17,7 +17,7 @@ import {
   LayoutTemplate,
   Columns
 } from 'lucide-react';
-import { ProxyResponse } from '../../types/api';
+import { ProxyResponse } from '../../../types/api';
 import { SnippetLanguage, SUPPORTED_LANGUAGES } from './CodeSnippetsTab';
 import { RequestAuthMode } from './AuthTab';
 

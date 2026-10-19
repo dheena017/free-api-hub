@@ -10,8 +10,8 @@ import {
   Monitor,
   PanelLeft
 } from 'lucide-react';
-import { useBookmarks } from '../utils/useBookmarks';
-import { useTheme } from '../utils/ThemeContext';
+import { useBookmarks } from '../../utils/useBookmarks';
+import { useTheme } from '../../utils/ThemeContext';
 import { Logo } from './Logo';
 
 interface NavbarProps {

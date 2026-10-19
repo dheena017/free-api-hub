@@ -1,38 +1,63 @@
 # Modular UI & Feature Blocks: `frontend/src/components`
 
-This directory houses all reusable UI components, layout structures, and complex feature blocks.
+This directory houses all reusable UI components, organized into clear, domain-driven feature directories.
 
 ---
 
-## 🧩 Component Inventory
+## 📁 Directory Structure
 
-### Layout & Navigation
-- **`Navbar.tsx`**: Header with brand logo, quick navigation links (Explore, Collections, Status, Submit), global search trigger, and GitHub repository link.
-- **`Footer.tsx`**: Site footer with category links, legal/privacy notes, and open-source credits.
-
-### Catalog & Discovery
-- **`ApiCard.tsx`**:
-  - Displays API title, short description, category tag, and pricing badge.
-  - Features real-time health indicator (🟢 99.9% / 🟡 Degraded) and average latency badge.
-  - Includes a quick **"Test Live"** button navigating directly to the playground.
-- **`SearchFilter.tsx`**:
-  - Global search bar with debounced input, keyboard shortcut (`Ctrl+K`), and quick-tag pills.
-- **`SidebarFilters.tsx`**:
-  - Multi-faceted filter panel for `ExplorePage.tsx` supporting Category, Auth Type, Pricing Tier, and Latency slider.
-- **`LivePingBadge.tsx`**:
-  - Micro-component rendering animated status rings (pulsing green for operational, amber for degraded).
-
-### Testing & Verification
-- **`Playground.tsx`**:
-  - **URL & Method Display**: Shows HTTP verb (`GET`, `POST`) and editable URL/query path.
-  - **Parameter Editor**: Key-value query parameter builder.
-  - **Execute Button**: Dispatches proxy request and shows loading state.
-  - **JSON Response Inspector**: Formatted, collapsible JSON tree with copy button.
-  - **Telemetry Bar**: Displays HTTP status code (`200 OK`), payload size, and roundtrip latency timer (`115 ms`).
+```
+frontend/src/components/
+├── layout/           # Global application layout shell
+│   ├── Navbar.tsx
+│   ├── Footer.tsx
+│   ├── AppSidebar.tsx
+│   ├── Logo.tsx
+│   └── index.ts
+├── ui/               # Reusable UI primitives, controls, and feedback
+│   ├── CustomSelect.tsx
+│   ├── CurlImportModal.tsx
+│   ├── SearchFilter.tsx
+│   ├── SidebarFilters.tsx
+│   ├── SkeletonCard.tsx
+│   ├── LivePingBadge.tsx
+│   └── index.ts
+├── viewers/          # Rich payload, code, and response inspectors
+│   ├── CodeSnippetViewer.tsx
+│   ├── JsonTreeViewer.tsx
+│   ├── HtmlPreviewViewer.tsx
+│   ├── MediaPreviewViewer.tsx
+│   └── index.ts
+├── playground/       # Interactive HTTP test console & workbench
+│   ├── Playground.tsx
+│   ├── RequestHistoryBar.tsx
+│   ├── tabs/
+│   │   ├── ParamsTab.tsx
+│   │   ├── HeadersTab.tsx
+│   │   ├── BodyTab.tsx
+│   │   ├── AuthTab.tsx
+│   │   ├── SettingsTab.tsx
+│   │   ├── CodeSnippetsTab.tsx
+│   │   ├── ResponseInspector.tsx
+│   │   ├── PlaygroundTabsNav.tsx
+│   │   └── index.ts
+│   └── index.ts
+├── api-detail/       # API detail page tabs, docs, and cards
+│   ├── ApiCard.tsx
+│   ├── ApiDocumentationView.tsx
+│   ├── ApiDetailTabsNav.tsx
+│   ├── PlaygroundTab.tsx
+│   ├── EndpointsDocsTab.tsx
+│   ├── HealthTelemetryTab.tsx
+│   ├── ArchitectureSdkTab.tsx
+│   └── index.ts
+└── index.ts          # Central barrel re-exporting all modules
+```
 
 ---
 
 ## 🎨 Component Design Guidelines
 
 - **Props Interface**: Every component exports a strictly typed TypeScript interface for its props.
+- **Barrel Exports**: Every feature folder exports a clean `index.ts` barrel. A root `index.ts` re-exports all modules.
 - **Aesthetics**: Adheres to modern developer tools aesthetics (clean dark mode, rounded borders, subtle gradient highlights on hover, high-contrast badges).

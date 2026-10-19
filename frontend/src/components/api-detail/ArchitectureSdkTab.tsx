@@ -13,7 +13,7 @@ import {
   Code2,
   Terminal
 } from 'lucide-react';
-import { CodeSnippetViewer } from '../CodeSnippetViewer';
+import { CodeSnippetViewer } from '../viewers/CodeSnippetViewer';
 import { generateSnippetForLanguage, SnippetLanguage } from '../../utils/codeSnippets';
 
 export interface ArchitectureSdkTabProps {

@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
-import { Navbar } from './components/Navbar';
-import { AppSidebar } from './components/AppSidebar';
-import { Footer } from './components/Footer';
+import { Navbar, AppSidebar, Footer } from './components/layout';
 import { HomePage } from './pages/HomePage';
 import { ExplorePage } from './pages/ExplorePage';
 import { ApiDetailPage } from './pages/ApiDetailPage';

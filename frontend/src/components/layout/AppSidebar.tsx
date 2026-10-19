@@ -25,8 +25,8 @@ import {
   Monitor
 } from 'lucide-react';
 import { Logo } from './Logo';
-import { useBookmarks } from '../utils/useBookmarks';
-import { useTheme } from '../utils/ThemeContext';
+import { useBookmarks } from '../../utils/useBookmarks';
+import { useTheme } from '../../utils/ThemeContext';
 
 interface AppSidebarProps {
   collapsed: boolean;

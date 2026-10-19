@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Heart } from 'lucide-react';
 import { Logo } from './Logo';
-import { fetchCategories } from '../api/client';
-import { CategorySummary } from '../types/api';
+import { fetchCategories } from '../../api/client';
+import { CategorySummary } from '../../types/api';
 
 export const Footer: React.FC = () => {
   const [categories, setCategories] = useState<CategorySummary[]>([]);

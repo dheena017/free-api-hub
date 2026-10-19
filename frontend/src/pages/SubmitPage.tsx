@@ -18,7 +18,7 @@ import {
   FileText,
   ExternalLink
 } from 'lucide-react';
-import { CustomSelect, SelectOption } from '../components/CustomSelect';
+import { CustomSelect, SelectOption } from '../components/ui';
 
 const CATEGORY_OPTIONS: SelectOption[] = [
   { value: 'developer-tools', label: 'Developer Tools & Utilities' },

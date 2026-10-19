@@ -1,3 +1,6 @@
+export { ApiCard } from './ApiCard';
+export { ApiDocumentationView } from './ApiDocumentationView';
+
 export { ApiDetailTabsNav } from './ApiDetailTabsNav';
 export type { ApiDetailTabsNavProps, DetailTab } from './ApiDetailTabsNav';
 

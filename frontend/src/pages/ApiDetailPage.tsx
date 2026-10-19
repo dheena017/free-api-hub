@@ -2,18 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ApiItem, HealthCheckResult } from '../types/api';
 import { fetchApiBySlug, fetchApis, checkApiHealth, reportApiIssue } from '../api/client';
-import { ApiCard } from '../components/ApiCard';
-import { LivePingBadge } from '../components/LivePingBadge';
-import { useBookmarks } from '../utils/useBookmarks';
-import { formatLatencyBadge } from '../utils/codeSnippets';
 import {
+  ApiCard,
   ApiDetailTabsNav,
   PlaygroundTab,
   EndpointsDocsTab,
   HealthTelemetryTab,
   ArchitectureSdkTab,
   type DetailTab
-} from '../components/api-detail-tabs';
+} from '../components/api-detail';
+import { LivePingBadge } from '../components/ui';
+import { useBookmarks } from '../utils/useBookmarks';
+import { formatLatencyBadge } from '../utils/codeSnippets';
 import {
   ArrowLeft,
   ExternalLink,

@@ -1,13 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { ApiItem, ProxyResponse } from '../../types/api';
-import { EndpointPreset } from '../../utils/endpointPresets';
+import { ApiItem, ProxyResponse } from '../../../types/api';
+import { EndpointPreset } from '../../../utils/endpointPresets';
 import { HistoryItem, RequestHistoryView } from '../RequestHistoryBar';
-import { extractMediaItems } from '../../utils/mediaExtractor';
-import { generateTypeScriptTypes, generateJsonSchema } from '../../utils/typeGenerator';
-import { CodeSnippetViewer } from '../CodeSnippetViewer';
-import { JsonTreeViewer } from '../JsonTreeViewer';
-import { HtmlPreviewViewer } from '../HtmlPreviewViewer';
-import { MediaPreviewViewer } from '../MediaPreviewViewer';
+import { extractMediaItems } from '../../../utils/mediaExtractor';
+import { generateTypeScriptTypes, generateJsonSchema } from '../../../utils/typeGenerator';
+import {
+  CodeSnippetViewer,
+  JsonTreeViewer,
+  HtmlPreviewViewer,
+  MediaPreviewViewer
+} from '../../viewers';
 import {
   Database,
   Clock,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ApiItem } from '../../types/api';
-import { ApiDocumentationView } from '../ApiDocumentationView';
+import { ApiDocumentationView } from './ApiDocumentationView';
 
 export interface EndpointsDocsTabProps {
   api: ApiItem;

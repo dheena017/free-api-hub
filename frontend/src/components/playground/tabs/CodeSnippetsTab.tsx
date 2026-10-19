@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Terminal, Copy, Check } from 'lucide-react';
-import { CodeSnippetViewer } from '../CodeSnippetViewer';
-import { SnippetLanguage, SUPPORTED_LANGUAGES } from '../../utils/codeSnippets';
+import { CodeSnippetViewer } from '../../viewers/CodeSnippetViewer';
+import { SnippetLanguage, SUPPORTED_LANGUAGES } from '../../../utils/codeSnippets';
 
 export type { SnippetLanguage };
 export { SUPPORTED_LANGUAGES };
