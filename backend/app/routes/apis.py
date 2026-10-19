@@ -14,7 +14,7 @@ async def list_apis(
     category: Optional[str] = Query(None, max_length=50, description="Filter by category slug"),
     auth_type: Optional[str] = Query(None, max_length=20, description="Filter by auth requirement (none, api_key, oauth)"),
     pricing_tier: Optional[str] = Query(None, max_length=30, description="Filter by pricing tier (open, free_forever, freemium_no_cc)"),
-    collection: Optional[str] = Query(None, max_length=30, description="Filter by curated collection (no-auth, cors-enabled, mock-data)"),
+    collection: Optional[str] = Query(None, max_length=30, description="Filter by curated collection (no-auth, cors-enabled, developer-tools)"),
     status: Optional[str] = Query(None, max_length=20, description="Filter by health status (healthy, degraded, offline)"),
     slugs: Optional[str] = Query(None, max_length=2000, description="Comma-separated list of API slugs to filter by"),
     sort: Optional[str] = Query("popular", description="Sort order: popular, latency, uptime, alphabetical"),

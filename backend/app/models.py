@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, HttpUrl, field_validator
+from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
 from typing import List, Optional, Dict, Any
 from enum import Enum
 
@@ -48,37 +48,44 @@ class EndpointItem(BaseModel):
     path: str
     method: str = "GET"
     description: Optional[str] = None
-    params: Optional[Dict[str, str]] = Field(default_factory=dict)
-    headers: Optional[Dict[str, str]] = Field(default_factory=dict)
+    params: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    headers: Optional[Dict[str, Any]] = Field(default_factory=dict)
     body: Optional[str] = None
     badge: Optional[str] = None
 
 
 class ApiItem(BaseModel):
-    id: str
-    name: str
     slug: str
+    name: str
     description: str
-    short_description: Optional[str] = Field(default=None)
     detailed_description: Optional[str] = Field(default=None)
     category: str
     base_url: str
-    sample_endpoint: str
-    method: str = "GET"
-    auth_type: AuthType = AuthType.NONE
+    endpoint: Optional[str] = None
+    auth_required: Optional[bool] = False
+    auth_type: Optional[str] = "none"
     pricing_tier: PricingTier = PricingTier.OPEN
     cors_supported: bool = True
     https: bool = True
+    is_active: bool = True
     documentation_url: str
     tags: List[str] = Field(default_factory=list)
     health: HealthInfo = Field(default_factory=HealthInfo)
-    default_params: Optional[Dict[str, str]] = Field(default_factory=dict)
-    default_headers: Optional[Dict[str, str]] = Field(default_factory=dict)
+    default_params: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    default_headers: Optional[Dict[str, Any]] = Field(default_factory=dict)
     endpoints: Optional[List[EndpointItem]] = Field(default_factory=list)
     use_cases: Optional[List[str]] = Field(default_factory=list)
     features: Optional[List[str]] = Field(default_factory=list)
     rate_limit: Optional[str] = Field(default=None)
     sample_response: Optional[Any] = Field(default=None)
+
+    @model_validator(mode="after")
+    def set_defaults(self):
+        if not self.endpoint and self.endpoints:
+            self.endpoint = self.endpoints[0].path
+        elif not self.endpoint:
+            self.endpoint = "/"
+        return self
 
 
 class ApiListResponse(BaseModel):
@@ -105,12 +112,11 @@ class CatalogStats(BaseModel):
     total_checks_today: int
 
 class EndpointStatusItem(BaseModel):
-    id: str
-    name: str
     slug: str
+    name: str
     category: str
     base_url: str
-    sample_endpoint: str
+    endpoint: str
     status: HealthStatus
     uptime_percent: Optional[float] = None
     avg_latency_ms: Optional[int] = None
@@ -174,7 +180,7 @@ class ProxyResponse(BaseModel):
 
 class ValidationRequest(BaseModel):
     base_url: str = Field(..., max_length=2048)
-    sample_endpoint: str = Field(default="/", max_length=1024)
+    endpoint: str = Field(default="/", max_length=1024)
     method: str = Field(default="GET")
 
     @field_validator("base_url")
@@ -209,12 +215,11 @@ class SubmissionPayload(BaseModel):
     name: str = Field(..., min_length=2, max_length=100)
     category: str = Field(..., min_length=2, max_length=50)
     base_url: str = Field(..., max_length=2048)
-    sample_endpoint: str = Field(default="/", max_length=1024)
+    endpoint: str = Field(default="/", max_length=1024)
     documentation_url: str = Field(..., max_length=2048)
     auth_type: AuthType = AuthType.NONE
     pricing_tier: PricingTier = PricingTier.OPEN
     description: str = Field(..., min_length=10, max_length=2000)
-    short_description: Optional[str] = Field(default=None, max_length=300)
     detailed_description: Optional[str] = Field(default=None, max_length=5000)
 
     @field_validator("base_url", "documentation_url")

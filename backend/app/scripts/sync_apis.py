@@ -558,7 +558,7 @@ def deduplicate_catalog(data_path: Optional[Path] = None) -> int:
 
         fp = get_service_fingerprint(validated.documentation_url, validated.base_url)
         slug = validated.slug.strip().lower()
-        full_endpoint = f"{validated.base_url.rstrip('/')}/{validated.sample_endpoint.lstrip('/')}".lower()
+        full_endpoint = f"{validated.base_url.rstrip('/')}/{validated.endpoint.lstrip('/')}".lower()
 
         # Strict duplicate check
         if fp in seen_fingerprints or base_name in seen_names or slug in seen_slugs or full_endpoint in seen_endpoints:
@@ -605,9 +605,8 @@ def sync_catalog(limit: int = 0, dry_run: bool = False, custom_feeds: Optional[L
         for item in existing_apis
     }
     seen_slugs = {item["slug"].lower() for item in existing_apis}
-    seen_ids = {item["id"].lower() for item in existing_apis}
     seen_endpoints = {
-        f"{item['base_url'].rstrip('/')}/{item['sample_endpoint'].lstrip('/')}".lower()
+        f"{item['base_url'].rstrip('/')}/{(item.get('endpoint', '')).lstrip('/')}".lower()
         for item in existing_apis
     }
 
@@ -650,11 +649,11 @@ def sync_catalog(limit: int = 0, dry_run: bool = False, custom_feeds: Optional[L
             continue
 
         slug = slugify(name)
-        if slug in seen_slugs or slug in seen_ids:
+        if slug in seen_slugs:
             # Append domain prefix or number to guarantee uniqueness
             domain_part = parsed_base.netloc.replace('www.', '').split('.')[0]
             alt_slug = f"{slug}-{domain_part}"
-            if alt_slug in seen_slugs or alt_slug in seen_ids:
+            if alt_slug in seen_slugs:
                 continue
             slug = alt_slug
 
@@ -679,14 +678,12 @@ def sync_catalog(limit: int = 0, dry_run: bool = False, custom_feeds: Optional[L
         tags.extend(name_words[:3])
 
         candidate_item = {
-            "id": slug,
             "name": name,
             "slug": slug,
             "description": raw.get("description") or f"Public {name} API endpoint for developers.",
             "category": category,
             "base_url": base_url,
-            "sample_endpoint": sample_path,
-            "method": "GET",
+            "endpoint": sample_path,
             "auth_type": auth_type_str,
             "pricing_tier": pricing_tier_str,
             "cors_supported": raw.get("cors_supported", True),
@@ -715,7 +712,6 @@ def sync_catalog(limit: int = 0, dry_run: bool = False, custom_feeds: Optional[L
         seen_fingerprints.add(fp)
         seen_names.add(base_name)
         seen_slugs.add(slug)
-        seen_ids.add(slug)
         seen_endpoints.add(full_endpoint)
 
         new_apis.append(validated_dict)

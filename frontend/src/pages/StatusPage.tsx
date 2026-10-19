@@ -518,7 +518,7 @@ export const StatusPage: React.FC = () => {
 
               return (
                 <div
-                  key={ep.id}
+                  key={ep.slug}
                   className="bg-[#28292A] hover:bg-[#303134] border border-[#3C4043] rounded-2xl p-4 sm:px-6 sm:py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors"
                 >
                   <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
@@ -539,7 +539,7 @@ export const StatusPage: React.FC = () => {
                           {ep.category}
                         </span>
                         <span className="text-[10px] font-mono font-bold text-emerald-400 px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
-                          {ep.method || 'GET'}
+                          {ep.endpoints?.[0]?.method || 'GET'}
                         </span>
                         <span
                           className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
@@ -554,7 +554,7 @@ export const StatusPage: React.FC = () => {
                         </span>
                       </div>
                       <div className="text-xs font-mono text-slate-400 truncate mt-1">
-                        {ep.base_url}{ep.sample_endpoint}
+                        {ep.base_url}{ep.endpoint}
                       </div>
                     </div>
                   </div>

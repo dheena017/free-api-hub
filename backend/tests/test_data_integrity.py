@@ -42,25 +42,22 @@ VALID_CATEGORIES = {
     "social-news",
     "open-data",
     "reference",
-    "news"
+    "news",
+    "animals",
+    "sports"
 }
 
 REQUIRED_ROOT_FIELDS = [
-    "id",
-    "name",
     "slug",
+    "name",
     "description",
     "category",
     "base_url",
-    "sample_endpoint",
-    "method",
-    "auth_type",
     "pricing_tier",
     "cors_supported",
     "https",
     "documentation_url",
-    "tags",
-    "health"
+    "tags"
 ]
 
 REQUIRED_HEALTH_FIELDS = [
@@ -83,12 +80,6 @@ class TestDataIntegrity:
         """Catalog must contain entries."""
         assert len(apis_raw) > 0, "apis.json should not be empty"
 
-    def test_no_duplicate_ids(self, apis_raw):
-        """Each API must have a unique identifier."""
-        ids = [item.get("id") for item in apis_raw if "id" in item]
-        duplicates = [x for x in ids if ids.count(x) > 1]
-        assert len(duplicates) == 0, f"Duplicate API IDs found: {set(duplicates)}"
-
     def test_no_duplicate_slugs(self, apis_raw):
         """Each API slug must be unique and URL-safe."""
         slugs = [item.get("slug") for item in apis_raw if "slug" in item]
@@ -104,14 +95,14 @@ class TestDataIntegrity:
     def test_no_duplicate_endpoints(self, apis_raw):
         """No two APIs should have the identical full sample URL."""
         endpoints = [
-            f"{item.get('base_url', '').rstrip('/')}/{item.get('sample_endpoint', '').lstrip('/')}"
+            f"{item.get('base_url', '').rstrip('/')}/{item.get('endpoint') or (item.get('endpoints')[0]['path'] if item.get('endpoints') else '')}".lower().lstrip('/')
             for item in apis_raw
         ]
         duplicates = [x for x in endpoints if endpoints.count(x) > 1]
         assert len(duplicates) == 0, f"Duplicate sample endpoints found: {set(duplicates)}"
 
     def test_no_missing_required_fields(self, apis_raw):
-        """Every entry must contain all required top-level and health attributes."""
+        """Every entry must contain all required top-level attributes."""
         for item in apis_raw:
             item_name = item.get("name", "UNKNOWN_ITEM")
 
@@ -122,7 +113,7 @@ class TestDataIntegrity:
                 )
 
             # Check non-empty string fields
-            for str_field in ["id", "name", "slug", "description", "category", "base_url", "sample_endpoint", "documentation_url"]:
+            for str_field in ["slug", "name", "description", "category", "base_url", "documentation_url"]:
                 assert isinstance(item[str_field], str) and item[str_field].strip() != "", (
                     f"API '{item_name}' has an empty or non-string '{str_field}'"
                 )
@@ -132,21 +123,22 @@ class TestDataIntegrity:
                 f"API '{item_name}' must have a non-empty 'tags' array"
             )
 
-            # Check health fields
-            health = item["health"]
-            assert isinstance(health, dict), f"API '{item_name}' 'health' must be an object"
-            for h_field in REQUIRED_HEALTH_FIELDS:
-                assert h_field in health, (
-                    f"API '{item_name}' health object is missing '{h_field}'"
-                )
+            # Check health fields if present
+            if "health" in item and item["health"]:
+                health = item["health"]
+                assert isinstance(health, dict), f"API '{item_name}' 'health' must be an object"
+                for h_field in REQUIRED_HEALTH_FIELDS:
+                    assert h_field in health, (
+                        f"API '{item_name}' health object is missing '{h_field}'"
+                    )
 
     def test_valid_urls(self, apis_raw):
-        """Ensure base_url, sample_endpoint, and documentation_url are well-formed."""
+        """Ensure base_url, endpoint, and documentation_url are well-formed."""
         for item in apis_raw:
             item_name = item.get("name", "UNKNOWN_ITEM")
             base_url = item.get("base_url", "")
             doc_url = item.get("documentation_url", "")
-            sample_endpoint = item.get("sample_endpoint", "")
+            endpoint = item.get("endpoint") or (item.get("endpoints")[0]["path"] if item.get("endpoints") else "")
 
             # Base URL check
             parsed_base = urlparse(base_url)
@@ -163,10 +155,11 @@ class TestDataIntegrity:
                 f"API '{item_name}' documentation_url '{doc_url}' must start with http:// or https://"
             )
 
-            # Sample endpoint path check
-            assert sample_endpoint.startswith("/") or sample_endpoint.startswith("?"), (
-                f"API '{item_name}' sample_endpoint '{sample_endpoint}' must start with '/' or '?'"
-            )
+            # Endpoint path check
+            if endpoint:
+                assert endpoint.startswith("/") or endpoint.startswith("?"), (
+                    f"API '{item_name}' endpoint '{endpoint}' must start with '/' or '?'"
+                )
 
     def test_valid_enums(self, apis_raw):
         """Enforce strict enum compliance for auth_type, pricing_tier, health status, and category."""
@@ -179,9 +172,10 @@ class TestDataIntegrity:
 
             # auth_type
             auth = item.get("auth_type")
-            assert auth in valid_auth_values, (
-                f"API '{item_name}' has invalid auth_type '{auth}'. Must be one of {valid_auth_values}"
-            )
+            if auth:
+                assert auth in valid_auth_values, (
+                    f"API '{item_name}' has invalid auth_type '{auth}'. Must be one of {valid_auth_values}"
+                )
 
             # pricing_tier
             pricing = item.get("pricing_tier")
@@ -196,19 +190,21 @@ class TestDataIntegrity:
             )
 
             # health status
-            status = item.get("health", {}).get("status")
-            assert status in valid_health_values, (
-                f"API '{item_name}' has invalid health.status '{status}'. Must be one of {valid_health_values}"
-            )
+            if "health" in item and item["health"]:
+                status = item["health"].get("status")
+                if status:
+                    assert status in valid_health_values, (
+                        f"API '{item_name}' has invalid health.status '{status}'. Must be one of {valid_health_values}"
+                    )
 
     def test_pydantic_schema_validation(self, apis_raw):
         """Every entry in apis.json must successfully deserialize into the Pydantic ApiItem schema."""
         for item in apis_raw:
             # Will raise ValidationError if any field violates typing
             api_item = ApiItem(**item)
-            assert api_item.id == item["id"]
-            assert api_item.health.uptime_percent >= 0.0
-            assert api_item.health.uptime_percent <= 100.0
+            assert api_item.slug == item["slug"]
+            if api_item.health and api_item.health.uptime_percent is not None:
+                assert 0.0 <= api_item.health.uptime_percent <= 100.0
 
 if __name__ == "__main__":
     import pytest

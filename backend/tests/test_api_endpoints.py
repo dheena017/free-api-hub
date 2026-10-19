@@ -55,8 +55,8 @@ class TestApiEndpoints:
         assert res2.status_code == 200
         items1 = res1.json()["items"]
         items2 = res2.json()["items"]
-        ids1 = {item["id"] for item in items1}
-        ids2 = {item["id"] for item in items2}
+        ids1 = {item["slug"] for item in items1}
+        ids2 = {item["slug"] for item in items2}
         assert len(ids1.intersection(ids2)) == 0, "Offsets should return non-overlapping pages"
 
     async def test_filter_by_slugs_single(self, async_client, apis_raw):
@@ -72,7 +72,11 @@ class TestApiEndpoints:
     async def test_filter_by_slugs_multiple(self, async_client, apis_raw):
         """Filter by multiple comma-separated slugs returns only the requested APIs."""
         if len(apis_raw) >= 3:
-            slugs = [apis_raw[0]["slug"], apis_raw[1]["slug"], apis_raw[2]["slug"]]
+            slugs = [
+                apis_raw[0]["slug"],
+                apis_raw[1]["slug"],
+                apis_raw[2]["slug"]
+            ]
             slugs_param = ",".join(slugs)
             res = await async_client.get(f"/api/v1/apis?slugs={slugs_param}")
             assert res.status_code == 200
@@ -125,7 +129,7 @@ class TestApiEndpoints:
         data = res.json()
         assert data["slug"] == sample_slug
         assert "base_url" in data
-        assert "sample_endpoint" in data
+        assert "endpoint" in data
 
     async def test_get_api_by_slug_not_found(self, async_client):
         """GET /api/v1/apis/{slug} returns 404 for a non-existent slug."""
@@ -170,7 +174,7 @@ class TestApiEndpoints:
         """POST /api/v1/submit/validate verifies a working public URL."""
         payload = {
             "base_url": "https://api.coindesk.com",
-            "sample_endpoint": "/v1/bpi/currentprice.json",
+            "endpoint": "/v1/bpi/currentprice.json",
             "method": "GET"
         }
         res = await async_client.post("/api/v1/submit/validate", json=payload)

@@ -511,13 +511,13 @@ export const ExplorePage: React.FC = () => {
             {viewMode === 'grid' ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {apis.map((api) => (
-                  <ApiCard key={api.id} api={api} viewMode="grid" />
+                  <ApiCard key={api.slug} api={api} viewMode="grid" />
                 ))}
               </div>
             ) : (
               <div className="space-y-2.5">
                 {apis.map((api) => (
-                  <ApiCard key={api.id} api={api} viewMode="compact" />
+                  <ApiCard key={api.slug} api={api} viewMode="compact" />
                 ))}
               </div>
             )}

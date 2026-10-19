@@ -8,8 +8,8 @@ CLOUDFLARE_HEADERS = {"cf-ray", "cf-cache-status"}
 CHALLENGE_TITLE_SNIPPETS = ["just a moment...", "attention required! | cloudflare", "ddos-guard"]
 
 async def probe_endpoint(client: httpx.AsyncClient, api: Dict[str, Any], timeout: float = 8.0):
-    """Helper sending a real HTTP GET probe to an endpoint."""
-    full_url = api["base_url"].rstrip("/") + "/" + api["sample_endpoint"].lstrip("/")
+    endpoint = (api.get("endpoint") or "").lstrip("/")
+    full_url = api["base_url"].rstrip("/") + "/" + endpoint
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) FreeAPIHub-HealthChecker/1.0",
         "Accept": "application/json, text/plain, */*"
@@ -51,7 +51,7 @@ class TestLiveUptimeAndHealth:
     """
 
     @pytest.mark.asyncio
-    async def test_live_sample_endpoints_batch(self, apis_raw):
+    async def test_live_endpoints_batch(self, apis_raw):
         """
         Sends real HTTP requests to a representative sample of catalog APIs.
         Asserts 200 OK status codes, acceptable latency, and no bot blocking.

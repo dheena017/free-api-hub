@@ -14,13 +14,16 @@ export function generatePostmanCollection(apis: ApiItem | ApiItem[], collectionN
       schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json'
     },
     item: apiList.map((api) => {
-      const fullUrl = `${api.base_url.replace(/\/+$/, '')}${api.sample_endpoint.startsWith('/') ? '' : '/'}${api.sample_endpoint}`;
-      const urlObj = new URL(fullUrl.startsWith('http') ? fullUrl : `https://${fullUrl}`);
+      const baseUrl = (api.base_url || '').replace(/\/+$/, '');
+      const rawEndpoint = api.endpoint || (api.endpoints?.[0]?.path) || '';
+      const endpointStr = rawEndpoint ? (rawEndpoint.startsWith('/') ? rawEndpoint : `/${rawEndpoint}`) : '';
+      const fullUrl = `${baseUrl}${endpointStr}`;
+      const urlObj = new URL(fullUrl.startsWith('http') ? fullUrl : `https://${fullUrl || 'api.example.com'}`);
 
       return {
         name: api.name,
         request: {
-          method: api.method || 'GET',
+          method: api.endpoints?.[0]?.method || 'GET',
           header: [
             {
               key: 'Accept',
@@ -45,7 +48,7 @@ export function generatePostmanCollection(apis: ApiItem | ApiItem[], collectionN
               value: v
             }))
           },
-          description: `${api.short_description || api.description}\n\nOfficial Docs: ${api.documentation_url}`
+          description: `${api.description}\n\nOfficial Docs: ${api.documentation_url}`
         },
         response: []
       };
@@ -59,11 +62,14 @@ export function generatePostmanCollection(apis: ApiItem | ApiItem[], collectionN
  * Generates a VS Code REST Client (.http) file format
  */
 export function generateHttpFileSnippet(api: ApiItem): string {
-  const fullUrl = `${api.base_url.replace(/\/+$/, '')}${api.sample_endpoint.startsWith('/') ? '' : '/'}${api.sample_endpoint}`;
+  const baseUrl = (api.base_url || '').replace(/\/+$/, '');
+  const rawEndpoint = api.endpoint || (api.endpoints?.[0]?.path) || '';
+  const endpointStr = rawEndpoint ? (rawEndpoint.startsWith('/') ? rawEndpoint : `/${rawEndpoint}`) : '';
+  const fullUrl = `${baseUrl}${endpointStr}`;
   let content = `### ${api.name}\n`;
-  content += `# ${api.short_description || api.description}\n`;
+  content += `# ${api.description}\n`;
   content += `# Documentation: ${api.documentation_url}\n`;
-  content += `${api.method || 'GET'} ${fullUrl}\n`;
+  content += `${api.endpoints?.[0]?.method || 'GET'} ${fullUrl}\n`;
   content += `Accept: application/json\n`;
   content += `User-Agent: FreeAPIHub/1.0\n`;
 

@@ -214,7 +214,7 @@ class TestEndpointSecurityAndCorrectness:
 
     async def test_validate_endpoint_blocks_private_ip(self, async_client):
         """POST /api/v1/submit/validate must block internal IP targets."""
-        payload = {"base_url": "http://10.0.0.1", "sample_endpoint": "/data", "method": "GET"}
+        payload = {"base_url": "http://10.0.0.1", "endpoint": "/data", "method": "GET"}
         res = await async_client.post("/api/v1/submit/validate", json=payload)
         assert res.status_code == 200
         data = res.json()
@@ -228,7 +228,7 @@ class TestEndpointSecurityAndCorrectness:
             "name": existing["name"],
             "category": existing["category"],
             "base_url": existing["base_url"],
-            "sample_endpoint": existing["sample_endpoint"],
+            "endpoint": existing.get("endpoint") or "/",
             "documentation_url": existing["documentation_url"],
             "auth_type": "none",
             "pricing_tier": "open",
@@ -252,9 +252,8 @@ class TestEndpointSecurityAndCorrectness:
         assert isinstance(data["endpoints"], list)
         if len(data["endpoints"]) > 0:
             ep = data["endpoints"][0]
-            assert "id" in ep
-            assert "name" in ep
             assert "slug" in ep
+            assert "name" in ep
             assert "status" in ep
             assert "uptime_percent" in ep
             assert "avg_latency_ms" in ep

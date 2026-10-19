@@ -209,14 +209,15 @@ export const Playground: React.FC<PlaygroundProps> = ({
   initialBody,
   onOpenDocs
 }) => {
-  const initialUrl = api.base_url.replace(/\/+$/, '');
-  const initialEndpointStr = api.sample_endpoint.startsWith('/')
-    ? api.sample_endpoint
-    : `/${api.sample_endpoint}`;
+  const initialUrl = (api?.base_url || '').replace(/\/+$/, '');
+  const rawSample = api?.endpoint || (api?.endpoints?.[0]?.path) || '';
+  const initialEndpointStr = rawSample
+    ? (rawSample.startsWith('/') ? rawSample : `/${rawSample}`)
+    : '';
   const fullInitialUrl = `${initialUrl}${initialEndpointStr}`;
 
   // Request State
-  const [method, setMethod] = useState(initialMethod || api.method || 'GET');
+  const [method, setMethod] = useState(initialMethod || api?.endpoints?.[0]?.method || 'GET');
   const [endpointUrl, setEndpointUrl] = useState(() => {
     if (initialEndpoint) {
       return initialEndpoint.startsWith('http')
@@ -229,13 +230,13 @@ export const Playground: React.FC<PlaygroundProps> = ({
     if (initialParams) {
       return Object.entries(initialParams).map(([key, value]) => ({ key, value }));
     }
-    if (api.default_params) {
+    if (api?.default_params) {
       return Object.entries(api.default_params).map(([key, value]) => ({ key, value }));
     }
     return [];
   });
   const [headers, setHeaders] = useState<Array<{ key: string; value: string }>>(() => {
-    if (api.default_headers) {
+    if (api?.default_headers) {
       return Object.entries(api.default_headers).map(([key, value]) => ({ key, value }));
     }
     return [];
@@ -248,7 +249,7 @@ export const Playground: React.FC<PlaygroundProps> = ({
   // Sync when initial props change
   useEffect(() => {
     if (initialEndpoint) {
-      const base = api.base_url.replace(/\/+$/, '');
+      const base = (api?.base_url || '').replace(/\/+$/, '');
       setEndpointUrl(
         initialEndpoint.startsWith('http')
           ? initialEndpoint
@@ -297,7 +298,7 @@ export const Playground: React.FC<PlaygroundProps> = ({
   // Request History State (Session)
   const [history, setHistory] = useState<HistoryItem[]>(() => {
     try {
-      const stored = sessionStorage.getItem(`fah_history_${api.slug}`);
+      const stored = sessionStorage.getItem(`fah_history_${api?.slug || 'api'}`);
       if (stored) return JSON.parse(stored);
     } catch {
       // ignore
@@ -309,11 +310,11 @@ export const Playground: React.FC<PlaygroundProps> = ({
   // Sync history to session storage
   useEffect(() => {
     try {
-      sessionStorage.setItem(`fah_history_${api.slug}`, JSON.stringify(history.slice(0, 10)));
+      sessionStorage.setItem(`fah_history_${api?.slug || 'api'}`, JSON.stringify(history.slice(0, 10)));
     } catch {
       // ignore
     }
-  }, [history, api.slug]);
+  }, [history, api?.slug]);
 
   // Convert param list to map
   const paramMap = useMemo(() => {
@@ -361,12 +362,13 @@ export const Playground: React.FC<PlaygroundProps> = ({
   // Generated TypeScript / JSON Schema
   const generatedTypesCode = useMemo(() => {
     if (!response?.data) return '';
-    const rootName = `${api.slug.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join('')}Response`;
+    const safeSlug = api?.slug || 'api';
+    const rootName = `${safeSlug.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join('')}Response`;
     if (typesDisplayMode === 'typescript') {
       return generateTypeScriptTypes(response.data, rootName);
     }
     return generateJsonSchema(response.data, rootName);
-  }, [response?.data, api.slug, typesDisplayMode]);
+  }, [response?.data, api?.slug, typesDisplayMode]);
 
   const handleRunTest = async (overrideTargetUrl?: string, overrideMethod?: string, overrideBody?: string) => {
     setUrlValidationError(null);
@@ -491,9 +493,10 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
   const handleSelectPreset = (preset: EndpointPreset) => {
     setSelectedPresetId(preset.id);
-    const newUrl = preset.endpoint.startsWith('http')
-      ? preset.endpoint
-      : `${initialUrl}${preset.endpoint.startsWith('/') ? '' : '/'}${preset.endpoint}`;
+    const presetEp = preset.endpoint || '';
+    const newUrl = presetEp.startsWith('http')
+      ? presetEp
+      : `${initialUrl}${presetEp.startsWith('/') ? '' : '/'}${presetEp}`;
 
     const newParams = preset.params
       ? Object.entries(preset.params).map(([k, v]) => ({ key: k, value: v }))
@@ -1051,7 +1054,7 @@ export const Playground: React.FC<PlaygroundProps> = ({
         onSelect={handleSelectHistoryItem}
         onClear={() => {
           setHistory([]);
-          sessionStorage.removeItem(`fah_history_${api.slug}`);
+          sessionStorage.removeItem(`fah_history_${api?.slug || 'api'}`);
         }}
         currentHistoryId={currentHistoryId}
       />

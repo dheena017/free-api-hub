@@ -16,8 +16,7 @@ Each API item in the JSON array must follow this schema:
   "description": "Free open-source weather API providing hourly and 7-day weather forecasts without requiring an API key.",
   "category": "weather",
   "base_url": "https://api.open-meteo.com",
-  "sample_endpoint": "/v1/forecast?latitude=52.52&longitude=13.41&current_weather=true",
-  "method": "GET",
+  "endpoint": "/v1/forecast?latitude=52.52&longitude=13.41&current_weather=true",
   "auth_type": "none",
   "pricing_tier": "open",
   "cors_supported": true,
@@ -64,7 +63,7 @@ To contribute or add an API without writing any backend code:
 1. Open `backend/app/data/apis.json`.
 2. Append a new object following the schema above to the root JSON array.
 3. Verify that:
-   - `sample_endpoint` returns `200 OK` on a standard HTTP `GET`.
+   - `endpoint` returns `200 OK` on a standard HTTP `GET`.
    - `pricing_tier` does **not** demand credit card entry.
    - `slug` is URL-safe and unique (e.g. `pokeapi`, `coingecko-free`).
 4. Run the health checker worker to test and populate the initial health metrics:

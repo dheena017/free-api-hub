@@ -106,6 +106,17 @@ export interface ApiQueryParams {
   offset?: number;
 }
 
+export function normalizeApiItem(api: ApiItem): ApiItem {
+  if (!api) return api;
+  const endpoint = api.endpoint || (api.endpoints?.[0]?.path) || '/';
+  const base_url = api.base_url || '';
+  return {
+    ...api,
+    base_url,
+    endpoint,
+  };
+}
+
 export async function fetchApis(params?: ApiQueryParams): Promise<ApiListResponse> {
   const query = new URLSearchParams();
   if (params?.q) query.set('q', params.q);
@@ -119,11 +130,16 @@ export async function fetchApis(params?: ApiQueryParams): Promise<ApiListRespons
   if (params?.limit) query.set('limit', params.limit.toString());
   if (params?.offset) query.set('offset', params.offset.toString());
 
-  return loggedFetch<ApiListResponse>(`${API_PREFIX}/apis?${query.toString()}`, undefined, 'Failed to fetch APIs from server');
+  const res = await loggedFetch<ApiListResponse>(`${API_PREFIX}/apis?${query.toString()}`, undefined, 'Failed to fetch APIs from server');
+  if (res && Array.isArray(res.items)) {
+    res.items = res.items.map(normalizeApiItem);
+  }
+  return res;
 }
 
 export async function fetchApiBySlug(slug: string): Promise<ApiItem> {
-  return loggedFetch<ApiItem>(`${API_PREFIX}/apis/${encodeURIComponent(slug)}`, undefined, `API '${slug}' not found in catalog`);
+  const res = await loggedFetch<ApiItem>(`${API_PREFIX}/apis/${encodeURIComponent(slug)}`, undefined, `API '${slug}' not found in catalog`);
+  return normalizeApiItem(res);
 }
 
 export async function fetchCategories(): Promise<CategorySummary[]> {

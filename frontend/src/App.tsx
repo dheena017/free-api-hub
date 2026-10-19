@@ -171,7 +171,7 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
               const isSelected = idx === selectedIndex;
               return (
                 <div
-                  key={item.id}
+                  key={item.slug}
                   onClick={() => handleSelectApi(item.slug)}
                   className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-colors ${
                     isSelected
@@ -193,7 +193,7 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                       )}
                     </div>
                     <p className="text-xs text-slate-400 truncate mt-0.5">
-                      {item.short_description || item.description}
+                      {item.description}
                     </p>
                   </div>
 
@@ -242,7 +242,7 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
               <div className="flex flex-wrap gap-1.5 text-xs">
                 {(categories.length > 0
                   ? categories.slice(0, 8).map((c) => c.slug)
-                  : ['weather', 'finance', 'gaming', 'science', 'database', 'developer-tools']
+                  : []
                 ).map((tag) => (
                   <button
                     key={tag}

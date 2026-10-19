@@ -27,7 +27,10 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
   const handleCopyEndpoint = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const endpointUrl = `${api.base_url}${api.sample_endpoint}`;
+    const base = (api.base_url || '').replace(/\/+$/, '');
+    const ep = api.endpoint || (api.endpoints?.[0]?.path) || '';
+    const formattedEp = ep ? (ep.startsWith('/') ? ep : `/${ep}`) : '';
+    const endpointUrl = `${base}${formattedEp}`;
     navigator.clipboard.writeText(endpointUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -92,7 +95,7 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
               {getAuthBadge()}
             </div>
             <p className="text-xs text-slate-400 truncate mt-0.5">
-              {api.short_description || api.description}
+              {api.description}
             </p>
           </div>
         </div>
@@ -189,12 +192,12 @@ export const ApiCard: React.FC<ApiCardProps> = ({ api, viewMode = 'grid' }) => {
           </h3>
         </Link>
 
-        {/* Short Description */}
+        {/* Description */}
         <p
           className="mt-2 text-xs text-slate-400 group-hover:text-slate-300 line-clamp-2 leading-relaxed min-h-[2.5rem]"
-          title={api.short_description || api.description}
+          title={api.description}
         >
-          {api.short_description || api.description}
+          {api.description}
         </p>
 
         {/* Tags */}

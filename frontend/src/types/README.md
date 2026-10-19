@@ -28,7 +28,7 @@ export interface ApiItem {
   description: string;
   category: string;
   base_url: string;
-  sample_endpoint: string;
+  endpoint: string;
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';
   auth_type: AuthType;
   pricing_tier: PricingTier;
@@ -78,7 +78,7 @@ export interface SubmissionPayload {
   name: string;
   category: string;
   base_url: string;
-  sample_endpoint: string;
+  endpoint: string;
   documentation_url: string;
   auth_type: AuthType;
   pricing_tier: PricingTier;

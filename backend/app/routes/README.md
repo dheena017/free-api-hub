@@ -13,7 +13,7 @@ This directory contains the REST API route modules for serving the catalog, prox
     - `category` (string, optional): Filter by category (e.g. `weather`, `finance`).
     - `auth_type` (string, optional): Filter by `none`, `api_key`, `oauth`.
     - `pricing_tier` (string, optional): Filter by `open`, `free_forever`, `freemium_no_cc`.
-    - `collection` (string, optional): Filter by preset collection (`no-auth`, `cors-enabled`, `mock-data`).
+    - `collection` (string, optional): Filter by preset collection (`no-auth`, `cors-enabled`, `developer-tools`).
     - `sort` (string, optional): `popular`, `latency`, `uptime`, `alphabetical`.
     - `limit` & `offset` (int, optional): Pagination controls.
 - **`GET /api/v1/apis/{slug}`**:

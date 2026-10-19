@@ -24,7 +24,7 @@ This directory contains test suites designed for **two completely distinct purpo
 * **What It Validates**:
   1. **No Duplicates**: Guarantees unique `id`, `slug`, `name`, and base endpoints across the entire directory.
   2. **Valid URLs**: Ensures every `base_url` starts with `http://` or `https://` and has a valid hostname.
-  3. **No Missing Fields**: Ensures every API item has all mandatory keys (`name`, `category`, `base_url`, `sample_endpoint`, `auth_type`, `pricing_tier`, `description`) so the React frontend never encounters `undefined` crashes.
+  3. **No Missing Fields**: Ensures every API item has all mandatory keys (`name`, `category`, `base_url`, `endpoint`, `auth_type`, `pricing_tier`, `description`) so the React frontend never encounters `undefined` crashes.
   4. **Strict Enums**: Ensures `auth_type` is strictly `"none"`, `"api_key"`, or `"oauth"`, and `pricing_tier` is `"open"`, `"free_forever"`, or `"freemium_no_cc"`.
 
 ### Command to Run Data Integrity Tests:

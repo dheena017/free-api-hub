@@ -200,7 +200,7 @@ class CatalogService:
     def get_by_slug(self, slug: str) -> Optional[ApiItem]:
         target = slug.lower().strip()
         for api in self._apis:
-            if api.slug.lower() == target or api.id.lower() == target:
+            if api.slug.lower() == target:
                 return api
         return None
 
@@ -222,7 +222,7 @@ class CatalogService:
         # Filter by specific slugs (e.g. for saved / bookmarked APIs)
         if slugs is not None:
             slug_set = {s.lower().strip() for s in slugs if s and s.strip()}
-            results = [a for a in results if a.slug.lower() in slug_set or a.id.lower() in slug_set]
+            results = [a for a in results if a.slug.lower() in slug_set]
 
         # Filter by collection
         if collection:
@@ -231,8 +231,8 @@ class CatalogService:
                 results = [a for a in results if getattr(a.auth_type, "value", str(a.auth_type)).lower() == "none"]
             elif c in ("cors-enabled", "cors-ready", "cors"):
                 results = [a for a in results if a.cors_supported]
-            elif c in ("mock-data", "mock", "prototyping"):
-                results = [a for a in results if "mock-data" in a.tags or a.category == "developer-tools"]
+            elif c in ("developer-tools", "dev-tools", "tools"):
+                results = [a for a in results if a.category == "developer-tools" or "developer-tools" in a.tags]
             elif c in ("high-uptime", "uptime"):
                 results = [a for a in results if a.health.uptime_percent is not None and a.health.uptime_percent >= 99.0]
             elif c in ("fast-response", "ultra-fast", "low-latency"):
@@ -423,7 +423,7 @@ class CatalogService:
         if not api:
             raise ValueError(f"API with slug or ID '{slug}' was not found in the catalog")
 
-        full_url = api.base_url.rstrip("/") + "/" + api.sample_endpoint.lstrip("/")
+        full_url = api.base_url.rstrip("/") + "/" + api.endpoint.lstrip("/")
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) FreeAPIHub-HealthChecker/1.0",
             "Accept": "application/json, text/plain, */*"
@@ -436,9 +436,19 @@ class CatalogService:
         error_msg = None
         latency_ms = 0
 
+        probe_method = "GET"
+        if api.endpoints and len(api.endpoints) > 0:
+            for ep in api.endpoints:
+                if ep.path == api.endpoint and ep.method:
+                    probe_method = ep.method.upper()
+                    break
+            else:
+                if api.endpoints[0].method:
+                    probe_method = api.endpoints[0].method.upper()
+
         try:
             status_code, latency_ms, _, _ = await safe_http_request(
-                method=api.method.upper() if api.method else "GET",
+                method=probe_method,
                 url=full_url,
                 headers=headers,
                 params=api.default_params or {},
@@ -550,7 +560,7 @@ class CatalogService:
                     return HealthCheckResult(
                         slug=item.slug,
                         name=item.name,
-                        target_url=f"{item.base_url}/{item.sample_endpoint}",
+                        target_url=f"{item.base_url}/{item.endpoint}",
                         status=HealthStatus.OFFLINE,
                         status_code=0,
                         latency_ms=0,
@@ -690,7 +700,7 @@ class CatalogService:
             )
 
     async def validate_endpoint(self, req: ValidationRequest) -> ValidationResult:
-        full_url = req.base_url.rstrip("/") + "/" + req.sample_endpoint.lstrip("/")
+        full_url = req.base_url.rstrip("/") + "/" + req.endpoint.lstrip("/")
         start_time = time.perf_counter()
         try:
             status_code, latency, _, raw_body = await safe_http_request(
@@ -716,7 +726,7 @@ class CatalogService:
             elif status_code == 403:
                 msg = "Validation failed: HTTP 403 Forbidden. Access was denied by upstream server."
             elif status_code == 404:
-                msg = f"Validation failed: HTTP 404 Not Found. Path '{req.sample_endpoint}' does not exist on base URL."
+                msg = f"Validation failed: HTTP 404 Not Found. Path '{req.endpoint}' does not exist on base URL."
             elif status_code == 429:
                 msg = "Validation failed: HTTP 429 Too Many Requests. Target API rate limit reached."
             else:
@@ -772,7 +782,7 @@ class CatalogService:
         and pending review submissions.
         """
         norm_name = payload.name.strip().lower()
-        norm_url = f"{payload.base_url.rstrip('/')}/{payload.sample_endpoint.lstrip('/')}".lower()
+        norm_url = f"{payload.base_url.rstrip('/')}/{payload.endpoint.lstrip('/')}".lower()
 
         # Check existing catalog for duplicates
         for api in self._apis:
@@ -782,7 +792,7 @@ class CatalogService:
                     "reason": f"An API with the name '{api.name}' already exists in the catalog.",
                     "status": "duplicate_rejected"
                 }
-            api_full = f"{api.base_url.rstrip('/')}/{api.sample_endpoint.lstrip('/')}".lower()
+            api_full = f"{api.base_url.rstrip('/')}/{api.endpoint.lstrip('/')}".lower()
             if api_full == norm_url:
                 return {
                     "duplicate": True,
@@ -805,12 +815,11 @@ class CatalogService:
             "name": payload.name.strip(),
             "category": payload.category.strip().lower(),
             "base_url": payload.base_url.strip(),
-            "sample_endpoint": payload.sample_endpoint.strip(),
+            "endpoint": payload.endpoint.strip(),
             "documentation_url": payload.documentation_url.strip(),
             "auth_type": getattr(payload.auth_type, "value", str(payload.auth_type)),
             "pricing_tier": getattr(payload.pricing_tier, "value", str(payload.pricing_tier)),
             "description": payload.description.strip(),
-            "short_description": payload.short_description.strip() if payload.short_description else None,
             "detailed_description": payload.detailed_description.strip() if payload.detailed_description else None,
             "status": "pending_review",
             "submitted_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -866,12 +875,11 @@ class CatalogService:
 
         endpoint_items: List[EndpointStatusItem] = [
             EndpointStatusItem(
-                id=a.id,
                 name=a.name,
                 slug=a.slug,
                 category=a.category,
                 base_url=a.base_url,
-                sample_endpoint=a.sample_endpoint,
+                endpoint=a.endpoint,
                 status=a.health.status,
                 uptime_percent=a.health.uptime_percent,
                 avg_latency_ms=a.health.avg_latency_ms,

@@ -92,7 +92,7 @@ class TestSubmissionsAndReporting:
             "name": "Open-Meteo Weather API",
             "category": "weather",
             "base_url": "https://api.open-meteo.com",
-            "sample_endpoint": "/v1/forecast",
+            "endpoint": "/v1/forecast",
             "documentation_url": "https://open-meteo.com/en/docs",
             "auth_type": "none",
             "pricing_tier": "open",

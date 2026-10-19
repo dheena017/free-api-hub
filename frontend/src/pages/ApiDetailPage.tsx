@@ -44,9 +44,10 @@ const getApiUseCases = (api: ApiItem): string[] => {
   if (api.use_cases && api.use_cases.length > 0) {
     return api.use_cases;
   }
+  const ep = api.endpoint || (api.endpoints?.[0]?.path) || 'endpoints';
   return [
     `Direct integration into applications consuming ${api.name} data`,
-    `Automated querying of ${api.sample_endpoint} for dynamic content feeds`,
+    `Automated querying of ${ep} for dynamic content feeds`,
     `Client-side widgets and developer tools in the ${api.category.replace('-', ' ')} domain`
   ];
 };
@@ -104,7 +105,7 @@ export const ApiDetailPage: React.FC = () => {
       document.title = `${api.name} - Free API Discovery & Playground | Free API Hub`;
       const meta = document.querySelector('meta[name="description"]');
       if (meta) {
-        meta.setAttribute('content', api.short_description || api.description);
+        meta.setAttribute('content', api.description);
       }
     }
   }, [api]);
@@ -208,7 +209,7 @@ export const ApiDetailPage: React.FC = () => {
     if (navigator.share && api) {
       navigator.share({
         title: `${api.name} - Free API Hub`,
-        text: api.short_description || api.description,
+        text: api.description,
         url: window.location.href,
       }).catch(() => {});
     } else {
@@ -408,9 +409,9 @@ export const ApiDetailPage: React.FC = () => {
               </button>
             </div>
 
-            {/* Short Description */}
+            {/* Description */}
             <p className="text-sm text-text-muted max-w-3xl leading-relaxed">
-              {api.short_description || api.description}
+              {api.description}
             </p>
 
             {/* Clean Quick Action Bar */}
@@ -816,7 +817,7 @@ export const ApiDetailPage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {relatedApis.map((item) => (
-              <ApiCard key={item.id} api={item} />
+              <ApiCard key={item.slug} api={item} />
             ))}
           </div>
         </section>

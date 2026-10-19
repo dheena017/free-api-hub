@@ -13,7 +13,7 @@ The health checker guarantees the core promise of Free API Hub: **Zero Wasted Ti
 For each listed API in `backend/app/data/apis.json`:
 
 1. **Probe Execution**:
-   - Sends a non-intrusive `GET` or `HEAD` request to `base_url + sample_endpoint`.
+   - Sends a non-intrusive `GET` or `HEAD` request to `base_url + endpoint`.
    - Records HTTP status code, roundtrip duration (`latency_ms`), and timestamp.
 2. **Classification Logic**:
    - `2xx OK`: Marked as **`healthy`** 🟢.

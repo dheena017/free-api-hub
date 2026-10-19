@@ -78,15 +78,15 @@ export const CURATED_COLLECTIONS: CollectionDefinition[] = [
     path: '/collections/high-uptime'
   },
   {
-    id: 'mock-data',
-    name: 'Mock & Prototype Data',
-    shortLabel: 'Mock Data',
-    tagline: 'Realistic Test Fixtures',
-    desc: 'Mock Fixtures',
+    id: 'developer-tools',
+    name: 'Developer Utilities & APIs',
+    shortLabel: 'Dev Tools',
+    tagline: 'Coding & Infrastructure APIs',
+    desc: 'Dev Utilities',
     description:
-      'Ready-made fixtures for users, products, posts, and geographic locations. Ideal for wireframing UI components before backend development starts.',
+      'Essential programmatic utilities, code formatters, validation services, and developer tooling with free tiers.',
     icon: Database,
-    path: '/collections/mock-data'
+    path: '/collections/developer-tools'
   }
 ];
 

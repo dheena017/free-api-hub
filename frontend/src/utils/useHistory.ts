@@ -9,7 +9,7 @@ export interface HistoryItem {
   name: string;
   slug: string;
   category: string;
-  sample_endpoint: string;
+  endpoint: string;
   auth_type: string;
   timestamp: number;
 }
@@ -56,11 +56,11 @@ export function useHistory() {
     const filtered = current.filter((item) => item.slug !== api.slug);
     const updated = [
       {
-        id: api.id,
+        id: api.slug,
         name: api.name,
         slug: api.slug,
         category: api.category,
-        sample_endpoint: api.sample_endpoint,
+        endpoint: api.endpoint || (api.endpoints?.[0]?.path) || '',
         auth_type: api.auth_type,
         timestamp: Date.now()
       },

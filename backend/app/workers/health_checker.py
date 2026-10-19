@@ -17,8 +17,8 @@ from app.logger import logger
 async def ping_endpoint(client: httpx.AsyncClient, api: Dict[str, Any], semaphore: asyncio.Semaphore) -> Dict[str, Any]:
     async with semaphore:
         base_url = api.get("base_url", "").rstrip("/")
-        sample_endpoint = api.get("sample_endpoint", "").lstrip("/")
-        full_url = f"{base_url}/{sample_endpoint}" if sample_endpoint else base_url
+        endpoint = (api.get("endpoint") or "").lstrip("/")
+        full_url = f"{base_url}/{endpoint}" if endpoint else base_url
         
         start_time = time.perf_counter()
         headers = {

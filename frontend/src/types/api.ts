@@ -44,7 +44,7 @@ export interface EndpointStatusItem {
   slug: string;
   category: string;
   base_url: string;
-  sample_endpoint: string;
+  endpoint: string;
   status: HealthStatus;
   uptime_percent?: number | null;
   avg_latency_ms?: number | null;
@@ -65,32 +65,31 @@ export interface EndpointItem {
   path: string;
   method?: string;
   description?: string;
-  params?: Record<string, string>;
-  headers?: Record<string, string>;
+  params?: Record<string, any>;
+  headers?: Record<string, any>;
   body?: string;
   badge?: string;
 }
 
 export interface ApiItem {
-  id: string;
   name: string;
   slug: string;
   description: string;
-  short_description?: string;
   detailed_description?: string;
   category: string;
   base_url: string;
-  sample_endpoint: string;
-  method: string;
+  endpoint: string;
   auth_type: AuthType;
+  auth_required?: boolean;
   pricing_tier: PricingTier;
   cors_supported: boolean;
   https: boolean;
+  is_active?: boolean;
   documentation_url: string;
   tags: string[];
   health: HealthInfo;
-  default_params?: Record<string, string>;
-  default_headers?: Record<string, string>;
+  default_params?: Record<string, any>;
+  default_headers?: Record<string, any>;
   endpoints?: EndpointItem[];
   use_cases?: string[];
   features?: string[];
@@ -142,7 +141,7 @@ export interface ProxyResponse {
 
 export interface ValidationRequest {
   base_url: string;
-  sample_endpoint: string;
+  endpoint: string;
   method?: string;
 }
 
@@ -158,11 +157,10 @@ export interface SubmissionPayload {
   name: string;
   category: string;
   base_url: string;
-  sample_endpoint: string;
+  endpoint: string;
   documentation_url: string;
   auth_type: AuthType;
   pricing_tier: PricingTier;
   description: string;
-  short_description?: string;
   detailed_description?: string;
 }

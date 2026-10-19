@@ -91,7 +91,10 @@ export const CurlImportModal: React.FC<CurlImportModalProps> = ({
               setCurlText(e.target.value);
               if (error) setError(null);
             }}
-            placeholder={'curl -X GET "https://dummyjson.com/products/1" -H "Accept: application/json"'}
+            placeholder={
+              sampleCurl ||
+              'curl -X GET "https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current_weather=true" -H "Accept: application/json"'
+            }
             rows={6}
             className="w-full bg-[#1F1F1F] border border-[#3C4043] rounded-xl p-3 text-xs font-mono text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-[#8AB4F8] resize-none"
             autoFocus

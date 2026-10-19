@@ -765,7 +765,7 @@ CATEGORY_USE_CASES = {
 def generate_default_use_cases(item: dict) -> list[str]:
     cat = item.get("category", "developer-tools")
     name = item.get("name", "API")
-    sample = item.get("sample_endpoint", "/")
+    sample = item.get("endpoint") or "/"
     
     if cat in CATEGORY_USE_CASES:
         return CATEGORY_USE_CASES[cat]
@@ -809,7 +809,7 @@ def generate_default_rate_limit(item: dict) -> str:
         return "Free developer tier: Sign up on official portal to obtain API credentials."
 
 def generate_default_endpoints(item: dict) -> list[dict]:
-    raw_sample = item.get("sample_endpoint", "/").strip()
+    raw_sample = (item.get("endpoint") or "/").strip()
     if not raw_sample.startswith("/"):
         raw_sample = f"/{raw_sample}"
         

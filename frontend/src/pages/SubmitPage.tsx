@@ -65,12 +65,11 @@ export const SubmitPage: React.FC = () => {
     name: '',
     category: 'developer-tools',
     base_url: '',
-    sample_endpoint: '',
+    endpoint: '',
     documentation_url: '',
     auth_type: 'none' as AuthType,
     pricing_tier: 'open' as PricingTier,
     description: '',
-    short_description: '',
     detailed_description: ''
   });
 
@@ -116,12 +115,11 @@ export const SubmitPage: React.FC = () => {
           name: item.name,
           category: item.category,
           base_url: item.base_url,
-          sample_endpoint: item.sample_endpoint,
+          endpoint: item.endpoint,
           documentation_url: item.documentation_url,
           auth_type: item.auth_type,
           pricing_tier: item.pricing_tier,
           description: item.description,
-          short_description: item.short_description || item.description,
           detailed_description: item.detailed_description || item.description
         });
       }
@@ -152,8 +150,8 @@ export const SubmitPage: React.FC = () => {
       errors.base_url = 'Base URL must start with http:// or https:// (e.g. https://api.example.com).';
     }
 
-    if (!formData.sample_endpoint.trim()) {
-      errors.sample_endpoint = 'Sample GET path is required (e.g. /v1/status or /fact).';
+    if (!formData.endpoint.trim()) {
+      errors.endpoint = 'GET endpoint path is required (e.g. /v1/status or /fact).';
     }
 
     if (Object.keys(errors).length > 0) {
@@ -171,7 +169,7 @@ export const SubmitPage: React.FC = () => {
     setFieldErrors((prev) => {
       const next = { ...prev };
       delete next.base_url;
-      delete next.sample_endpoint;
+      delete next.endpoint;
       return next;
     });
 
@@ -181,7 +179,7 @@ export const SubmitPage: React.FC = () => {
     try {
       const result = await validateEndpoint({
         base_url: formData.base_url.trim(),
-        sample_endpoint: formData.sample_endpoint.trim(),
+        endpoint: formData.endpoint.trim(),
         method: 'GET'
       });
       setValidationResult(result);
@@ -211,8 +209,8 @@ export const SubmitPage: React.FC = () => {
     if (!formData.category) {
       errors.category = 'Please choose a category.';
     }
-    if (!formData.short_description.trim() && !formData.description.trim()) {
-      errors.short_description = 'Please provide a short summary description for the catalog card.';
+    if (!formData.description.trim()) {
+      errors.description = 'Please provide a description for the catalog card.';
     }
     if (!formData.documentation_url.trim()) {
       errors.documentation_url = 'Official Documentation URL is required.';
@@ -222,8 +220,8 @@ export const SubmitPage: React.FC = () => {
     if (!formData.base_url.trim()) {
       errors.base_url = 'Base URL is required.';
     }
-    if (!formData.sample_endpoint.trim()) {
-      errors.sample_endpoint = 'Sample GET path is required.';
+    if (!formData.endpoint.trim()) {
+      errors.endpoint = 'GET endpoint path is required.';
     }
 
     if (Object.keys(errors).length > 0) {
@@ -246,11 +244,11 @@ export const SubmitPage: React.FC = () => {
         name: formData.name.trim(),
         category: formData.category,
         base_url: formData.base_url.trim(),
-        sample_endpoint: formData.sample_endpoint.trim(),
+        endpoint: formData.endpoint.trim(),
         documentation_url: formData.documentation_url.trim(),
         auth_type: formData.auth_type,
         pricing_tier: formData.pricing_tier,
-        description: formData.short_description.trim() || formData.description.trim()
+        description: formData.description.trim()
       });
       if (res.submission_id) {
         setLastSubmittedId(res.submission_id);
@@ -382,8 +380,8 @@ export const SubmitPage: React.FC = () => {
                   <p className="font-mono text-[#8AB4F8] mt-0.5 truncate">{lookupResult.base_url}</p>
                 </div>
                 <div>
-                  <span className="text-slate-400">Sample Path:</span>
-                  <p className="font-mono text-slate-300 mt-0.5">{lookupResult.sample_endpoint}</p>
+                  <span className="text-slate-400">Endpoint Path:</span>
+                  <p className="font-mono text-slate-300 mt-0.5">{lookupResult.endpoint}</p>
                 </div>
                 <div>
                   <span className="text-slate-400">Submission Timestamp:</span>
@@ -457,12 +455,11 @@ export const SubmitPage: React.FC = () => {
                   name: '',
                   category: 'weather',
                   base_url: '',
-                  sample_endpoint: '',
+                  endpoint: '',
                   documentation_url: '',
                   auth_type: 'none',
                   pricing_tier: 'open',
                   description: '',
-                  short_description: '',
                   detailed_description: ''
                 });
               }}
@@ -545,32 +542,31 @@ export const SubmitPage: React.FC = () => {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs font-medium text-slate-300">
-                  Short Description (Card Summary) *
+                  Description *
                 </label>
                 <span className="text-[10px] text-slate-400 font-mono">Shown on API cards & search</span>
               </div>
               <textarea
                 rows={2}
                 placeholder="Punchy 1-2 sentence summary of what this API provides (e.g. Accurate global weather forecast without API keys)..."
-                value={formData.short_description || formData.description}
+                value={formData.description}
                 onChange={(e) => {
                   setFormData({
                     ...formData,
-                    short_description: e.target.value,
                     description: e.target.value
                   });
-                  if (fieldErrors.short_description) setFieldErrors({ ...fieldErrors, short_description: '' });
+                  if (fieldErrors.description) setFieldErrors({ ...fieldErrors, description: '' });
                 }}
                 className={`w-full bg-[#1F1F1F] border rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none transition-colors ${
-                  fieldErrors.short_description
+                  fieldErrors.description
                     ? 'border-rose-500 ring-1 ring-rose-500/30'
                     : 'border-[#3C4043] focus:border-[#8AB4F8]'
                 }`}
               />
-              {fieldErrors.short_description && (
+              {fieldErrors.description && (
                 <p className="text-[11px] text-rose-400 mt-1 flex items-center gap-1 font-medium">
                   <AlertCircle className="h-3 w-3 flex-shrink-0" />
-                  <span>{fieldErrors.short_description}</span>
+                  <span>{fieldErrors.description}</span>
                 </p>
               )}
             </div>
@@ -681,26 +677,26 @@ export const SubmitPage: React.FC = () => {
 
                 <div>
                   <label className="text-xs font-medium text-slate-300 block mb-1">
-                    Sample GET Path *
+                    GET Endpoint Path *
                   </label>
                   <input
                     type="text"
                     placeholder="/v1/status or /fact"
-                    value={formData.sample_endpoint}
+                    value={formData.endpoint}
                     onChange={(e) => {
-                      setFormData({ ...formData, sample_endpoint: e.target.value });
-                      if (fieldErrors.sample_endpoint) setFieldErrors({ ...fieldErrors, sample_endpoint: '' });
+                      setFormData({ ...formData, endpoint: e.target.value });
+                      if (fieldErrors.endpoint) setFieldErrors({ ...fieldErrors, endpoint: '' });
                     }}
                     className={`w-full bg-[#1F1F1F] border rounded-lg px-3 py-2 text-xs font-mono text-slate-100 focus:outline-none transition-colors ${
-                      fieldErrors.sample_endpoint
+                      fieldErrors.endpoint
                         ? 'border-rose-500 ring-1 ring-rose-500/30'
                         : 'border-[#3C4043] focus:border-[#8AB4F8]'
                     }`}
                   />
-                  {fieldErrors.sample_endpoint && (
+                  {fieldErrors.endpoint && (
                     <p className="text-[11px] text-rose-400 mt-1 flex items-center gap-1 font-medium">
                       <AlertCircle className="h-3 w-3 flex-shrink-0" />
-                      <span>{fieldErrors.sample_endpoint}</span>
+                      <span>{fieldErrors.endpoint}</span>
                     </p>
                   )}
                 </div>

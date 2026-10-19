@@ -73,7 +73,8 @@ export function getEndpointPresets(api: ApiItem): EndpointPreset[] {
   // 1. Data-First: If structured endpoints exist directly in catalog data, prioritize them!
   if (api.endpoints && api.endpoints.length > 0) {
     return api.endpoints.map((ep, idx) => {
-      const rawPath = ep.path.startsWith('/') ? ep.path : `/${ep.path}`;
+      const epPath = ep?.path || '/';
+      const rawPath = epPath.startsWith('/') ? epPath : `/${epPath}`;
       const { params: extractedParams } = extractParamsFromEndpoint(rawPath);
       const mergedParams = {
         ...extractedParams,
@@ -95,7 +96,7 @@ export function getEndpointPresets(api: ApiItem): EndpointPreset[] {
   }
 
   const presets: EndpointPreset[] = [];
-  const rawSample = api.sample_endpoint || '/';
+  const rawSample = api.endpoint || (api.endpoints?.[0]?.path) || '/';
   const formattedSample = rawSample.startsWith('/') ? rawSample : `/${rawSample}`;
   const { cleanPath, params: extractedParams } = extractParamsFromEndpoint(formattedSample);
 
@@ -110,7 +111,7 @@ export function getEndpointPresets(api: ApiItem): EndpointPreset[] {
     id: 'primary-sample',
     label: `${api.name} (Live Sample)`,
     description: `Official endpoint verified live: ${formattedSample}`,
-    method: api.method || 'GET',
+    method: api.endpoints?.[0]?.method || 'GET',
     endpoint: formattedSample,
     params: Object.keys(mergedParams).length > 0 ? mergedParams : undefined,
     headers: api.default_headers && Object.keys(api.default_headers).length > 0 ? api.default_headers : undefined,
@@ -123,7 +124,7 @@ export function getEndpointPresets(api: ApiItem): EndpointPreset[] {
       id: 'clean-endpoint',
       label: 'Base Path (No Parameters)',
       description: `Query base resource without filters: ${cleanPath}`,
-      method: api.method || 'GET',
+      method: api.endpoints?.[0]?.method || 'GET',
       endpoint: cleanPath,
       headers: api.default_headers,
       badge: 'Unfiltered'
@@ -161,8 +162,11 @@ export function getEndpointPresets(api: ApiItem): EndpointPreset[] {
   }
 
   // 4. Mutation / POST Simulation (for POST APIs or data categories)
+  const hasMutationEndpoint = api.endpoints?.some((ep) =>
+    ['POST', 'PUT', 'PATCH'].includes((ep.method || '').toUpperCase())
+  );
   if (
-    ['POST', 'PUT', 'PATCH'].includes((api.method || '').toUpperCase()) ||
+    hasMutationEndpoint ||
     ['developer-tools', 'database', 'ecommerce', 'productivity'].includes(api.category)
   ) {
     const postEndpoint = cleanPath.endsWith('/add') || cleanPath.endsWith('/create')

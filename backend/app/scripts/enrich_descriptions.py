@@ -79,7 +79,7 @@ def build_enrichment(item: dict) -> tuple[str, str]:
     category = item.get("category", "developer-tools").lower()
     auth_type = item.get("auth_type", "none")
     base_url = item.get("base_url", "").rstrip("/")
-    sample_endpoint = item.get("sample_endpoint", "").lstrip("/")
+    endpoint = item.get("endpoint", "").lstrip("/")
     method = item.get("method", "GET").upper()
 
     # Check explicit hand-curated list
@@ -121,7 +121,7 @@ def build_enrichment(item: dict) -> tuple[str, str]:
 
     # Paragraph 2: Technical access & endpoints for this API
     auth_detail = "no API key required (open public endpoint)" if auth_type == "none" else f"free {auth_type.replace('_', ' ')} authentication"
-    p2 = f"Requests are sent to {base_url} using standard HTTP {method}. Developers can call endpoints such as '/{sample_endpoint}' with {auth_detail} to receive structured JSON responses."
+    p2 = f"Requests are sent to {base_url} using standard HTTP {method}. Developers can call endpoints such as '/{endpoint}' with {auth_detail} to receive structured JSON responses."
 
     # Paragraph 3: Domain-specific use cases for this API
     use_case = DOMAIN_USE_CASES.get(category, "Ideal for web and mobile applications, backend services, and automated data processing.")

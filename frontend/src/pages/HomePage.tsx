@@ -173,14 +173,7 @@ export const HomePage: React.FC = () => {
         label: c.name,
         query: c.slug
       }))
-    : [
-        { label: 'Weather', query: 'weather' },
-        { label: 'Finance', query: 'finance' },
-        { label: 'Gaming', query: 'gaming' },
-        { label: 'Science', query: 'science' },
-        { label: 'Database', query: 'database' },
-        { label: 'Tools', query: 'developer-tools' }
-      ];
+    : [];
 
   const categoryThemes: Record<string, { iconColor: string; bg: string; border: string }> = {
     'developer-tools': { iconColor: 'text-sky-400', bg: 'bg-sky-500/10', border: 'hover:border-sky-500/50' },
@@ -229,7 +222,7 @@ export const HomePage: React.FC = () => {
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#8AB4F8]/10 border border-[#8AB4F8]/20 text-[#8AB4F8] text-xs font-medium mb-6">
           <span className="h-2 w-2 rounded-full bg-[#81C995]" />
           <span>
-            {stats ? `${stats.total_apis.toLocaleString()} Verified Free REST APIs` : '4,000+ Verified Free REST APIs'} • Zero Credit Card Traps
+            {stats ? `${stats.total_apis.toLocaleString()} Verified Free REST APIs` : 'Verified Free REST APIs'} • Zero Credit Card Traps
           </span>
         </div>
 
@@ -535,7 +528,7 @@ export const HomePage: React.FC = () => {
         ) : featuredApis.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {featuredApis.map((api) => (
-              <ApiCard key={api.id} api={api} />
+              <ApiCard key={api.slug} api={api} />
             ))}
           </div>
         ) : (
