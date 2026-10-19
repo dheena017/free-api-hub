@@ -176,7 +176,7 @@
         "is_day": 1
       },
       "hourly_units": {
-        "temperature_2m": "°C",
+        "temperature_2m": "\u00b0C",
         "relative_humidity_2m": "%",
         "precipitation_probability": "%"
       },
@@ -206,9 +206,9 @@
   },
   {
     "slug": "pokeapi",
-    "name": "PokéAPI",
-    "description": "Comprehensive RESTful Pokémon API consuming full data about Pokémon, moves, abilities, types, and species.",
-    "detailed_description": "PokéAPI is a full-featured, open-source RESTful API providing structured data about the entire Pokémon franchise.\n\nIt indexes hundreds of Pokémon species, battle moves, evolutions, abilities, egg groups, item descriptions, and encounter locations across all generations. The API supports hyperlinked pagination and CORS out of the box.\n\nPerfect for game databases, Pokédex companion apps, Discord bots, and educational web development tutorials.",
+    "name": "Pok\u00e9API",
+    "description": "Comprehensive RESTful Pok\u00e9mon API consuming full data about Pok\u00e9mon, moves, abilities, types, and species.",
+    "detailed_description": "Pok\u00e9API is a full-featured, open-source RESTful API providing structured data about the entire Pok\u00e9mon franchise.\n\nIt indexes hundreds of Pok\u00e9mon species, battle moves, evolutions, abilities, egg groups, item descriptions, and encounter locations across all generations. The API supports hyperlinked pagination and CORS out of the box.\n\nPerfect for game databases, Pok\u00e9dex companion apps, Discord bots, and educational web development tutorials.",
     "category": "gaming",
     "base_url": "https://pokeapi.co",
     "endpoint": "/api/v2/pokemon/ditto",
@@ -239,7 +239,7 @@
     "endpoints": [
       {
         "id": "ditto-detail",
-        "name": "Get Pokémon Details (Ditto)",
+        "name": "Get Pok\u00e9mon Details (Ditto)",
         "path": "/api/v2/pokemon/ditto",
         "method": "GET",
         "description": "Full attributes, abilities, stats, sprites, and types for Ditto",
@@ -250,10 +250,10 @@
       },
       {
         "id": "pokemon-list",
-        "name": "List All Pokémon",
+        "name": "List All Pok\u00e9mon",
         "path": "/api/v2/pokemon",
         "method": "GET",
-        "description": "Paginated index of all Pokémon species across all generations",
+        "description": "Paginated index of all Pok\u00e9mon species across all generations",
         "params": {
           "limit": "20",
           "offset": "0"
@@ -278,7 +278,7 @@
         "name": "Type Matchups & Strengths (Electric)",
         "path": "/api/v2/type/electric",
         "method": "GET",
-        "description": "Damage relations, double damage to/from, and related Pokémon for Electric type",
+        "description": "Damage relations, double damage to/from, and related Pok\u00e9mon for Electric type",
         "params": {},
         "headers": {},
         "body": null,
@@ -286,12 +286,12 @@
       }
     ],
     "use_cases": [
-      "Interactive Pokédex web applications and mobile companion tools",
-      "Pokémon battle simulators, tournament drafting, and team builders",
+      "Interactive Pok\u00e9dex web applications and mobile companion tools",
+      "Pok\u00e9mon battle simulators, tournament drafting, and team builders",
       "Character stat visualizers, evolution tree explorers, and trivia bots"
     ],
     "features": [
-      "Complete coverage of all 9 Pokémon video game generations",
+      "Complete coverage of all 9 Pok\u00e9mon video game generations",
       "Hyperlinked RESTful pagination and JSON schema compliance",
       "Open-source and community-maintained with high CDN caching",
       "Zero authentication needed"
@@ -6948,7 +6948,7 @@
   },
   {
     "slug": "am-thyste",
-    "name": "Améthyste",
+    "name": "Am\u00e9thyste",
     "description": "Generate images for Discord users",
     "detailed_description": null,
     "category": "communication",
@@ -6964,7 +6964,7 @@
     "tags": [
       "entertainment",
       "api-key",
-      "améthyste"
+      "am\u00e9thyste"
     ],
     "health": {
       "status": "untested",
@@ -6979,7 +6979,7 @@
     "endpoints": [
       {
         "id": "primary-sample",
-        "name": "Améthyste (Primary Endpoint)",
+        "name": "Am\u00e9thyste (Primary Endpoint)",
         "path": "/",
         "method": "GET",
         "description": "Verified endpoint: /",
@@ -7256,7 +7256,7 @@
   {
     "slug": "dribbble",
     "name": "Dribbble",
-    "description": "Discover the world’s top designers & creatives",
+    "description": "Discover the world\u2019s top designers & creatives",
     "detailed_description": null,
     "category": "security",
     "base_url": "https://developer.dribbble.com",
@@ -8319,7 +8319,7 @@
   {
     "slug": "text-till-kladdesign",
     "name": "Text-till-Kladdesign",
-    "description": "AI fashion design generator — transform Swedish text into clothing concepts",
+    "description": "AI fashion design generator \u2014 transform Swedish text into clothing concepts",
     "detailed_description": null,
     "category": "art-design",
     "base_url": "https://text-till-klad-design.gracestack.se",
@@ -9751,7 +9751,7 @@
   },
   {
     "slug": "a-b-blia-digital",
-    "name": "A Bíblia Digital",
+    "name": "A B\u00edblia Digital",
     "description": "Do not worry about managing the multiple versions of the Bible",
     "detailed_description": null,
     "category": "reference",
@@ -9767,7 +9767,7 @@
     "tags": [
       "reference",
       "api-key",
-      "bíblia",
+      "b\u00edblia",
       "digital"
     ],
     "health": {
@@ -9783,7 +9783,7 @@
     "endpoints": [
       {
         "id": "primary-sample",
-        "name": "A Bíblia Digital (Primary Endpoint)",
+        "name": "A B\u00edblia Digital (Primary Endpoint)",
         "path": "/",
         "method": "GET",
         "description": "Verified endpoint: /",
@@ -9794,7 +9794,7 @@
       }
     ],
     "use_cases": [
-      "Direct application integration consuming live A Bíblia Digital data",
+      "Direct application integration consuming live A B\u00edblia Digital data",
       "Automated querying of / for dynamic data feeds",
       "Interactive developer widgets and dashboards in the reference domain"
     ],
@@ -10504,7 +10504,7 @@
   {
     "slug": "runyankole-bible",
     "name": "Runyankole Bible",
-    "description": "Free REST API for the Runyankore-Rukiga Bible — 66 books, 31106 verses",
+    "description": "Free REST API for the Runyankore-Rukiga Bible \u2014 66 books, 31106 verses",
     "detailed_description": null,
     "category": "education-books",
     "base_url": "https://runyankole-bible-api.vercel.app",
@@ -18295,7 +18295,7 @@
   {
     "slug": "hostdefi",
     "name": "HostDeFi",
-    "description": "Free A+–F token-safety grades across Solana and EVM chains",
+    "description": "Free A+\u2013F token-safety grades across Solana and EVM chains",
     "detailed_description": null,
     "category": "crypto-web3",
     "base_url": "https://hostdefi.com",
@@ -22352,7 +22352,7 @@
   },
   {
     "slug": "api-gr-tis",
-    "name": "API Grátis",
+    "name": "API Gr\u00e1tis",
     "description": "Multiples services and public APIs",
     "detailed_description": null,
     "category": "developer-tools",
@@ -22369,7 +22369,7 @@
       "developer-tools",
       "none",
       "api",
-      "grátis"
+      "gr\u00e1tis"
     ],
     "health": {
       "status": "untested",
@@ -22384,7 +22384,7 @@
     "endpoints": [
       {
         "id": "primary-sample",
-        "name": "API Grátis (Primary Endpoint)",
+        "name": "API Gr\u00e1tis (Primary Endpoint)",
         "path": "/",
         "method": "GET",
         "description": "Verified endpoint: /",
@@ -39069,8 +39069,8 @@
   },
   {
     "slug": "gr-nstromindex",
-    "name": "GrünstromIndex",
-    "description": "Green Power Index for Germany (Grünstromindex/GSI)",
+    "name": "Gr\u00fcnstromIndex",
+    "description": "Green Power Index for Germany (Gr\u00fcnstromindex/GSI)",
     "detailed_description": null,
     "category": "science",
     "base_url": "https://gruenstromindex.de",
@@ -39085,7 +39085,7 @@
     "tags": [
       "science",
       "none",
-      "grünstromindex"
+      "gr\u00fcnstromindex"
     ],
     "health": {
       "status": "untested",
@@ -39100,7 +39100,7 @@
     "endpoints": [
       {
         "id": "primary-sample",
-        "name": "GrünstromIndex (Primary Endpoint)",
+        "name": "Gr\u00fcnstromIndex (Primary Endpoint)",
         "path": "/",
         "method": "GET",
         "description": "Verified endpoint: /",
@@ -39354,7 +39354,7 @@
   {
     "slug": "national-grid-eso",
     "name": "National Grid ESO",
-    "description": "Open data from Great Britain’s Electricity System Operator",
+    "description": "Open data from Great Britain\u2019s Electricity System Operator",
     "detailed_description": null,
     "category": "science",
     "base_url": "https://data.nationalgrideso.com",
@@ -39869,7 +39869,7 @@
   },
   {
     "slug": "s-hk-n-hinta-nyt",
-    "name": "Sähkön hinta nyt",
+    "name": "S\u00e4hk\u00f6n hinta nyt",
     "description": "Finnish and Nordic day-ahead electricity spot prices (15-minute), cheapest hours",
     "detailed_description": null,
     "category": "science",
@@ -39885,7 +39885,7 @@
     "tags": [
       "science",
       "none",
-      "sähkön",
+      "s\u00e4hk\u00f6n",
       "hinta",
       "nyt"
     ],
@@ -39902,7 +39902,7 @@
     "endpoints": [
       {
         "id": "primary-sample",
-        "name": "Sähkön hinta nyt (Primary Endpoint)",
+        "name": "S\u00e4hk\u00f6n hinta nyt (Primary Endpoint)",
         "path": "/",
         "method": "GET",
         "description": "Verified endpoint: /",
@@ -41359,7 +41359,7 @@
   {
     "slug": "econpulse",
     "name": "EconPulse",
-    "description": "Live economic data — CPI, PPI, energy, treasury rates, BTC premium",
+    "description": "Live economic data \u2014 CPI, PPI, energy, treasury rates, BTC premium",
     "detailed_description": null,
     "category": "crypto-web3",
     "base_url": "https://econpulse.io",
@@ -43141,7 +43141,7 @@
   {
     "slug": "mono",
     "name": "Mono",
-    "description": "Connect with users’ bank accounts and access transaction data in Africa",
+    "description": "Connect with users\u2019 bank accounts and access transaction data in Africa",
     "detailed_description": null,
     "category": "finance",
     "base_url": "https://mono.co",
@@ -49864,7 +49864,7 @@
   {
     "slug": "master-setter",
     "name": "Master Setter",
-    "description": "Pokémon TCG cards and sets in 14 languages, with every printing and variant",
+    "description": "Pok\u00e9mon TCG cards and sets in 14 languages, with every printing and variant",
     "detailed_description": null,
     "category": "entertainment",
     "base_url": "https://api.master-setter.com",
@@ -50440,8 +50440,8 @@
   },
   {
     "slug": "pok-mon-tcg",
-    "name": "Pokémon TCG",
-    "description": "Pokémon TCG Information",
+    "name": "Pok\u00e9mon TCG",
+    "description": "Pok\u00e9mon TCG Information",
     "detailed_description": null,
     "category": "entertainment",
     "base_url": "https://pokemontcg.io",
@@ -50456,7 +50456,7 @@
     "tags": [
       "entertainment",
       "none",
-      "pokémon",
+      "pok\u00e9mon",
       "tcg"
     ],
     "health": {
@@ -50472,7 +50472,7 @@
     "endpoints": [
       {
         "id": "primary-sample",
-        "name": "Pokémon TCG (Primary Endpoint)",
+        "name": "Pok\u00e9mon TCG (Primary Endpoint)",
         "path": "/",
         "method": "GET",
         "description": "Verified endpoint: /",
@@ -50498,8 +50498,8 @@
   },
   {
     "slug": "pok-sprite",
-    "name": "PokéSprite",
-    "description": "Database of Pokémon sprites and icons",
+    "name": "Pok\u00e9Sprite",
+    "description": "Database of Pok\u00e9mon sprites and icons",
     "detailed_description": null,
     "category": "database",
     "base_url": "https://msikma.github.io",
@@ -50514,7 +50514,7 @@
     "tags": [
       "entertainment",
       "none",
-      "pokésprite"
+      "pok\u00e9sprite"
     ],
     "health": {
       "status": "untested",
@@ -50529,7 +50529,7 @@
     "endpoints": [
       {
         "id": "primary-sample",
-        "name": "PokéSprite (Primary Endpoint)",
+        "name": "Pok\u00e9Sprite (Primary Endpoint)",
         "path": "/",
         "method": "GET",
         "description": "Verified endpoint: /",
@@ -51410,7 +51410,7 @@
   {
     "slug": "tcgdex",
     "name": "TCGdex",
-    "description": "Multi languages Pokémon TCG Information",
+    "description": "Multi languages Pok\u00e9mon TCG Information",
     "detailed_description": null,
     "category": "entertainment",
     "base_url": "https://tcgdex.dev",
@@ -51580,7 +51580,7 @@
   {
     "slug": "tickermint",
     "name": "TickerMint",
-    "description": "Daily market prices and price history for Pokémon, One Piece, Lorcana and Yu-Gi-Oh cards",
+    "description": "Daily market prices and price history for Pok\u00e9mon, One Piece, Lorcana and Yu-Gi-Oh cards",
     "detailed_description": null,
     "category": "entertainment",
     "base_url": "https://tickermint.cards",
@@ -57346,7 +57346,7 @@
   },
   {
     "slug": "bolet-n-oficial-del-estado-boe",
-    "name": "Boletín Oficial del Estado (BOE)",
+    "name": "Bolet\u00edn Oficial del Estado (BOE)",
     "description": "Official Spanish State Gazette open data: laws, summaries and XML/JSON APIs",
     "detailed_description": null,
     "category": "news",
@@ -57362,7 +57362,7 @@
     "tags": [
       "news",
       "none",
-      "boletín",
+      "bolet\u00edn",
       "oficial",
       "del"
     ],
@@ -57379,7 +57379,7 @@
     "endpoints": [
       {
         "id": "primary-sample",
-        "name": "Boletín Oficial del Estado (BOE) (Primary Endpoint)",
+        "name": "Bolet\u00edn Oficial del Estado (BOE) (Primary Endpoint)",
         "path": "/",
         "method": "GET",
         "description": "Verified endpoint: /",
@@ -57698,7 +57698,7 @@
   {
     "slug": "cpfhub",
     "name": "CPFHub",
-    "description": "Brazilian CPF lookup — returns full name, birth date, and gender for any CPF",
+    "description": "Brazilian CPF lookup \u2014 returns full name, birth date, and gender for any CPF",
     "detailed_description": null,
     "category": "news",
     "base_url": "https://cpfhub.io",
@@ -57867,8 +57867,8 @@
   },
   {
     "slug": "city-gda-sk",
-    "name": "City, Gdańsk",
-    "description": "Gdańsk (PL) City Open Data",
+    "name": "City, Gda\u0144sk",
+    "description": "Gda\u0144sk (PL) City Open Data",
     "detailed_description": null,
     "category": "geography",
     "base_url": "https://ckan.multimediagdansk.pl",
@@ -57883,7 +57883,7 @@
     "tags": [
       "news",
       "none",
-      "gdańsk"
+      "gda\u0144sk"
     ],
     "health": {
       "status": "untested",
@@ -57898,7 +57898,7 @@
     "endpoints": [
       {
         "id": "primary-sample",
-        "name": "City, Gdańsk (Primary Endpoint)",
+        "name": "City, Gda\u0144sk (Primary Endpoint)",
         "path": "/",
         "method": "GET",
         "description": "Verified endpoint: /",
@@ -58502,7 +58502,7 @@
   {
     "slug": "conversor-iae-cnae",
     "name": "Conversor IAE CNAE",
-    "description": "Spanish IAE/CNAE tax activity codes, 2009→2025 crosswalk and AEAT obligations",
+    "description": "Spanish IAE/CNAE tax activity codes, 2009\u21922025 crosswalk and AEAT obligations",
     "detailed_description": null,
     "category": "news",
     "base_url": "https://www.conversoriaecnae.es",
@@ -60115,8 +60115,8 @@
   },
   {
     "slug": "istanbul-i-bb-open-data",
-    "name": "Istanbul (İBB) Open Data",
-    "description": "Data sets from the İstanbul Metropolitan Municipality (İBB)",
+    "name": "Istanbul (\u0130BB) Open Data",
+    "description": "Data sets from the \u0130stanbul Metropolitan Municipality (\u0130BB)",
     "detailed_description": null,
     "category": "news",
     "base_url": "https://data.ibb.gov.tr",
@@ -60148,7 +60148,7 @@
     "endpoints": [
       {
         "id": "primary-sample",
-        "name": "Istanbul (İBB) Open Data (Primary Endpoint)",
+        "name": "Istanbul (\u0130BB) Open Data (Primary Endpoint)",
         "path": "/",
         "method": "GET",
         "description": "Verified endpoint: /",
@@ -60346,7 +60346,7 @@
   {
     "slug": "neotimo-dgfip-mirror",
     "name": "Neotimo DGFiP Mirror",
-    "description": "French DGFiP registry of certified e-invoicing platforms (Plateformes Agréées), searchable by SIRET",
+    "description": "French DGFiP registry of certified e-invoicing platforms (Plateformes Agr\u00e9\u00e9es), searchable by SIRET",
     "detailed_description": null,
     "category": "finance",
     "base_url": "https://neotimo.com",
@@ -66191,7 +66191,7 @@
   },
   {
     "slug": "urgences-qu-bec",
-    "name": "Urgences Québec",
+    "name": "Urgences Qu\u00e9bec",
     "description": "Hourly emergency room occupancy, stretcher counts and wait times for every hospital in Quebec, Canada",
     "detailed_description": null,
     "category": "health-medical",
@@ -66208,7 +66208,7 @@
       "reference",
       "none",
       "urgences",
-      "québec"
+      "qu\u00e9bec"
     ],
     "health": {
       "status": "untested",
@@ -66223,7 +66223,7 @@
     "endpoints": [
       {
         "id": "primary-sample",
-        "name": "Urgences Québec (Primary Endpoint)",
+        "name": "Urgences Qu\u00e9bec (Primary Endpoint)",
         "path": "/",
         "method": "GET",
         "description": "Verified endpoint: /",
@@ -66234,7 +66234,7 @@
       }
     ],
     "use_cases": [
-      "Direct application integration consuming live Urgences Québec data",
+      "Direct application integration consuming live Urgences Qu\u00e9bec data",
       "Automated querying of / for dynamic data feeds",
       "Interactive developer widgets and dashboards in the reference domain"
     ],
@@ -68082,7 +68082,7 @@
   {
     "slug": "ai-economics-tools",
     "name": "AI Economics Tools",
-    "description": "Token cost, LLM energy, agent-hour and Proof-Adjusted Autonomy calculators by Michał Piszczek",
+    "description": "Token cost, LLM energy, agent-hour and Proof-Adjusted Autonomy calculators by Micha\u0142 Piszczek",
     "detailed_description": null,
     "category": "crypto-web3",
     "base_url": "https://piszczek.pl",
@@ -69401,7 +69401,7 @@
   {
     "slug": "mediacraft-ai",
     "name": "MediaCraft AI",
-    "description": "Chinese content compliance review (17 platforms), EN↔CN translation, and SEO optimization. Pay-per-call via x402 (Solana USDC).",
+    "description": "Chinese content compliance review (17 platforms), EN\u2194CN translation, and SEO optimization. Pay-per-call via x402 (Solana USDC).",
     "detailed_description": null,
     "category": "crypto-web3",
     "base_url": "https://mediacraft-x402-api.onrender.com",
@@ -73682,7 +73682,7 @@
   {
     "slug": "spaceflight-news",
     "name": "Spaceflight News",
-    "description": "Spaceflight related news 🚀",
+    "description": "Spaceflight related news \ud83d\ude80",
     "detailed_description": null,
     "category": "news",
     "base_url": "https://spaceflightnewsapi.net",
@@ -77070,7 +77070,7 @@
   {
     "slug": "statistics-of-the-world",
     "name": "Statistics of the World",
-    "description": "Economic data for 218 countries — GDP, population, inflation, and 440+ indicators from IMF and World Bank",
+    "description": "Economic data for 218 countries \u2014 GDP, population, inflation, and 440+ indicators from IMF and World Bank",
     "detailed_description": null,
     "category": "geography",
     "base_url": "https://statisticsoftheworld.com",
@@ -77413,8 +77413,8 @@
   },
   {
     "slug": "ume-open-data",
-    "name": "Umeå Open Data",
-    "description": "Open data of the city Umeå in northen Sweden",
+    "name": "Ume\u00e5 Open Data",
+    "description": "Open data of the city Ume\u00e5 in northen Sweden",
     "detailed_description": null,
     "category": "geography",
     "base_url": "https://opendata.umea.se",
@@ -77429,7 +77429,7 @@
     "tags": [
       "news",
       "none",
-      "umeå",
+      "ume\u00e5",
       "open",
       "data"
     ],
@@ -77446,7 +77446,7 @@
     "endpoints": [
       {
         "id": "primary-sample",
-        "name": "Umeå Open Data (Primary Endpoint)",
+        "name": "Ume\u00e5 Open Data (Primary Endpoint)",
         "path": "/",
         "method": "GET",
         "description": "Verified endpoint: /",
@@ -79360,7 +79360,7 @@
   {
     "slug": "kimiquotes",
     "name": "Kimiquotes",
-    "description": "Team radio and interview quotes by Finnish F1 legend Kimi Räikkönen",
+    "description": "Team radio and interview quotes by Finnish F1 legend Kimi R\u00e4ikk\u00f6nen",
     "detailed_description": null,
     "category": "music",
     "base_url": "https://kimiquotes.herokuapp.com",
@@ -84979,8 +84979,8 @@
   },
   {
     "slug": "vedintel-astroapi",
-    "name": "VedIntel™ AstroAPI",
-    "description": "Vedic astrology computation — birth charts, dashas, panchang, AI narratives",
+    "name": "VedIntel\u2122 AstroAPI",
+    "description": "Vedic astrology computation \u2014 birth charts, dashas, panchang, AI narratives",
     "detailed_description": null,
     "category": "ai-ml",
     "base_url": "https://vedintelastroapi.com",
@@ -85010,7 +85010,7 @@
     "endpoints": [
       {
         "id": "primary-sample",
-        "name": "VedIntel™ AstroAPI (Primary Endpoint)",
+        "name": "VedIntel\u2122 AstroAPI (Primary Endpoint)",
         "path": "/",
         "method": "GET",
         "description": "Verified endpoint: /",
@@ -86355,7 +86355,7 @@
   {
     "slug": "hackerone",
     "name": "HackerOne",
-    "description": "The industry’s first hacker API that helps increase productivity towards creative bug bounty hunting",
+    "description": "The industry\u2019s first hacker API that helps increase productivity towards creative bug bounty hunting",
     "detailed_description": null,
     "category": "security",
     "base_url": "https://api.hackerone.com",
@@ -88016,7 +88016,7 @@
   {
     "slug": "birkinbagstock",
     "name": "BirkinBagStock",
-    "description": "Independent Hermès resale index: inventory, market prices, auction calendar and results",
+    "description": "Independent Herm\u00e8s resale index: inventory, market prices, auction calendar and results",
     "detailed_description": null,
     "category": "ecommerce",
     "base_url": "https://birkinbagstock.com",
@@ -93002,7 +93002,7 @@
   {
     "slug": "fanline-wire",
     "name": "FanLine Wire",
-    "description": "Real-time FanDuel Sportsbook odds — live & in-play and pre-match, with a keyless public snapshot",
+    "description": "Real-time FanDuel Sportsbook odds \u2014 live & in-play and pre-match, with a keyless public snapshot",
     "detailed_description": null,
     "category": "entertainment",
     "base_url": "https://fanlinewire.com",
@@ -94326,7 +94326,7 @@
   {
     "slug": "pinnwire",
     "name": "PinnWire",
-    "description": "Real-time Pinnacle odds for 13 sports — live and prematch over REST, WebSocket and SSE drop alerts",
+    "description": "Real-time Pinnacle odds for 13 sports \u2014 live and prematch over REST, WebSocket and SSE drop alerts",
     "detailed_description": null,
     "category": "sports",
     "base_url": "https://pinnwire.com",
@@ -98632,7 +98632,7 @@
   {
     "slug": "apimetro",
     "name": "Apimetro",
-    "description": "Geospatial data for Mexico City public transport system (Metro, Metrobús, Cablebús, RTP, etc.)",
+    "description": "Geospatial data for Mexico City public transport system (Metro, Metrob\u00fas, Cableb\u00fas, RTP, etc.)",
     "detailed_description": null,
     "category": "transportation",
     "base_url": "https://apimetro.dev",
@@ -100068,7 +100068,7 @@
   },
   {
     "slug": "on-va-o",
-    "name": "On va où ?",
+    "name": "On va o\u00f9 ?",
     "description": "Bike, scooter, motorcycle, wheelchair and walking routes across Europe, with safety indicators",
     "detailed_description": null,
     "category": "transportation",
@@ -100098,7 +100098,7 @@
     "endpoints": [
       {
         "id": "primary-sample",
-        "name": "On va où ? (Primary Endpoint)",
+        "name": "On va o\u00f9 ? (Primary Endpoint)",
         "path": "/",
         "method": "GET",
         "description": "Verified endpoint: /",
@@ -101281,7 +101281,7 @@
   {
     "slug": "transport-for-bordeaux-france",
     "name": "Transport for Bordeaux, France",
-    "description": "Bordeaux Métropole public transport and more (France)",
+    "description": "Bordeaux M\u00e9tropole public transport and more (France)",
     "detailed_description": null,
     "category": "transportation",
     "base_url": "https://opendata.bordeaux-metropole.fr",
@@ -104404,7 +104404,7 @@
   {
     "slug": "brazilian-vehicles-and-prices",
     "name": "Brazilian Vehicles and Prices",
-    "description": "Vehicles information from Fundação Instituto de Pesquisas Econômicas - Fipe",
+    "description": "Vehicles information from Funda\u00e7\u00e3o Instituto de Pesquisas Econ\u00f4micas - Fipe",
     "detailed_description": null,
     "category": "transportation",
     "base_url": "https://deividfortuna.github.io",
@@ -108593,7 +108593,7 @@
   },
   {
     "slug": "m-t-o-france",
-    "name": "Météo-France",
+    "name": "M\u00e9t\u00e9o-France",
     "description": "French weather forecasts and alerts",
     "detailed_description": null,
     "category": "weather",
@@ -108609,7 +108609,7 @@
     "tags": [
       "weather",
       "api-key",
-      "météo",
+      "m\u00e9t\u00e9o",
       "france"
     ],
     "health": {
@@ -108625,7 +108625,7 @@
     "endpoints": [
       {
         "id": "primary-sample",
-        "name": "Météo-France (Primary Endpoint)",
+        "name": "M\u00e9t\u00e9o-France (Primary Endpoint)",
         "path": "/",
         "method": "GET",
         "description": "Verified endpoint: /",
@@ -110137,7 +110137,7 @@
   {
     "slug": "chatwith",
     "name": "Chatwith",
-    "description": "Build custom ChatGPT-style AI chatbots trained on your website and files, integrated with 5000+ apps — no coding, live in minutes.",
+    "description": "Build custom ChatGPT-style AI chatbots trained on your website and files, integrated with 5000+ apps \u2014 no coding, live in minutes.",
     "detailed_description": null,
     "category": "ai-ml",
     "base_url": "https://chatwith.tools",
@@ -112376,7 +112376,7 @@
   {
     "slug": "getgenai-packaging-compliance-review",
     "name": "GetGenAI (Packaging Compliance Review)",
-    "description": "Compliance review API for product labels and marketing assets — automated checks against regulations, retailer specs, and brand guidelines, always up to date",
+    "description": "Compliance review API for product labels and marketing assets \u2014 automated checks against regulations, retailer specs, and brand guidelines, always up to date",
     "detailed_description": null,
     "category": "ecommerce",
     "base_url": "https://www.getgen.ai",
@@ -114381,7 +114381,7 @@
   {
     "slug": "zillapi",
     "name": "Zillapi",
-    "description": "US property data API — Zestimate, photos, taxes, price history",
+    "description": "US property data API \u2014 Zestimate, photos, taxes, price history",
     "detailed_description": null,
     "category": "art-design",
     "base_url": "https://zillapi.com",
@@ -116903,7 +116903,7 @@
   {
     "slug": "verifyed",
     "name": "VerifyEd",
-    "description": "Verify academic credentials — search 912K+ schools, detect diploma mills worldwide",
+    "description": "Verify academic credentials \u2014 search 912K+ schools, detect diploma mills worldwide",
     "detailed_description": null,
     "category": "education-books",
     "base_url": "https://verifyed.org",
@@ -118450,7 +118450,7 @@
   {
     "slug": "thordata",
     "name": "Thordata",
-    "description": "Scrap any webpage or search engine with built-in residential proxies across 190+ countries. Web Scraping API, Search API, and Web Unlocker — pay as you go",
+    "description": "Scrap any webpage or search engine with built-in residential proxies across 190+ countries. Web Scraping API, Search API, and Web Unlocker \u2014 pay as you go",
     "detailed_description": null,
     "category": "geography",
     "base_url": "https://www.thordata.com",
@@ -123255,7 +123255,7 @@
   },
   {
     "slug": "str-mpriser-i-dag",
-    "name": "Strømpriser i dag",
+    "name": "Str\u00f8mpriser i dag",
     "description": "Norwegian electricity prices including VAT and the state subsidy, plus grid tariffs for all 73 grid companies",
     "detailed_description": null,
     "category": "science",
@@ -123271,7 +123271,7 @@
     "tags": [
       "science",
       "none",
-      "strømpriser",
+      "str\u00f8mpriser",
       "dag"
     ],
     "health": {
@@ -123287,7 +123287,7 @@
     "endpoints": [
       {
         "id": "primary-sample",
-        "name": "Strømpriser i dag (Primary Endpoint)",
+        "name": "Str\u00f8mpriser i dag (Primary Endpoint)",
         "path": "/",
         "method": "GET",
         "description": "Verified endpoint: /",
@@ -124177,7 +124177,7 @@
   {
     "slug": "eunormia-e-invoice-api",
     "name": "eunormia E-Invoice API",
-    "description": "eunormia turns your invoice data into a ZUGFeRD/Factur-X PDF/A-3 per EN 16931 — and validates every result before it is delivered",
+    "description": "eunormia turns your invoice data into a ZUGFeRD/Factur-X PDF/A-3 per EN 16931 \u2014 and validates every result before it is delivered",
     "detailed_description": null,
     "category": "productivity",
     "base_url": "https://eunormia.com",
@@ -128373,7 +128373,7 @@
   },
   {
     "slug": "psychologie-et-s-r-nit",
-    "name": "Psychologie et Sérénité",
+    "name": "Psychologie et S\u00e9r\u00e9nit\u00e9",
     "description": "French psychology articles metadata and validated psychological tests catalog",
     "detailed_description": null,
     "category": "news",
@@ -128390,7 +128390,7 @@
       "reference",
       "none",
       "psychologie",
-      "sérénité"
+      "s\u00e9r\u00e9nit\u00e9"
     ],
     "health": {
       "status": "untested",
@@ -128405,7 +128405,7 @@
     "endpoints": [
       {
         "id": "primary-sample",
-        "name": "Psychologie et Sérénité (Primary Endpoint)",
+        "name": "Psychologie et S\u00e9r\u00e9nit\u00e9 (Primary Endpoint)",
         "path": "/",
         "method": "GET",
         "description": "Verified endpoint: /",
@@ -128416,7 +128416,7 @@
       }
     ],
     "use_cases": [
-      "Direct application integration consuming live Psychologie et Sérénité data",
+      "Direct application integration consuming live Psychologie et S\u00e9r\u00e9nit\u00e9 data",
       "Automated querying of / for dynamic data feeds",
       "Interactive developer widgets and dashboards in the reference domain"
     ],
@@ -132168,7 +132168,7 @@
   {
     "slug": "moonlora",
     "name": "Moonlora",
-    "description": "Moon phases, illumination, moon signs, full/new moon dates (1900–2100), moonrise/moonset by coordinates",
+    "description": "Moon phases, illumination, moon signs, full/new moon dates (1900\u20132100), moonrise/moonset by coordinates",
     "detailed_description": null,
     "category": "science",
     "base_url": "https://moonlora.com",
@@ -132283,7 +132283,7 @@
   {
     "slug": "arkforge-trust-layer",
     "name": "ArkForge Trust Layer",
-    "description": "Cryptographic proof API for HTTP exchanges — Ed25519, RFC 3161, and Sigstore Rekor attestation",
+    "description": "Cryptographic proof API for HTTP exchanges \u2014 Ed25519, RFC 3161, and Sigstore Rekor attestation",
     "detailed_description": null,
     "category": "developer-tools",
     "base_url": "https://arkforge.fr",
@@ -137623,7 +137623,7 @@
   {
     "slug": "shoof-aflam",
     "name": "Shoof Aflam",
-    "description": "Arabic streaming guide — search 14,000+ movies/series, platform availability across 18 services",
+    "description": "Arabic streaming guide \u2014 search 14,000+ movies/series, platform availability across 18 services",
     "detailed_description": null,
     "category": "video-movies",
     "base_url": "https://shoofaflam.tv",
@@ -138084,7 +138084,7 @@
   {
     "slug": "grill-index",
     "name": "Grill Index",
-    "description": "Scores grilling conditions 0–100 for any location: best cook window, week ahead, charcoal/gas/smoker tuning. No key needed",
+    "description": "Scores grilling conditions 0\u2013100 for any location: best cook window, week ahead, charcoal/gas/smoker tuning. No key needed",
     "detailed_description": null,
     "category": "sports",
     "base_url": "https://grillindex.cblabs.app",
@@ -141637,7 +141637,7 @@
   {
     "slug": "college-roi",
     "name": "College ROI",
-    "description": "Lifetime ROI of US colleges and majors — free static JSON, CC BY 4.0",
+    "description": "Lifetime ROI of US colleges and majors \u2014 free static JSON, CC BY 4.0",
     "detailed_description": null,
     "category": "education-books",
     "base_url": "https://le-teen.com",
@@ -142963,7 +142963,7 @@
   {
     "slug": "crob-at",
     "name": "Crob.at",
-    "description": "Pokémon team sharing and type chart data",
+    "description": "Pok\u00e9mon team sharing and type chart data",
     "detailed_description": null,
     "category": "entertainment",
     "base_url": "https://crob.at",
@@ -143249,7 +143249,7 @@
   {
     "slug": "reg-vault",
     "name": "REG-Vault",
-    "description": "Retro-gaming metadata catalog — 91k games across 99 systems (box art, manuals, screenshots, gameplay previews). MCP endpoint at  api.regvault.org/mcp",
+    "description": "Retro-gaming metadata catalog \u2014 91k games across 99 systems (box art, manuals, screenshots, gameplay previews). MCP endpoint at  api.regvault.org/mcp",
     "detailed_description": null,
     "category": "gaming",
     "base_url": "https://regvault.org",
@@ -144173,7 +144173,7 @@
   {
     "slug": "crime-brasil",
     "name": "Crime Brasil",
-    "description": "Brazilian public-safety data — 3M geocoded crime incidents, PRF highway accidents, DATASUS violence (CC BY 4.0)",
+    "description": "Brazilian public-safety data \u2014 3M geocoded crime incidents, PRF highway accidents, DATASUS violence (CC BY 4.0)",
     "detailed_description": null,
     "category": "news",
     "base_url": "https://crimebrasil.com.br",
@@ -147451,7 +147451,7 @@
   {
     "slug": "stormglass",
     "name": "Stormglass",
-    "description": "Weather forecasts & historical data from the world’s most trusted meteorological institutions in one single API",
+    "description": "Weather forecasts & historical data from the world\u2019s most trusted meteorological institutions in one single API",
     "detailed_description": null,
     "category": "weather",
     "base_url": "https://docs.stormglass.io",
@@ -149579,7 +149579,7 @@
   {
     "slug": "wikitude",
     "name": "Wikitude",
-    "description": "Wikitude’s all-in-one AR solution includes image recognition & tracking, 3D model rendering, video overlay, location based AR.",
+    "description": "Wikitude\u2019s all-in-one AR solution includes image recognition & tracking, 3D model rendering, video overlay, location based AR.",
     "detailed_description": null,
     "category": "art-design",
     "base_url": "http://www.wikitude.com",
@@ -150152,7 +150152,7 @@
   {
     "slug": "anti-captcha",
     "name": "Anti-Captcha",
-    "description": "Access to Anti-Captcha’s API.",
+    "description": "Access to Anti-Captcha\u2019s API.",
     "detailed_description": null,
     "category": "developer-tools",
     "base_url": "https://anti-captcha.com",
@@ -151297,7 +151297,7 @@
   {
     "slug": "cambridge-dictionaries-online",
     "name": "Cambridge Dictionaries Online",
-    "description": "Access to Cambridge’s custom-developed API.",
+    "description": "Access to Cambridge\u2019s custom-developed API.",
     "detailed_description": null,
     "category": "education-books",
     "base_url": "http://dictionary.cambridge.org",
@@ -151993,7 +151993,7 @@
   },
   {
     "slug": "signnow-api-esign-api-by-airslate",
-    "name": "SignNow API – eSign API by airSlate",
+    "name": "SignNow API \u2013 eSign API by airSlate",
     "description": "Embed branded eSignature workflows in your app and quickly customize them to your user needs.",
     "detailed_description": null,
     "category": "developer-tools",
@@ -152026,7 +152026,7 @@
     "endpoints": [
       {
         "id": "primary-sample",
-        "name": "SignNow API – eSign API by airSlate (Primary Endpoint)",
+        "name": "SignNow API \u2013 eSign API by airSlate (Primary Endpoint)",
         "path": "/",
         "method": "GET",
         "description": "Verified endpoint: /",
@@ -153141,7 +153141,7 @@
   {
     "slug": "webpurify",
     "name": "WebPurify",
-    "description": "Provides live image moderation by humans. Free for the first 100 images. 2¢ per image after.",
+    "description": "Provides live image moderation by humans. Free for the first 100 images. 2\u00a2 per image after.",
     "detailed_description": null,
     "category": "art-design",
     "base_url": "https://www.webpurify.com",
@@ -155384,7 +155384,7 @@
   {
     "slug": "rhapsody",
     "name": "Rhapsody",
-    "description": "Access metadata, user’s entire library of music and do much more.",
+    "description": "Access metadata, user\u2019s entire library of music and do much more.",
     "detailed_description": null,
     "category": "music",
     "base_url": "https://developer.rhapsody.com",
@@ -156702,7 +156702,7 @@
   {
     "slug": "factual",
     "name": "Factual",
-    "description": "Providing a places search that can be searched by latitude/longitude, and “where” using full text search query string.",
+    "description": "Providing a places search that can be searched by latitude/longitude, and \u201cwhere\u201d using full text search query string.",
     "detailed_description": null,
     "category": "geography",
     "base_url": "https://developer.factual.com",
@@ -157163,7 +157163,7 @@
   {
     "slug": "mastodon",
     "name": "Mastodon",
-    "description": "Access to Mastodon’s APIs, the Open-source twitter competitor.",
+    "description": "Access to Mastodon\u2019s APIs, the Open-source twitter competitor.",
     "detailed_description": null,
     "category": "developer-tools",
     "base_url": "https://docs.joinmastodon.org",
@@ -157220,7 +157220,7 @@
   {
     "slug": "viber",
     "name": "Viber",
-    "description": "With Viber’s APIs, you can create unique experiences for users at scale.",
+    "description": "With Viber\u2019s APIs, you can create unique experiences for users at scale.",
     "detailed_description": null,
     "category": "developer-tools",
     "base_url": "https://developers.viber.com",
@@ -157277,7 +157277,7 @@
   {
     "slug": "weibo",
     "name": "Weibo",
-    "description": "Programmatic access to China’s most popular microblogging site.",
+    "description": "Programmatic access to China\u2019s most popular microblogging site.",
     "detailed_description": null,
     "category": "developer-tools",
     "base_url": "http://open.weibo.com",
@@ -157334,7 +157334,7 @@
   {
     "slug": "whatsapp-document-interaction",
     "name": "Whatsapp Document Interaction",
-    "description": "If your application creates photos, videos or audio notes and you’d like your users to share these media using WhatsApp.  Limited",
+    "description": "If your application creates photos, videos or audio notes and you\u2019d like your users to share these media using WhatsApp.  Limited",
     "detailed_description": null,
     "category": "music",
     "base_url": "https://faq.whatsapp.com",
@@ -157393,7 +157393,7 @@
   {
     "slug": "wordpress",
     "name": "Wordpress",
-    "description": "Access to Wordpress’ API.",
+    "description": "Access to Wordpress\u2019 API.",
     "detailed_description": null,
     "category": "developer-tools",
     "base_url": "https://codex.wordpress.org",
@@ -157507,7 +157507,7 @@
   {
     "slug": "mercurial",
     "name": "Mercurial",
-    "description": "Access to Mercurial’s API.",
+    "description": "Access to Mercurial\u2019s API.",
     "detailed_description": null,
     "category": "developer-tools",
     "base_url": "https://www.mercurial-scm.org",
@@ -158202,7 +158202,7 @@
   {
     "slug": "ola",
     "name": "Ola",
-    "description": "Help your users find, book and track Ola rides with ease. Ola is India’s most popular cab booking app with availability of rides in more than 100 cities across India.",
+    "description": "Help your users find, book and track Ola rides with ease. Ola is India\u2019s most popular cab booking app with availability of rides in more than 100 cities across India.",
     "detailed_description": null,
     "category": "music",
     "base_url": "https://developers.olacabs.com",
@@ -163320,7 +163320,7 @@
   {
     "slug": "extpose",
     "name": "Extpose",
-    "description": "Extpose — in‑store performance analytics and optimization tool for Chrome extensions. https://extpose.com",
+    "description": "Extpose \u2014 in\u2011store performance analytics and optimization tool for Chrome extensions. https://extpose.com",
     "detailed_description": null,
     "category": "ecommerce",
     "base_url": "https://extpose.com",
@@ -163727,7 +163727,7 @@
   {
     "slug": "gerermesaffaires-rest-api",
     "name": "GererMesAffaires {REST:API}",
-    "description": "Sécurisez vos données en interfaçant votre logiciel métier avec le service en ligne GererMesAffaires",
+    "description": "S\u00e9curisez vos donn\u00e9es en interfa\u00e7ant votre logiciel m\u00e9tier avec le service en ligne GererMesAffaires",
     "detailed_description": null,
     "category": "developer-tools",
     "base_url": "https://api.gerermesaffaires.com",
@@ -164840,7 +164840,7 @@
   {
     "slug": "groundhog-day-api",
     "name": "Groundhog Day API",
-    "description": "This API returns all of North America’s prognosticating animals and their yearly weather predictions.",
+    "description": "This API returns all of North America\u2019s prognosticating animals and their yearly weather predictions.",
     "detailed_description": null,
     "category": "animals",
     "base_url": "https://groundhog-day.com",
@@ -165130,8 +165130,8 @@
   },
   {
     "slug": "ioe-iot-api-to-create-end-user-applications",
-    "name": "IoE² IoT API - to create end-user applications",
-    "description": "Public API endpoints and OpenAPI specifications for IoE² IoT API - to create end-user applications.",
+    "name": "IoE\u00b2 IoT API - to create end-user applications",
+    "description": "Public API endpoints and OpenAPI specifications for IoE\u00b2 IoT API - to create end-user applications.",
     "detailed_description": null,
     "category": "developer-tools",
     "base_url": "https://developers.ijenko.com",
@@ -165146,7 +165146,7 @@
     "tags": [
       "developer-tools",
       "none",
-      "ioe²",
+      "ioe\u00b2",
       "iot",
       "api"
     ],
@@ -165163,7 +165163,7 @@
     "endpoints": [
       {
         "id": "primary-sample",
-        "name": "IoE² IoT API - to create end-user applications (Primary Endpoint)",
+        "name": "IoE\u00b2 IoT API - to create end-user applications (Primary Endpoint)",
         "path": "/",
         "method": "GET",
         "description": "Verified endpoint: /",
@@ -165422,7 +165422,7 @@
   {
     "slug": "api-isendpro",
     "name": "API iSendPro",
-    "description": "[1] Liste des fonctionnalités : - envoi de SMS à un ou plusieurs destinataires, - lookup HLR, - récupération des récapitulatifs de campagne, - gestion des répertoires, - ajout en liste noire. - comptage du nombre de caractères des SMS [2] Pour utiliser cette API vous devez: - Créer un compte iSen...",
+    "description": "[1] Liste des fonctionnalit\u00e9s : - envoi de SMS \u00e0 un ou plusieurs destinataires, - lookup HLR, - r\u00e9cup\u00e9ration des r\u00e9capitulatifs de campagne, - gestion des r\u00e9pertoires, - ajout en liste noire. - comptage du nombre de caract\u00e8res des SMS [2] Pour utiliser cette API vous devez: - Cr\u00e9er un compte iSen...",
     "detailed_description": null,
     "category": "communication",
     "base_url": "https://isendpro.com",
@@ -165653,7 +165653,7 @@
   {
     "slug": "developer-documentation",
     "name": "Developer documentation",
-    "description": "Welcome Implementing a new tool can be daunting, but it doesn't have to. You can implement journy.io in a few different ways to ensure it fits with the rest of your tech stack seamlessly. We welcome your feedback, ideas and suggestions. We really want to make your life easier, so if we’re falling...",
+    "description": "Welcome Implementing a new tool can be daunting, but it doesn't have to. You can implement journy.io in a few different ways to ensure it fits with the rest of your tech stack seamlessly. We welcome your feedback, ideas and suggestions. We really want to make your life easier, so if we\u2019re falling...",
     "detailed_description": null,
     "category": "reference",
     "base_url": "https://help.journy.io",
@@ -168276,7 +168276,7 @@
   {
     "slug": "ptv-timetable-api-version-3",
     "name": "PTV Timetable API - Version 3",
-    "description": "The PTV Timetable API provides direct access to Public Transport Victoria’s public transport timetable data. The API returns scheduled timetable, route and stop data for all metropolitan and regional train, tram and bus services in Victoria, including Night Network(Night Train and Night Tram data...",
+    "description": "The PTV Timetable API provides direct access to Public Transport Victoria\u2019s public transport timetable data. The API returns scheduled timetable, route and stop data for all metropolitan and regional train, tram and bus services in Victoria, including Night Network(Night Train and Night Tram data...",
     "detailed_description": null,
     "category": "transportation",
     "base_url": "https://ptv.vic.gov.au",
@@ -168569,7 +168569,7 @@
   {
     "slug": "salesforce-einstein-vision-and-einstein-language",
     "name": "Salesforce Einstein Vision and Einstein Language",
-    "description": "Provided by Salesforce  � Copyright 2000�2020 salesforce.com, inc. All rights reserved. Salesforce is a registered trademark of salesforce.com, inc., as are other names and marks. Other marks appearing herein may be trademarks of their respective owners.  Last updated:  Aug 17, 2020",
+    "description": "Provided by Salesforce  \ufffd Copyright 2000\ufffd2020 salesforce.com, inc. All rights reserved. Salesforce is a registered trademark of salesforce.com, inc., as are other names and marks. Other marks appearing herein may be trademarks of their respective owners.  Last updated:  Aug 17, 2020",
     "detailed_description": null,
     "category": "ai-ml",
     "base_url": "https://metamind.readme.io",
@@ -168919,8 +168919,8 @@
   },
   {
     "slug": "api",
-    "name": "カラーミーショップアプリストア API",
-    "description": "カラーミーショップアプリストア API アプリストアにて公開するアプリに対して、一般公開しているカラーミーショップAPIに加えて、カラーミーショップアプリストアAPI（以下、アプリストアAPIといいます）を利用することが出来ます。アプリストアAPIでは以下のことが行えます。 - 課金データ(アプリ内課金、従量課金)の作成 - インラインスクリプトタグの取得・作成・更新・削除 - スクリプトタグの取得・作成・更新・削除  利用手順 アプリストアAPIを利用するには、OAuth認証が必要です。OAuth認証の基本的な流れについてはカラーミーショップAPIドキュメントを参照してください。 アプ...",
+    "name": "\u30ab\u30e9\u30fc\u30df\u30fc\u30b7\u30e7\u30c3\u30d7\u30a2\u30d7\u30ea\u30b9\u30c8\u30a2 API",
+    "description": "\u30ab\u30e9\u30fc\u30df\u30fc\u30b7\u30e7\u30c3\u30d7\u30a2\u30d7\u30ea\u30b9\u30c8\u30a2 API \u30a2\u30d7\u30ea\u30b9\u30c8\u30a2\u306b\u3066\u516c\u958b\u3059\u308b\u30a2\u30d7\u30ea\u306b\u5bfe\u3057\u3066\u3001\u4e00\u822c\u516c\u958b\u3057\u3066\u3044\u308b\u30ab\u30e9\u30fc\u30df\u30fc\u30b7\u30e7\u30c3\u30d7API\u306b\u52a0\u3048\u3066\u3001\u30ab\u30e9\u30fc\u30df\u30fc\u30b7\u30e7\u30c3\u30d7\u30a2\u30d7\u30ea\u30b9\u30c8\u30a2API\uff08\u4ee5\u4e0b\u3001\u30a2\u30d7\u30ea\u30b9\u30c8\u30a2API\u3068\u3044\u3044\u307e\u3059\uff09\u3092\u5229\u7528\u3059\u308b\u3053\u3068\u304c\u51fa\u6765\u307e\u3059\u3002\u30a2\u30d7\u30ea\u30b9\u30c8\u30a2API\u3067\u306f\u4ee5\u4e0b\u306e\u3053\u3068\u304c\u884c\u3048\u307e\u3059\u3002 - \u8ab2\u91d1\u30c7\u30fc\u30bf(\u30a2\u30d7\u30ea\u5185\u8ab2\u91d1\u3001\u5f93\u91cf\u8ab2\u91d1)\u306e\u4f5c\u6210 - \u30a4\u30f3\u30e9\u30a4\u30f3\u30b9\u30af\u30ea\u30d7\u30c8\u30bf\u30b0\u306e\u53d6\u5f97\u30fb\u4f5c\u6210\u30fb\u66f4\u65b0\u30fb\u524a\u9664 - \u30b9\u30af\u30ea\u30d7\u30c8\u30bf\u30b0\u306e\u53d6\u5f97\u30fb\u4f5c\u6210\u30fb\u66f4\u65b0\u30fb\u524a\u9664  \u5229\u7528\u624b\u9806 \u30a2\u30d7\u30ea\u30b9\u30c8\u30a2API\u3092\u5229\u7528\u3059\u308b\u306b\u306f\u3001OAuth\u8a8d\u8a3c\u304c\u5fc5\u8981\u3067\u3059\u3002OAuth\u8a8d\u8a3c\u306e\u57fa\u672c\u7684\u306a\u6d41\u308c\u306b\u3064\u3044\u3066\u306f\u30ab\u30e9\u30fc\u30df\u30fc\u30b7\u30e7\u30c3\u30d7API\u30c9\u30ad\u30e5\u30e1\u30f3\u30c8\u3092\u53c2\u7167\u3057\u3066\u304f\u3060\u3055\u3044\u3002 \u30a2\u30d7...",
     "detailed_description": null,
     "category": "ecommerce",
     "base_url": "https://shop-pro.jp",
@@ -168935,7 +168935,7 @@
     "tags": [
       "finance",
       "oauth",
-      "カラーミーショップアプリストア",
+      "\u30ab\u30e9\u30fc\u30df\u30fc\u30b7\u30e7\u30c3\u30d7\u30a2\u30d7\u30ea\u30b9\u30c8\u30a2",
       "api"
     ],
     "health": {
@@ -168951,7 +168951,7 @@
     "endpoints": [
       {
         "id": "primary-sample",
-        "name": "カラーミーショップアプリストア API (Primary Endpoint)",
+        "name": "\u30ab\u30e9\u30fc\u30df\u30fc\u30b7\u30e7\u30c3\u30d7\u30a2\u30d7\u30ea\u30b9\u30c8\u30a2 API (Primary Endpoint)",
         "path": "/",
         "method": "GET",
         "description": "Verified endpoint: /",
@@ -169795,7 +169795,7 @@
   {
     "slug": "tcgdex-api",
     "name": "TCGdex API",
-    "description": "A Multilanguage Pokémon TCG Database with Cards Pictures and most of the informations contained on the cards. You can find out more about TCGdex at https://www.tcgdex.net or on Discord.",
+    "description": "A Multilanguage Pok\u00e9mon TCG Database with Cards Pictures and most of the informations contained on the cards. You can find out more about TCGdex at https://www.tcgdex.net or on Discord.",
     "detailed_description": null,
     "category": "database",
     "base_url": "https://tcgdex.net",
@@ -170492,7 +170492,7 @@
   },
   {
     "slug": "viator-api-documentation-amp-specification-merchant-partners",
-    "name": "Viator API Documentation &amp; Specification – Merchant Partners",
+    "name": "Viator API Documentation &amp; Specification \u2013 Merchant Partners",
     "description": "&lt;style type='text/css'&gt; code { white-space: nowrap; } a { font-weight: bold; } figure {   width: 100%;   text-align: center;   font-style: italic;   font-size: smaller;   text-indent: 0;   border: thin silver solid;   margin: 0.5em;   padding: 0.5em; } &lt;/style&gt;  Updates  Latest update...",
     "detailed_description": null,
     "category": "ecommerce",
@@ -170525,7 +170525,7 @@
     "endpoints": [
       {
         "id": "primary-sample",
-        "name": "Viator API Documentation &amp; Specification – Merchant Partners (Primary Endpoint)",
+        "name": "Viator API Documentation &amp; Specification \u2013 Merchant Partners (Primary Endpoint)",
         "path": "/",
         "method": "GET",
         "description": "Verified endpoint: /",
@@ -170783,7 +170783,7 @@
   {
     "slug": "wealth-reader-api",
     "name": "Wealth Reader API",
-    "description": "Las APIs regulatorias basadas en PSD2 proporcionan acceso a cierta información financiera como saldos de cuentas bancarias y transacciones. Sin embargo, hay otras fuentes de información patrimonial que no son accesibles por estas APIs. La API de Wealth Reader amplía la información ofrecida por la...",
+    "description": "Las APIs regulatorias basadas en PSD2 proporcionan acceso a cierta informaci\u00f3n financiera como saldos de cuentas bancarias y transacciones. Sin embargo, hay otras fuentes de informaci\u00f3n patrimonial que no son accesibles por estas APIs. La API de Wealth Reader ampl\u00eda la informaci\u00f3n ofrecida por la...",
     "detailed_description": null,
     "category": "developer-tools",
     "base_url": "https://docs-es.wealthreader.com",
@@ -171537,7 +171537,7 @@
   {
     "slug": "cloud-66",
     "name": "Cloud 66",
-    "description": "Free for personal projects (includes one deployment server, one static site), Cloud 66 gives you everything you need to build, deploy, and grow your applications on any cloud without the headache of the “server stuff.”.",
+    "description": "Free for personal projects (includes one deployment server, one static site), Cloud 66 gives you everything you need to build, deploy, and grow your applications on any cloud without the headache of the \u201cserver stuff.\u201d.",
     "detailed_description": null,
     "category": "developer-tools",
     "base_url": "https://www.cloud66.com",
@@ -174270,7 +174270,7 @@
   {
     "slug": "proxmint-geoip",
     "name": "Proxmint GeoIP",
-    "description": "Free IP → country/city/ASN JSON API, no key, CORS-open. MaxMind GeoLite2.",
+    "description": "Free IP \u2192 country/city/ASN JSON API, no key, CORS-open. MaxMind GeoLite2.",
     "detailed_description": null,
     "category": "geography",
     "base_url": "https://proxmint.com",
@@ -176617,7 +176617,7 @@
   {
     "slug": "metashot",
     "name": "Metashot",
-    "description": "Open Graph (OG) social preview image generation API. Generate dynamic 1200×630 images for Twitter, LinkedIn and Facebook via URL params, edge-cached on Cloudflare Workers. Free tier: 1,000 renders/month. Paid plans from $12/month.",
+    "description": "Open Graph (OG) social preview image generation API. Generate dynamic 1200\u00d7630 images for Twitter, LinkedIn and Facebook via URL params, edge-cached on Cloudflare Workers. Free tier: 1,000 renders/month. Paid plans from $12/month.",
     "detailed_description": null,
     "category": "art-design",
     "base_url": "https://metashot.io",
@@ -180248,7 +180248,7 @@
   {
     "slug": "talky-io",
     "name": "Talky.io",
-    "description": "Free group video chat. Anonymous. Peer‑to‑peer. No plugins, signup, or payment required",
+    "description": "Free group video chat. Anonymous. Peer\u2011to\u2011peer. No plugins, signup, or payment required",
     "detailed_description": null,
     "category": "ecommerce",
     "base_url": "https://talky.io",
@@ -187381,7 +187381,7 @@
   {
     "slug": "datree",
     "name": "Datree",
-    "description": "Open Source CLI tool to prevent Kubernetes misconfigurations by ensuring that manifests and Helm charts follow best practices as well as your organization’s policies",
+    "description": "Open Source CLI tool to prevent Kubernetes misconfigurations by ensuring that manifests and Helm charts follow best practices as well as your organization\u2019s policies",
     "detailed_description": null,
     "category": "developer-tools",
     "base_url": "https://www.datree.io",
@@ -191756,7 +191756,7 @@
   {
     "slug": "smsgate",
     "name": "SMSGate",
-    "description": "SMS Gateway for Android™ enables sending and receiving SMS messages through your devices using cloud routing. Completely free cloud service (with recommended notification for usage above 10,000 messages/day to maintain quality for all users).",
+    "description": "SMS Gateway for Android\u2122 enables sending and receiving SMS messages through your devices using cloud routing. Completely free cloud service (with recommended notification for usage above 10,000 messages/day to maintain quality for all users).",
     "detailed_description": null,
     "category": "communication",
     "base_url": "https://sms-gate.app",
@@ -194191,7 +194191,7 @@
   {
     "slug": "fivenines-io",
     "name": "Fivenines.io",
-    "description": "Linux server monitoring with real‑time dashboards and alerting - free forever for up to 5 monitored servers at 60-seconds interval. No credit card required.",
+    "description": "Linux server monitoring with real\u2011time dashboards and alerting -\u202ffree forever for up to\u202f5\u202fmonitored servers at 60-seconds interval. No credit card required.",
     "detailed_description": null,
     "category": "developer-tools",
     "base_url": "https://fivenines.io",
@@ -199298,7 +199298,7 @@
   {
     "slug": "anypost",
     "name": "Anypost",
-    "description": "transactional and broadcast email API. 3,000 emails/month free, then as low as 8¢ per 1k",
+    "description": "transactional and broadcast email API. 3,000 emails/month free, then as low as 8\u00a2 per 1k",
     "detailed_description": null,
     "category": "communication",
     "base_url": "https://anypost.com",
@@ -203340,7 +203340,7 @@
   {
     "slug": "fontshare",
     "name": "Fontshare",
-    "description": "is a free fonts service. It’s a growing collection of professional-grade fonts, 100% free for personal and commercial use.",
+    "description": "is a free fonts service. It\u2019s a growing collection of professional-grade fonts, 100% free for personal and commercial use.",
     "detailed_description": null,
     "category": "art-design",
     "base_url": "https://www.fontshare.com",
@@ -207417,7 +207417,7 @@
   {
     "slug": "clever-cloud",
     "name": "Clever Cloud",
-    "description": "European PaaS with automated deployments, autoscaling, managed databases, and Git-based workflows. Includes €20 free credits at signup, a limited DEV plan with free MySQL and PostgreSQL databases, and free allowances for services like Heptapod and FS Buckets.",
+    "description": "European PaaS with automated deployments, autoscaling, managed databases, and Git-based workflows. Includes \u20ac20 free credits at signup, a limited DEV plan with free MySQL and PostgreSQL databases, and free allowances for services like Heptapod and FS Buckets.",
     "detailed_description": null,
     "category": "database",
     "base_url": "https://clever.cloud",
@@ -223782,7 +223782,7 @@
   {
     "slug": "pterocos",
     "name": "Pterocos",
-    "description": "a free opensource browser-based coding environment for front-end developers. write html, css and js with a vs code-grade editor (monaco), live preview, scss/typeScript/babel support, and an ai chat assistant for debugging and suggestions. all projects save to local storage. free forever – no acco...",
+    "description": "a free opensource browser-based coding environment for front-end developers. write html, css and js with a vs code-grade editor (monaco), live preview, scss/typeScript/babel support, and an ai chat assistant for debugging and suggestions. all projects save to local storage. free forever \u2013 no acco...",
     "detailed_description": null,
     "category": "communication",
     "base_url": "https://pterocos.eu.org",
@@ -224356,7 +224356,7 @@
   {
     "slug": "vscodium",
     "name": "VSCodium",
-    "description": "Community-driven, without telemetry/tracking, and freely-licensed binary distribution of Microsoft’s editor VSCode",
+    "description": "Community-driven, without telemetry/tracking, and freely-licensed binary distribution of Microsoft\u2019s editor VSCode",
     "detailed_description": null,
     "category": "developer-tools",
     "base_url": "https://vscodium.com",
@@ -227649,7 +227649,7 @@
   {
     "slug": "graphcomment",
     "name": "GraphComment",
-    "description": "GraphComment is a comments platform that helps you build an active community from the website’s audience.",
+    "description": "GraphComment is a comments platform that helps you build an active community from the website\u2019s audience.",
     "detailed_description": null,
     "category": "developer-tools",
     "base_url": "https://graphcomment.com",
