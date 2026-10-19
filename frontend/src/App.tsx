@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
+import { AppSidebar } from './components/AppSidebar';
 import { Footer } from './components/Footer';
 import { HomePage } from './pages/HomePage';
 import { ExplorePage } from './pages/ExplorePage';
@@ -302,6 +303,8 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
 
 export default function App() {
   const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     const handleToggle = () => setSearchModalOpen((prev) => !prev);
@@ -313,21 +316,44 @@ export default function App() {
     <ThemeProvider>
       <ToastProvider>
         <BrowserRouter>
-          <div className="min-h-screen flex flex-col bg-background text-text-base font-sans transition-colors">
-            <Navbar onOpenSearchModal={() => setSearchModalOpen(true)} />
-            <div className="flex-1">
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/explore" element={<ExplorePage />} />
-                <Route path="/api/:slug" element={<ApiDetailPage />} />
-                <Route path="/category/:category" element={<CategoryPage />} />
-                <Route path="/collections/:filter" element={<CollectionPage />} />
-                <Route path="/status" element={<StatusPage />} />
-                <Route path="/submit" element={<SubmitPage />} />
-                <Route path="*" element={<NotFoundPage />} />
-              </Routes>
+          <div className="min-h-screen flex bg-background text-text-base font-sans transition-colors">
+            {/* Full-Website Global AppSidebar */}
+            <AppSidebar
+              collapsed={isSidebarCollapsed}
+              onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
+              mobileOpen={mobileSidebarOpen}
+              onCloseMobile={() => setMobileSidebarOpen(false)}
+              onOpenSearchModal={() => setSearchModalOpen(true)}
+            />
+
+            {/* Main Application Area */}
+            <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
+              <Navbar
+                onOpenSearchModal={() => setSearchModalOpen(true)}
+                onToggleSidebar={() => {
+                  if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                    setMobileSidebarOpen((prev) => !prev);
+                  } else {
+                    setIsSidebarCollapsed((prev) => !prev);
+                  }
+                }}
+                isSidebarCollapsed={isSidebarCollapsed}
+              />
+              <main className="flex-1 min-w-0">
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/explore" element={<ExplorePage />} />
+                  <Route path="/api/:slug" element={<ApiDetailPage />} />
+                  <Route path="/category/:category" element={<CategoryPage />} />
+                  <Route path="/collections/:filter" element={<CollectionPage />} />
+                  <Route path="/status" element={<StatusPage />} />
+                  <Route path="/submit" element={<SubmitPage />} />
+                  <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+              </main>
+              <Footer />
             </div>
-            <Footer />
+
             <GlobalSearchModal
               isOpen={searchModalOpen}
               onClose={() => setSearchModalOpen(false)}

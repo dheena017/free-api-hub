@@ -4,12 +4,14 @@ interface LogoProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   withText?: boolean;
+  withBadge?: boolean;
 }
 
 export const Logo: React.FC<LogoProps> = ({
   className = '',
   size = 'md',
-  withText = false
+  withText = false,
+  withBadge = false
 }) => {
   const sizeMap = {
     sm: 'h-7 w-7',
@@ -20,7 +22,7 @@ export const Logo: React.FC<LogoProps> = ({
 
   return (
     <div className={`flex items-center gap-2.5 ${className}`}>
-      <div className={`relative ${sizeMap[size]} rounded-xl overflow-hidden border border-[#26272C] flex-shrink-0 bg-[#0D0E11]`}>
+      <div className={`relative ${sizeMap[size]} rounded-xl overflow-hidden border border-border flex-shrink-0 bg-[#0D0E11]`}>
         <img
           src="/logo.png"
           alt="FreeAPIHub Logo"
@@ -29,13 +31,15 @@ export const Logo: React.FC<LogoProps> = ({
       </div>
 
       {withText && (
-        <div className="flex flex-col">
-          <span className="font-bold text-lg tracking-tight text-white flex items-center gap-1.5">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="font-bold text-base tracking-tight text-text-base whitespace-nowrap">
             FreeAPI<span className="text-accent">Hub</span>
-            <span className="text-[10px] uppercase font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          </span>
+          {withBadge && (
+            <span className="text-[10px] uppercase font-mono font-bold px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
               100% Free
             </span>
-          </span>
+          )}
         </div>
       )}
     </div>
