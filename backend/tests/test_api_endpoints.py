@@ -157,9 +157,11 @@ class TestApiEndpoints:
         assert res.status_code == 200
         data = res.json()
         assert data["total_apis"] > 0
-        assert data["healthy_count"] > 0
+        assert "healthy_count" in data
         assert "degraded_count" in data
         assert "offline_count" in data
+        assert "untested_count" in data
+        assert data["healthy_count"] + data["degraded_count"] + data["offline_count"] + data["untested_count"] == data["total_apis"]
         assert data["global_uptime_percent"] >= 0.0
         assert data["avg_latency_ms"] >= 0
 

@@ -497,7 +497,7 @@ class CatalogService:
             message = f"Offline - {error_msg or f'Probe failed with status {status_code}'}"
 
         # Rolling uptime calculation
-        prev_uptime = api.health.uptime_percent if api.health else 99.0
+        prev_uptime = api.health.uptime_percent if (api.health and api.health.uptime_percent is not None) else 99.0
         probe_score = 100.0 if health_status == HealthStatus.HEALTHY else (50.0 if health_status == HealthStatus.DEGRADED else 0.0)
         new_uptime = round(prev_uptime * 0.95 + probe_score * 0.05, 1)
 

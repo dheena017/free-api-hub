@@ -3,7 +3,7 @@ import sys
 import time
 import uuid
 from collections import deque
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Optional, List, Dict
 
 # ANSI Color Codes
@@ -93,7 +93,7 @@ class BackendLogger:
             "id": f"be_{uuid.uuid4().hex[:8]}",
             "source": "backend",
             "timestamp": self._timestamp(),
-            "time_iso": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "time_iso": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "level": level.upper(),
             "category": category.upper(),
             "message": message,
