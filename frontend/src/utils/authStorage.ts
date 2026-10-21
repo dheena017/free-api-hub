@@ -14,11 +14,37 @@ export interface ApiCredentials {
 export function getDefaultCredentials(api?: Partial<ApiItem>): ApiCredentials {
   const isKey = api?.auth_type === 'api_key';
   const isOAuth = api?.auth_type === 'oauth';
+
+  let detectedKeyName = isKey ? 'X-API-Key' : 'api_key';
+  let detectedLocation: 'header' | 'query' = 'header';
+
+  // Check if API specifies default_params or endpoints using query parameter auth (e.g. access_key, api_key, key)
+  const paramKeys = [
+    ...Object.keys(api?.default_params || {}),
+    ...(api?.endpoints?.flatMap((e) => Object.keys(e.params || {})) || [])
+  ];
+  const queryAuthKey = paramKeys.find((k) =>
+    ['access_key', 'api_key', 'apikey', 'key', 'token', 'app_id', 'appid', 'auth'].includes(k.toLowerCase())
+  );
+
+  if (queryAuthKey) {
+    detectedKeyName = queryAuthKey;
+    detectedLocation = 'query';
+  } else if (api?.default_headers) {
+    const headerAuthKey = Object.keys(api.default_headers).find((k) =>
+      ['x-api-key', 'api-key', 'authorization', 'apikey', 'x-auth-token'].includes(k.toLowerCase())
+    );
+    if (headerAuthKey) {
+      detectedKeyName = headerAuthKey;
+      detectedLocation = 'header';
+    }
+  }
+
   return {
     authType: isKey ? 'apiKey' : isOAuth ? 'bearer' : 'none',
-    apiKeyName: isKey ? 'X-API-Key' : 'api_key',
+    apiKeyName: detectedKeyName,
     apiKeyValue: '',
-    apiKeyLocation: 'header',
+    apiKeyLocation: detectedLocation,
     bearerToken: '',
     basicUsername: '',
     basicPassword: ''
