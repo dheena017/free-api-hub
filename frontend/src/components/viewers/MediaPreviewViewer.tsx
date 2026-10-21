@@ -14,7 +14,7 @@ import {
   X,
   Maximize2,
   Sparkles,
-  Film
+  Zap
 } from 'lucide-react';
 
 interface MediaPreviewViewerProps {
@@ -39,23 +39,23 @@ const SAMPLE_MEDIA_APIS = [
   },
   {
     name: 'PokeAPI (Sprites)',
-    description: 'Pikachu official artwork and sprite GIFs',
+    description: 'Official Pokémon pixel sprites & artwork',
     type: 'Image',
     url: 'https://pokeapi.co/api/v2/pokemon/pikachu',
     method: 'GET'
   },
   {
     name: 'Random Fox API',
-    description: 'Floof photos and image links',
+    description: 'Fox image URLs and direct media links',
     type: 'Image',
     url: 'https://randomfox.ca/floof/',
     method: 'GET'
   },
   {
-    name: 'Rick & Morty',
-    description: 'Character avatars and episode art',
-    type: 'Image',
-    url: 'https://rickandmortyapi.com/api/character/1',
+    name: 'DiceBear Avatar API',
+    description: 'Direct SVG vector avatar generation',
+    type: 'SVG',
+    url: 'https://api.dicebear.com/7.x/bottts/svg?seed=FreeApiHub',
     method: 'GET'
   },
   {
@@ -94,6 +94,15 @@ export const MediaPreviewViewer: React.FC<MediaPreviewViewerProps> = ({
 
   const handleDownload = async (item: MediaItem) => {
     try {
+      if (item.url.startsWith('data:')) {
+        const a = document.createElement('a');
+        a.href = item.url;
+        a.download = `api-media-output-${Date.now()}.${(item.extension || 'png').toLowerCase()}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        return;
+      }
       const response = await fetch(item.url, { mode: 'cors' });
       const blob = await response.blob();
       const blobUrl = URL.createObjectURL(blob);
@@ -122,16 +131,24 @@ export const MediaPreviewViewer: React.FC<MediaPreviewViewerProps> = ({
     setRotation(0);
   };
 
+  const formatDisplayUrl = (url: string) => {
+    if (url.startsWith('data:')) {
+      const mime = url.slice(5, url.indexOf(';'));
+      return `${mime} (Direct Embedded Data Payload)`;
+    }
+    return url;
+  };
+
   if (mediaItems.length === 0) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-6 text-center space-y-4">
-        <div className="p-3 rounded-2xl bg-surface border border-border text-accent">
-          <Film className="h-8 w-8 stroke-[1.5]" />
+      <div className="h-full flex flex-col items-center justify-center p-8 text-center space-y-4 font-sans">
+        <div className="p-3.5 rounded-2xl bg-surface border border-border text-accent">
+          <ImageIcon className="h-8 w-8 stroke-[1.5]" />
         </div>
-        <div className="space-y-1 max-w-sm">
-          <h4 className="text-sm font-semibold text-text-base">No Media URLs Detected</h4>
+        <div className="space-y-1.5 max-w-sm">
+          <h4 className="text-sm font-semibold text-text-base">No Media Output Detected</h4>
           <p className="text-xs text-text-muted leading-relaxed">
-            This API response contains alphanumeric data or objects without image/video file links.
+            This API response contains alphanumeric data or structured JSON without direct image, SVG, video, or audio media output.
           </p>
         </div>
 
@@ -139,14 +156,14 @@ export const MediaPreviewViewer: React.FC<MediaPreviewViewerProps> = ({
           <div className="w-full max-w-md bg-surface p-4 rounded-xl border border-border space-y-3 text-left">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-accent">
               <Sparkles className="h-3.5 w-3.5" />
-              <span>Test Live Media APIs in Playground:</span>
+              <span>Test Live Media Output APIs in Playground:</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {SAMPLE_MEDIA_APIS.map((sample) => (
                 <button
                   key={sample.name}
                   onClick={() => onLoadSampleEndpoint(sample.url, sample.method)}
-                  className="flex items-start gap-2 p-2.5 rounded-lg bg-surface-elevated hover:bg-surface-hover border border-border transition-colors text-left group"
+                  className="flex items-start gap-2 p-2.5 rounded-lg bg-surface-elevated hover:bg-surface-hover border border-border transition-colors text-left group cursor-pointer"
                 >
                   <div className="mt-0.5 p-1 rounded bg-surface text-text-muted group-hover:text-accent transition-colors">
                     {sample.type === 'Video' ? <Video className="h-3 w-3" /> : <ImageIcon className="h-3 w-3" />}
@@ -169,13 +186,13 @@ export const MediaPreviewViewer: React.FC<MediaPreviewViewerProps> = ({
   }
 
   return (
-    <div className="h-full flex flex-col space-y-3">
-      {/* Category Sub-tabs */}
+    <div className="h-full flex flex-col space-y-3 font-sans">
+      {/* Category Sub-tabs & Count Bar */}
       <div className="flex items-center justify-between gap-2 border-b border-border pb-2">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <button
             onClick={() => setFilter('all')}
-            className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
+            className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
               filter === 'all'
                 ? 'bg-accent text-background font-bold shadow-sm'
                 : 'text-text-muted hover:text-text-base hover:bg-surface-hover'
@@ -186,20 +203,20 @@ export const MediaPreviewViewer: React.FC<MediaPreviewViewerProps> = ({
           {images.length > 0 && (
             <button
               onClick={() => setFilter('image')}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                 filter === 'image'
                   ? 'bg-accent text-background font-bold shadow-sm'
                   : 'text-text-muted hover:text-text-base hover:bg-surface-hover'
               }`}
             >
               <ImageIcon className="h-3 w-3" />
-              <span>Images ({images.length})</span>
+              <span>Images & Vectors ({images.length})</span>
             </button>
           )}
           {videos.length > 0 && (
             <button
               onClick={() => setFilter('video')}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                 filter === 'video'
                   ? 'bg-accent text-background font-bold shadow-sm'
                   : 'text-text-muted hover:text-text-base hover:bg-surface-hover'
@@ -212,7 +229,7 @@ export const MediaPreviewViewer: React.FC<MediaPreviewViewerProps> = ({
           {audios.length > 0 && (
             <button
               onClick={() => setFilter('audio')}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                 filter === 'audio'
                   ? 'bg-accent text-background font-bold shadow-sm'
                   : 'text-text-muted hover:text-text-base hover:bg-surface-hover'
@@ -224,8 +241,8 @@ export const MediaPreviewViewer: React.FC<MediaPreviewViewerProps> = ({
           )}
         </div>
 
-        <span className="text-[10px] text-text-muted font-mono">
-          {filteredItems.length} {filteredItems.length === 1 ? 'item' : 'items'}
+        <span className="text-[11px] text-text-muted font-mono">
+          {filteredItems.length} {filteredItems.length === 1 ? 'output' : 'outputs'}
         </span>
       </div>
 
@@ -235,22 +252,22 @@ export const MediaPreviewViewer: React.FC<MediaPreviewViewerProps> = ({
           {filteredItems.map((item) => (
             <div
               key={item.id}
-              className="bg-surface rounded-xl border border-border overflow-hidden flex flex-col group hover:border-border-light transition-colors"
+              className="bg-surface rounded-xl border border-border overflow-hidden flex flex-col group hover:border-accent/40 transition-colors shadow-sm"
             >
               {/* Media Visual Container */}
-              <div className="relative aspect-video bg-surface-elevated border-b border-border flex items-center justify-center overflow-hidden">
+              <div className="relative aspect-video bg-surface-elevated/70 border-b border-border flex items-center justify-center overflow-hidden p-2">
                 {item.type === 'image' && (
                   <>
                     <img
                       src={item.url}
                       alt={item.title}
-                      className="max-h-full max-w-full object-contain transition-transform duration-200 group-hover:scale-105 cursor-pointer"
+                      className="max-h-full max-w-full object-contain transition-transform duration-200 group-hover:scale-105 cursor-pointer rounded"
                       onClick={() => openLightbox(item)}
                       loading="lazy"
                     />
                     <button
                       onClick={() => openLightbox(item)}
-                      className="absolute top-2 right-2 p-1.5 rounded-lg bg-surface/80 hover:bg-surface-hover text-text-base border border-border opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-2 right-2 p-1.5 rounded-lg bg-surface/90 hover:bg-surface-elevated text-text-base border border-border opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-sm"
                       title="Enlarge preview"
                     >
                       <Maximize2 className="h-3.5 w-3.5" />
@@ -263,7 +280,7 @@ export const MediaPreviewViewer: React.FC<MediaPreviewViewerProps> = ({
                     <iframe
                       src={item.embedUrl}
                       title={item.title}
-                      className="w-full h-full border-0"
+                      className="w-full h-full border-0 rounded"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                     />
@@ -272,7 +289,7 @@ export const MediaPreviewViewer: React.FC<MediaPreviewViewerProps> = ({
                       src={item.url}
                       controls
                       preload="metadata"
-                      className="w-full h-full object-contain"
+                      className="w-full h-full object-contain rounded"
                     />
                   )
                 )}
@@ -286,11 +303,20 @@ export const MediaPreviewViewer: React.FC<MediaPreviewViewerProps> = ({
               </div>
 
               {/* Card Meta and Actions */}
-              <div className="p-2.5 bg-surface space-y-2">
+              <div className="p-3 bg-surface space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-mono font-medium text-accent bg-accent/10 px-1.5 py-0.5 rounded border border-accent/30 truncate">
-                    {item.keyPath}
-                  </span>
+                  <div className="flex items-center gap-1.5 truncate">
+                    {item.isDirectResponse && (
+                      <span className="inline-flex items-center gap-1 text-[9px] font-mono font-bold text-emerald-400 bg-emerald-500/15 px-1.5 py-0.5 rounded border border-emerald-500/30">
+                        <Zap className="h-2.5 w-2.5 fill-current" />
+                        Direct API Output
+                      </span>
+                    )}
+                    <span className="text-[10px] font-mono font-medium text-accent bg-accent/10 px-1.5 py-0.5 rounded border border-accent/25 truncate">
+                      {item.keyPath}
+                    </span>
+                  </div>
+
                   {item.extension && (
                     <span className="text-[9px] font-mono text-text-muted uppercase bg-surface-elevated px-1.5 py-0.5 rounded border border-border">
                       {item.extension}
@@ -298,16 +324,16 @@ export const MediaPreviewViewer: React.FC<MediaPreviewViewerProps> = ({
                   )}
                 </div>
 
-                <div className="text-[11px] font-mono text-text-muted truncate" title={item.url}>
-                  {item.url}
+                <div className="text-[11px] font-mono text-text-muted truncate select-all" title={item.url}>
+                  {formatDisplayUrl(item.url)}
                 </div>
 
                 {/* Action Toolbar */}
-                <div className="flex items-center justify-between pt-1 border-t border-border text-xs">
-                  <div className="flex items-center gap-1">
+                <div className="flex items-center justify-between pt-1.5 border-t border-border text-xs">
+                  <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => handleCopyUrl(item)}
-                      className="inline-flex items-center gap-1 text-[11px] text-text-muted hover:text-text-base px-2 py-1 rounded bg-surface-elevated hover:bg-surface-hover border border-border transition-colors"
+                      className="inline-flex items-center gap-1 text-[11px] text-text-muted hover:text-text-base px-2 py-1 rounded bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
                       title="Copy media URL"
                     >
                       {copiedId === item.id ? (
@@ -325,7 +351,7 @@ export const MediaPreviewViewer: React.FC<MediaPreviewViewerProps> = ({
 
                     <button
                       onClick={() => handleDownload(item)}
-                      className="inline-flex items-center gap-1 text-[11px] text-text-muted hover:text-text-base px-2 py-1 rounded bg-surface-elevated hover:bg-surface-hover border border-border transition-colors"
+                      className="inline-flex items-center gap-1 text-[11px] text-text-muted hover:text-text-base px-2 py-1 rounded bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
                       title="Download file"
                     >
                       <Download className="h-3 w-3" />
@@ -338,7 +364,7 @@ export const MediaPreviewViewer: React.FC<MediaPreviewViewerProps> = ({
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-1 text-[11px] text-accent hover:opacity-80 transition-colors"
-                    title="Open original asset in new browser tab"
+                    title="Open original asset in new tab"
                   >
                     <span>Open</span>
                     <ExternalLink className="h-3 w-3" />
@@ -352,7 +378,7 @@ export const MediaPreviewViewer: React.FC<MediaPreviewViewerProps> = ({
 
       {/* Lightbox Modal for High-Res Inspection */}
       {activeLightbox && (
-        <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-md flex flex-col p-4 animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-md flex flex-col p-4 animate-in fade-in duration-150 font-sans">
           {/* Lightbox Toolbar */}
           <div className="flex items-center justify-between pb-3 border-b border-border text-text-base">
             <div className="flex items-center gap-3">
@@ -367,42 +393,42 @@ export const MediaPreviewViewer: React.FC<MediaPreviewViewerProps> = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setZoomLevel((prev) => Math.min(prev + 0.25, 4))}
-                className="p-1.5 rounded-lg bg-surface hover:bg-surface-hover text-text-base border border-border transition-colors"
+                className="p-1.5 rounded-lg bg-surface hover:bg-surface-hover text-text-base border border-border transition-colors cursor-pointer"
                 title="Zoom in"
               >
                 <ZoomIn className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setZoomLevel((prev) => Math.max(prev - 0.25, 0.5))}
-                className="p-1.5 rounded-lg bg-surface hover:bg-surface-hover text-text-base border border-border transition-colors"
+                className="p-1.5 rounded-lg bg-surface hover:bg-surface-hover text-text-base border border-border transition-colors cursor-pointer"
                 title="Zoom out"
               >
                 <ZoomOut className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setRotation((prev) => (prev + 90) % 360)}
-                className="p-1.5 rounded-lg bg-surface hover:bg-surface-hover text-text-base border border-border transition-colors"
+                className="p-1.5 rounded-lg bg-surface hover:bg-surface-hover text-text-base border border-border transition-colors cursor-pointer"
                 title="Rotate 90 degrees"
               >
                 <RotateCw className="h-4 w-4" />
               </button>
               <button
                 onClick={() => handleCopyUrl(activeLightbox)}
-                className="p-1.5 rounded-lg bg-surface hover:bg-surface-hover text-text-base border border-border transition-colors"
+                className="p-1.5 rounded-lg bg-surface hover:bg-surface-hover text-text-base border border-border transition-colors cursor-pointer"
                 title="Copy URL"
               >
                 {copiedId === activeLightbox.id ? <Check className="h-4 w-4 text-healthy" /> : <Copy className="h-4 w-4" />}
               </button>
               <button
                 onClick={() => handleDownload(activeLightbox)}
-                className="p-1.5 rounded-lg bg-surface hover:bg-surface-hover text-text-base border border-border transition-colors"
+                className="p-1.5 rounded-lg bg-surface hover:bg-surface-hover text-text-base border border-border transition-colors cursor-pointer"
                 title="Download"
               >
                 <Download className="h-4 w-4" />
               </button>
               <button
                 onClick={closeLightbox}
-                className="p-1.5 rounded-lg bg-surface hover:bg-surface-hover text-text-muted hover:text-text-base border border-border transition-colors ml-2"
+                className="p-1.5 rounded-lg bg-surface hover:bg-surface-hover text-text-muted hover:text-text-base border border-border transition-colors ml-2 cursor-pointer"
                 title="Close lightbox"
               >
                 <X className="h-4 w-4" />
@@ -420,7 +446,7 @@ export const MediaPreviewViewer: React.FC<MediaPreviewViewerProps> = ({
                   transform: `scale(${zoomLevel}) rotate(${rotation}deg)`,
                   transition: 'transform 0.15s ease-out'
                 }}
-                className="max-h-[85vh] max-w-[85vw] object-contain rounded-lg border border-border"
+                className="max-h-[85vh] max-w-[85vw] object-contain rounded-lg border border-border shadow-2xl bg-surface"
               />
             )}
 

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { ApiItem, ProxyResponse } from '../../types/api';
 import { executeProxy } from '../../api/client';
 import {
@@ -23,15 +23,29 @@ import {
   ParamsTab,
   HeadersTab,
   BodyTab,
-  AuthTab,
-  SettingsTab,
   CodeSnippetsTab,
   ResponseInspector,
   PlaygroundTabsNav,
   RequestTab,
+  RequestOverviewTab,
   WorkbenchLayout,
-  RequestAuthMode
+  RequestAuthMode,
+  JsonResponseTab,
+  RawResponseTab,
+  ResponseHeadersTab,
+  SchemaResponseTab,
+  TypesResponseTab,
+  PreviewResponseTab
 } from './tabs';
+import { RequestSettingsModal } from './RequestSettingsModal';
+import { RequestHistoryModal } from './RequestHistoryModal';
+import { ClientCodeModal } from './ClientCodeModal';
+import {
+  ApiCredentials,
+  loadApiCredentials,
+  hasActiveCredentials
+} from '../../utils/authStorage';
+import { ApiAuthModal } from '../api-detail/ApiAuthModal';
 import {
   Play,
   Copy,
@@ -208,7 +222,7 @@ function getErrorDiagnostics(statusCode: number, errorMessage?: string | null) {
   };
 }
 
-const METHOD_STYLES: Record<string, { bg: string; text: string; border: string }> = {
+export const METHOD_STYLES: Record<string, { bg: string; text: string; border: string }> = {
   GET: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30' },
   POST: { bg: 'bg-sky-500/15', text: 'text-sky-400', border: 'border-sky-500/30' },
   PUT: { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30' },
@@ -266,6 +280,10 @@ export interface PlaygroundProps {
   initialParams?: Record<string, string>;
   initialBody?: string;
   onOpenDocs?: () => void;
+  onOpenAuthModal?: () => void;
+  onOpenSettingsModal?: () => void;
+  onOpenHistoryModal?: () => void;
+  onOpenClientCodeModal?: () => void;
 }
 
 export const Playground: React.FC<PlaygroundProps> = ({
@@ -273,24 +291,44 @@ export const Playground: React.FC<PlaygroundProps> = ({
   initialEndpoint,
   initialMethod,
   initialParams,
-  initialBody
+  initialBody,
+  onOpenDocs,
+  onOpenAuthModal,
+  onOpenSettingsModal,
+  onOpenHistoryModal,
+  onOpenClientCodeModal
 }) => {
   const initialUrl = (api?.base_url || '').replace(/\/+$/, '');
   const rawSample = api?.endpoint || (api?.endpoints?.[0]?.path) || '';
-  const initialEndpointStr = rawSample
-    ? (rawSample.startsWith('/') ? rawSample : `/${rawSample}`)
-    : '';
-  const fullInitialUrl = `${initialUrl}${initialEndpointStr}`;
+  const fullInitialUrl = rawSample.startsWith('http')
+    ? rawSample
+    : `${initialUrl}${rawSample ? (rawSample.startsWith('/') ? rawSample : `/${rawSample}`) : ''}`;
 
   // Presets State
   const presets = useMemo(() => getEndpointPresets(api), [api]);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(() => {
     return presets.length > 0 ? presets[0].id : null;
   });
+  const [isPresetDropdownOpen, setIsPresetDropdownOpen] = useState(false);
+  const presetDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close preset dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (presetDropdownRef.current && !presetDropdownRef.current.contains(event.target as Node)) {
+        setIsPresetDropdownOpen(false);
+      }
+    }
+    if (isPresetDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isPresetDropdownOpen]);
 
   // Request State
   const [method, setMethod] = useState(initialMethod || api?.endpoints?.[0]?.method || 'GET');
-  const [isMethodDropdownOpen, setIsMethodDropdownOpen] = useState(false);
   const [endpointUrl, setEndpointUrl] = useState(() => {
     if (initialEndpoint) {
       return initialEndpoint.startsWith('http')
@@ -324,31 +362,88 @@ export const Playground: React.FC<PlaygroundProps> = ({
   const [workbenchLayout, setWorkbenchLayout] = useState<WorkbenchLayout>('tabs');
   const [requestBody, setRequestBody] = useState<string>(initialBody || '');
   const [activeParamTab, setActiveParamTab] = useState<RequestTab>(
-    initialBody ? 'body' : 'params'
+    initialBody ? 'body' : 'json'
   );
+
+  const isResponseTab = (tab: RequestTab): boolean =>
+    ['response', 'json', 'raw', 'resp-headers', 'schema', 'types', 'preview'].includes(tab);
+
+  const mapToResponseSubtab = (
+    tab: RequestTab
+  ): 'json' | 'preview' | 'media' | 'headers' | 'request' | 'table' | 'types' | 'raw' => {
+    switch (tab) {
+      case 'resp-headers':
+        return 'headers';
+      case 'schema':
+        return 'table';
+      case 'raw':
+        return 'raw';
+      case 'types':
+        return 'types';
+      case 'preview':
+        return 'preview';
+      case 'json':
+      case 'response':
+      default:
+        return 'json';
+    }
+  };
 
   const handleSetWorkbenchLayout = (mode: WorkbenchLayout) => {
     setWorkbenchLayout(mode);
-    if (mode === 'split' && (activeParamTab === 'response' || activeParamTab === 'snippets')) {
+    if (mode === 'split' && (isResponseTab(activeParamTab) || activeParamTab === 'snippets')) {
       setActiveParamTab('params');
     }
   };
 
-  // Auth State
-  const [authType, setAuthType] = useState<RequestAuthMode>(() => {
-    if (api?.auth_type === 'api_key') return 'apiKey';
-    if (api?.auth_type === 'oauth') return 'bearer';
-    return 'none';
+  // Internal modal fallback states
+  const [isInternalAuthModalOpen, setIsInternalAuthModalOpen] = useState(false);
+  const handleOpenAuthModal = onOpenAuthModal || (() => setIsInternalAuthModalOpen(true));
+  const [isInternalSettingsModalOpen, setIsInternalSettingsModalOpen] = useState(false);
+  const handleOpenSettingsModal = onOpenSettingsModal || (() => setIsInternalSettingsModalOpen(true));
+  const [isInternalHistoryModalOpen, setIsInternalHistoryModalOpen] = useState(false);
+  const handleOpenHistoryModal = onOpenHistoryModal || (() => setIsInternalHistoryModalOpen(true));
+  const [isInternalClientCodeModalOpen, setIsInternalClientCodeModalOpen] = useState(false);
+  const handleOpenClientCodeModal = onOpenClientCodeModal || (() => setIsInternalClientCodeModalOpen(true));
+
+  // Persistent Auth State loaded from local storage
+  const initialCreds = useMemo(() => loadApiCredentials(api?.slug || 'api', api), [api]);
+  const [authType, setAuthType] = useState<RequestAuthMode>(initialCreds.authType);
+  const [apiKeyName, setApiKeyName] = useState(initialCreds.apiKeyName);
+  const [apiKeyValue, setApiKeyValue] = useState(initialCreds.apiKeyValue);
+  const [apiKeyLocation, setApiKeyLocation] = useState<'header' | 'query'>(initialCreds.apiKeyLocation);
+  const [bearerToken, setBearerToken] = useState(initialCreds.bearerToken);
+  const [basicUsername, setBasicUsername] = useState(initialCreds.basicUsername);
+  const [basicPassword, setBasicPassword] = useState(initialCreds.basicPassword);
+
+  // Sync when credentials are saved or cleared in ApiAuthModal
+  useEffect(() => {
+    const handleAuthUpdated = (e: Event) => {
+      const customEvent = e as CustomEvent<{ slug: string; creds: ApiCredentials }>;
+      if (customEvent.detail && customEvent.detail.slug === api?.slug) {
+        const c = customEvent.detail.creds;
+        setAuthType(c.authType);
+        setApiKeyName(c.apiKeyName);
+        setApiKeyValue(c.apiKeyValue);
+        setApiKeyLocation(c.apiKeyLocation);
+        setBearerToken(c.bearerToken);
+        setBasicUsername(c.basicUsername);
+        setBasicPassword(c.basicPassword);
+      }
+    };
+    window.addEventListener('fah_auth_updated', handleAuthUpdated);
+    return () => window.removeEventListener('fah_auth_updated', handleAuthUpdated);
+  }, [api?.slug]);
+
+  const hasActiveCreds = hasActiveCredentials({
+    authType,
+    apiKeyName,
+    apiKeyValue,
+    apiKeyLocation,
+    bearerToken,
+    basicUsername,
+    basicPassword
   });
-  const [apiKeyName, setApiKeyName] = useState(() => {
-    return api?.auth_type === 'api_key' ? 'X-API-Key' : 'api_key';
-  });
-  const [apiKeyValue, setApiKeyValue] = useState('');
-  const [apiKeyLocation, setApiKeyLocation] = useState<'header' | 'query'>('header');
-  const [bearerToken, setBearerToken] = useState('');
-  const [basicUsername, setBasicUsername] = useState('');
-  const [basicPassword, setBasicPassword] = useState('');
-  const [showSecret, setShowSecret] = useState(false);
 
   // Settings State
   const [requestTimeout, setRequestTimeout] = useState<number>(10000);
@@ -395,7 +490,6 @@ export const Playground: React.FC<PlaygroundProps> = ({
     }
     if (initialBody !== undefined) {
       setRequestBody(initialBody);
-      if (initialBody) setActiveParamTab('body');
     }
   }, [initialEndpoint, initialMethod, initialParams, initialBody, api.base_url]);
 
@@ -504,7 +598,8 @@ export const Playground: React.FC<PlaygroundProps> = ({
         trimmed.startsWith('<!doctype html') ||
         trimmed.startsWith('<html') ||
         (trimmed.includes('<head') && trimmed.includes('<body')) ||
-        (trimmed.includes('<title>') && trimmed.includes('</title>'))
+        (trimmed.includes('<title>') && trimmed.includes('</title>')) ||
+        (/^<(div|p|span|table|ul|ol|h[1-6]|section|article|header|footer|form)[\s>]/i.test(trimmed) && trimmed.includes('</'))
       );
     }
     return false;
@@ -513,8 +608,8 @@ export const Playground: React.FC<PlaygroundProps> = ({
   // Extract media items whenever response data changes
   const mediaItems = useMemo(() => {
     if (!response?.data) return [];
-    return extractMediaItems(response.data, endpointUrl);
-  }, [response?.data, endpointUrl]);
+    return extractMediaItems(response.data, endpointUrl, response.headers);
+  }, [response?.data, endpointUrl, response?.headers]);
 
   // Generated TypeScript / JSON Schema
   const generatedTypesCode = useMemo(() => {
@@ -587,17 +682,22 @@ export const Playground: React.FC<PlaygroundProps> = ({
             trimmed.startsWith('<!doctype html') ||
             trimmed.startsWith('<html') ||
             (trimmed.includes('<head') && trimmed.includes('<body')) ||
-            (trimmed.includes('<title>') && trimmed.includes('</title>'))
+            (trimmed.includes('<title>') && trimmed.includes('</title>')) ||
+            (/^<(div|p|span|table|ul|ol|h[1-6]|section|article|header|footer|form)[\s>]/i.test(trimmed) && trimmed.includes('</'))
           );
         }
         return false;
       })();
 
-      const detected = extractMediaItems(result.data, targetUrl);
+      const detected = extractMediaItems(result.data, targetUrl, result.headers);
       if (isResultHtml && activeResponseTab !== 'headers' && activeResponseTab !== 'raw') {
         setActiveResponseTab('preview');
+        if (workbenchLayout === 'tabs') setActiveParamTab('preview');
       } else if (detected.length > 0 && activeResponseTab !== 'types' && activeResponseTab !== 'headers') {
         setActiveResponseTab('media');
+        if (workbenchLayout === 'tabs') setActiveParamTab('preview');
+      } else if (workbenchLayout === 'tabs' && !isResponseTab(activeParamTab)) {
+        setActiveParamTab('json');
       }
 
       // Record in Session Request History
@@ -891,125 +991,156 @@ export const Playground: React.FC<PlaygroundProps> = ({
       <div className="bg-surface rounded-2xl p-4 sm:p-5 border border-border shadow-sm space-y-4 transition-colors">
         {/* Presets Bar */}
         {presets.length > 0 && (
-          <div className="space-y-2 pb-3 border-b border-border">
-            <div className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
+          <div className="pb-3 border-b border-border flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-3 flex-wrap flex-1 min-w-0">
+              <div className="flex items-center gap-2 shrink-0">
                 <div className="p-1.5 rounded-lg bg-accent/10 text-accent border border-accent/20">
                   <Sparkles className="h-3.5 w-3.5" />
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <span className="text-xs font-bold text-text-base tracking-tight">Preset Scenarios</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-surface-elevated text-text-muted border border-border">
-                    {presets.length} available
+                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-surface-elevated text-text-muted">
+                    {presets.length}
                   </span>
                 </div>
               </div>
+
+              {/* Scenario Dropdown Selector - Inline with label */}
+              <div className="relative flex-1 min-w-[260px] max-w-full sm:max-w-lg" ref={presetDropdownRef}>
+                {(() => {
+                  const currentPreset = presets.find((p) => p.id === selectedPresetId) || presets[0];
+                  const currentMethodStyle = currentPreset ? (METHOD_STYLES[currentPreset.method] || METHOD_STYLES.GET) : METHOD_STYLES.GET;
+                  return (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setIsPresetDropdownOpen((prev) => !prev)}
+                        className="w-full flex items-center justify-between gap-2.5 px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface border border-border hover:border-accent/40 text-xs font-mono transition-all cursor-pointer text-left shadow-sm group"
+                        aria-expanded={isPresetDropdownOpen}
+                        aria-haspopup="listbox"
+                      >
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          {currentPreset && (
+                            <span
+                              className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded border ${currentMethodStyle.bg} ${currentMethodStyle.text} ${currentMethodStyle.border}`}
+                            >
+                              {currentPreset.method}
+                            </span>
+                          )}
+                          <span className="font-medium text-text-base truncate">
+                            {currentPreset ? currentPreset.label : 'Select Scenario...'}
+                          </span>
+                          {currentPreset?.badge && (
+                            <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1 shrink-0">
+                              <Check className="h-2.5 w-2.5" />
+                              <span>{currentPreset.badge}</span>
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1 text-text-muted group-hover:text-text-base shrink-0 ml-1">
+                          <ChevronDown
+                            className={`h-3.5 w-3.5 transition-transform duration-200 ${
+                              isPresetDropdownOpen ? 'rotate-180 text-accent' : ''
+                            }`}
+                          />
+                        </div>
+                      </button>
+
+                      {/* Dropdown Menu */}
+                      {isPresetDropdownOpen && (
+                        <div
+                          className="absolute left-0 mt-1.5 w-full sm:w-[440px] bg-surface border border-border rounded-xl shadow-xl py-1 z-50 animate-in fade-in zoom-in-95 duration-100 max-h-72 overflow-y-auto"
+                          role="listbox"
+                        >
+                        <div className="px-3 py-1.5 text-[10px] font-mono text-text-muted uppercase tracking-wider border-b border-border/50">
+                          Preset Endpoint Scenarios ({presets.length})
+                        </div>
+                        <div className="py-1">
+                          {presets.map((preset) => {
+                            const isSelected = selectedPresetId === preset.id;
+                            const mStyle = METHOD_STYLES[preset.method] || METHOD_STYLES.GET;
+                            return (
+                              <button
+                                key={preset.id}
+                                type="button"
+                                onClick={() => {
+                                  handleSelectPreset(preset);
+                                  setIsPresetDropdownOpen(false);
+                                }}
+                                className={`w-full text-left px-3 py-2 text-xs font-mono flex items-start justify-between gap-2.5 transition-colors cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-accent/10 text-text-base font-semibold'
+                                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
+                                }`}
+                                role="option"
+                                aria-selected={isSelected}
+                              >
+                                <div className="space-y-0.5 min-w-0 flex-1">
+                                  <div className="flex items-center gap-1.5">
+                                    <span
+                                      className={`text-[9px] uppercase font-bold px-1.5 py-0.2 rounded border ${mStyle.bg} ${mStyle.text} ${mStyle.border}`}
+                                    >
+                                      {preset.method}
+                                    </span>
+                                    <span className="text-text-base font-semibold truncate">
+                                      {preset.label}
+                                    </span>
+                                    {preset.badge && (
+                                      <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                        {preset.badge}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-[11px] text-text-muted truncate">
+                                    <code>{preset.endpoint || '/'}</code>
+                                    {preset.description && (
+                                      <span className="ml-2 text-[10px] text-text-muted/70">
+                                        — {preset.description}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {isSelected && (
+                                  <Check className="h-4 w-4 text-accent shrink-0 mt-0.5" />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+            </div>
+
+            {/* Right side: Import cURL */}
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
                 onClick={() => setIsCurlModalOpen(true)}
-                className="text-xs font-mono text-accent hover:text-accent-hover flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
+                className="text-xs font-mono text-accent hover:text-accent-hover flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface border border-border hover:border-accent/40 transition-colors cursor-pointer shrink-0"
                 title="Paste and import any cURL command"
               >
                 <Terminal className="h-3.5 w-3.5" />
                 <span>Import cURL</span>
               </button>
             </div>
-
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-              {presets.map((preset) => {
-                const isActive = selectedPresetId === preset.id;
-                const mStyle = METHOD_STYLES[preset.method] || METHOD_STYLES.GET;
-                return (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    onClick={() => handleSelectPreset(preset)}
-                    className={`flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono transition-all border cursor-pointer ${
-                      isActive
-                        ? 'bg-accent text-background font-bold border-accent shadow-sm shadow-accent/20'
-                        : 'bg-surface-elevated text-text-base hover:text-text-base border-border hover:border-border-light hover:bg-surface-hover'
-                    }`}
-                    title={preset.description}
-                  >
-                    <span
-                      className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded ${
-                        isActive
-                          ? 'bg-black/20 text-background'
-                          : `${mStyle.bg} ${mStyle.text} border ${mStyle.border}`
-                      }`}
-                    >
-                      {preset.method}
-                    </span>
-                    <span className="font-medium">{preset.label}</span>
-                    {preset.badge && (
-                      <span
-                        className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-1 ${
-                          isActive
-                            ? 'bg-black/15 text-background'
-                            : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                        }`}
-                      >
-                        <Check className="h-2.5 w-2.5" />
-                        <span>{preset.badge}</span>
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
           </div>
         )}
 
         {/* Omnibar Request Input Bar */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-surface-elevated/70 p-2 rounded-2xl border border-border focus-within:border-accent/60 focus-within:ring-2 focus-within:ring-accent/15 transition-all">
-          {/* Method Selector Dropdown */}
-          <div className="relative flex-shrink-0">
-            <button
-              type="button"
-              onClick={() => setIsMethodDropdownOpen(!isMethodDropdownOpen)}
-              className={`flex items-center justify-between gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-bold border cursor-pointer transition-all ${activeMethodStyle.bg} ${activeMethodStyle.text} ${activeMethodStyle.border} min-w-[92px]`}
-              title="Change HTTP Request Verb"
+          {/* Method Badge */}
+          <div className="flex-shrink-0">
+            <span
+              className={`inline-flex items-center justify-center px-3 py-2 rounded-xl text-xs font-mono font-bold border select-none ${activeMethodStyle.bg} ${activeMethodStyle.text} ${activeMethodStyle.border} min-w-[72px] text-center`}
             >
-              <span>{method}</span>
-              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isMethodDropdownOpen ? 'rotate-180' : ''}`} />
-            </button>
-
-            {isMethodDropdownOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setIsMethodDropdownOpen(false)}
-                />
-                <div className="absolute left-0 top-full mt-1.5 w-32 bg-surface border border-border rounded-xl shadow-xl z-50 p-1 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
-                  {HTTP_METHODS.map((m) => {
-                    const style = METHOD_STYLES[m];
-                    const isSelected = method === m;
-                    return (
-                      <button
-                        key={m}
-                        type="button"
-                        onClick={() => {
-                          setMethod(m);
-                          setIsMethodDropdownOpen(false);
-                          if (['POST', 'PUT', 'PATCH'].includes(m) && !requestBody) {
-                            setRequestBody('{\n  "exampleKey": "value"\n}');
-                            setActiveParamTab('body');
-                          }
-                        }}
-                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-colors cursor-pointer ${
-                          isSelected
-                            ? `${style.bg} ${style.text}`
-                            : 'text-text-base hover:bg-surface-elevated'
-                        }`}
-                      >
-                        <span className={style.text}>{m}</span>
-                        {isSelected && <Check className="h-3 w-3 text-accent" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
-            )}
+              {method}
+            </span>
           </div>
 
           {/* URL Input */}
@@ -1065,122 +1196,130 @@ export const Playground: React.FC<PlaygroundProps> = ({
             <span>{urlValidationError}</span>
           </div>
         )}
+      </div>
 
-        {/* Parameter & Header Tabs Navigation */}
-        <div className="pt-2 border-t border-border space-y-3">
-          <PlaygroundTabsNav
-            activeTab={activeParamTab}
-            onSelectTab={setActiveParamTab}
-            workbenchLayout={workbenchLayout}
-            onSetWorkbenchLayout={handleSetWorkbenchLayout}
-            paramsCount={params.length}
-            headersCount={headers.length}
-            hasBody={Boolean(requestBody.trim())}
-            authType={authType}
-            bypassCache={bypassCache}
-            isLoading={isLoading}
-            response={response}
-            activeSnippetLang={activeSnippetLang}
-            onAddParam={() => handleUpdateParams((prev) => [...prev, { key: '', value: '' }])}
-            onAddHeader={() => setHeaders((prev) => [...prev, { key: '', value: '' }])}
-            onFormatBody={handleFormatRequestBody}
-            onClearBody={() => setRequestBody('')}
-            onClearAuth={() => {
-              setAuthType('none');
-              setApiKeyValue('');
-              setBearerToken('');
-              setBasicUsername('');
-              setBasicPassword('');
-            }}
-            onResetSettings={() => {
-              setRequestTimeout(10000);
-              setFollowRedirects(true);
-              setBypassCache(false);
-            }}
-            onCopyJson={handleCopyJson}
-            copiedJson={copiedJson}
-            onDownloadJson={handleDownloadJson}
-            onCopySnippet={handleCopySnippet}
-            copiedSnippet={copiedSnippet}
-          />
-
-          {/* Tab 1: Query Params */}
-          {activeParamTab === 'params' && (
-            <ParamsTab params={params} onUpdateParams={handleUpdateParams} />
-          )}
-
-          {/* Tab 2: Headers */}
-          {activeParamTab === 'headers' && (
-            <HeadersTab headers={headers} onSetHeaders={setHeaders} />
-          )}
-
-          {/* Tab 3: Body */}
-          {activeParamTab === 'body' && (
-            <BodyTab requestBody={requestBody} onSetRequestBody={setRequestBody} />
-          )}
-
-          {/* Tab 4: Auth */}
-          {activeParamTab === 'auth' && (
-            <AuthTab
-              apiAuthType={api?.auth_type}
+      {/* Main Workbench Card (Tabs Layout Mode) */}
+      {workbenchLayout === 'tabs' && (
+        <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col min-h-[560px] transition-colors">
+          {/* Integrated Workbench Header Tabs Strip */}
+          <div className="px-3 sm:px-4 py-2.5 border-b border-border bg-surface-elevated/40">
+            <PlaygroundTabsNav
+              activeTab={activeParamTab}
+              onSelectTab={setActiveParamTab}
+              workbenchLayout={workbenchLayout}
+              onSetWorkbenchLayout={handleSetWorkbenchLayout}
+              paramsCount={params.length}
+              headersCount={headers.length}
+              hasBody={Boolean(requestBody.trim())}
               authType={authType}
-              onSetAuthType={setAuthType}
-              apiKeyName={apiKeyName}
-              onSetApiKeyName={setApiKeyName}
-              apiKeyValue={apiKeyValue}
-              onSetApiKeyValue={setApiKeyValue}
-              apiKeyLocation={apiKeyLocation}
-              onSetApiKeyLocation={setApiKeyLocation}
-              bearerToken={bearerToken}
-              onSetBearerToken={setBearerToken}
-              basicUsername={basicUsername}
-              onSetBasicUsername={setBasicUsername}
-              basicPassword={basicPassword}
-              onSetBasicPassword={setBasicPassword}
-              showSecret={showSecret}
-              onToggleShowSecret={() => setShowSecret(!showSecret)}
-            />
-          )}
-
-          {/* Tab 5: Settings */}
-          {activeParamTab === 'settings' && (
-            <SettingsTab
-              requestTimeout={requestTimeout}
-              onSetRequestTimeout={setRequestTimeout}
               bypassCache={bypassCache}
-              onToggleBypassCache={() => setBypassCache(!bypassCache)}
-              followRedirects={followRedirects}
-              onToggleFollowRedirects={() => setFollowRedirects(!followRedirects)}
+              isLoading={isLoading}
+              response={response}
+              activeSnippetLang={activeSnippetLang}
             />
-          )}
+          </div>
 
-          {/* Tab 6: Response Payload (when in tabs mode) */}
-          {workbenchLayout === 'tabs' && activeParamTab === 'response' && (
-            <div className="pt-1">
-              <ResponseInspector
+          {/* Seamless Content Area */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Dedicated Individual Response Tabs */}
+            {(activeParamTab === 'json' || activeParamTab === 'response') && (
+              <JsonResponseTab
                 response={response}
                 isLoading={isLoading}
-                endpointUrl={endpointUrl}
-                api={api}
-                presets={presets}
-                onSelectPreset={handleSelectPreset}
-                history={history}
-                onSelectHistoryItem={handleSelectHistoryItem}
-                onRunTest={handleRunTest}
-                onClearHistory={() => {
-                  setHistory([]);
-                  sessionStorage.removeItem(`fah_history_${api?.slug || 'api'}`);
-                }}
-                currentHistoryId={currentHistoryId}
+                onRunTest={() => handleRunTest()}
+                onSwitchToPreview={() => setActiveParamTab('preview')}
                 isUnified={true}
-                setEndpointUrl={setEndpointUrl}
               />
-            </div>
-          )}
+            )}
 
-          {/* Tab 7: Integration Client Code (when in tabs mode) */}
-          {workbenchLayout === 'tabs' && activeParamTab === 'snippets' && (
-            <div className="pt-1">
+            {activeParamTab === 'raw' && (
+              <RawResponseTab
+                response={response}
+                isLoading={isLoading}
+                onRunTest={() => handleRunTest()}
+                isUnified={true}
+              />
+            )}
+
+            {activeParamTab === 'resp-headers' && (
+              <ResponseHeadersTab
+                response={response}
+                isLoading={isLoading}
+                onRunTest={() => handleRunTest()}
+                isUnified={true}
+              />
+            )}
+
+            {activeParamTab === 'schema' && (
+              <SchemaResponseTab
+                response={response}
+                isLoading={isLoading}
+                onRunTest={() => handleRunTest()}
+                isUnified={true}
+              />
+            )}
+
+            {activeParamTab === 'types' && (
+              <TypesResponseTab
+                response={response}
+                isLoading={isLoading}
+                onRunTest={() => handleRunTest()}
+                apiName={api?.name}
+                apiSlug={api?.slug}
+                isUnified={true}
+              />
+            )}
+
+            {activeParamTab === 'preview' && (
+              <PreviewResponseTab
+                response={response}
+                endpointUrl={endpointUrl}
+                isLoading={isLoading}
+                onRunTest={(url) => handleRunTest(url)}
+                onSwitchToJson={() => setActiveParamTab('json')}
+                isUnified={true}
+              />
+            )}
+
+            {/* Request Overview */}
+            {activeParamTab === 'request' && (
+              <RequestOverviewTab
+                method={method}
+                endpointUrl={endpointUrl}
+                params={params}
+                headers={headers}
+                requestBody={requestBody}
+                authType={authType}
+                apiKeyName={apiKeyName}
+                apiKeyValue={apiKeyValue}
+                apiKeyLocation={apiKeyLocation}
+                bearerToken={bearerToken}
+                basicUsername={basicUsername}
+                curlSnippet={getActiveSnippet()}
+                isLoading={isLoading}
+                onRunTest={() => handleRunTest()}
+                onNavigateTab={(target: RequestTab) => setActiveParamTab(target)}
+                onOpenAuthModal={handleOpenAuthModal}
+              />
+            )}
+
+            {/* Query Params */}
+            {activeParamTab === 'params' && (
+              <ParamsTab params={params} onUpdateParams={handleUpdateParams} isUnified={true} />
+            )}
+
+            {/* Headers */}
+            {activeParamTab === 'headers' && (
+              <HeadersTab headers={headers} onSetHeaders={setHeaders} isUnified={true} />
+            )}
+
+            {/* Body */}
+            {activeParamTab === 'body' && (
+              <BodyTab requestBody={requestBody} onSetRequestBody={setRequestBody} isUnified={true} />
+            )}
+
+            {/* Integration Client Code */}
+            {activeParamTab === 'snippets' && (
               <CodeSnippetsTab
                 activeSnippetLang={activeSnippetLang}
                 onSetActiveSnippetLang={setActiveSnippetLang}
@@ -1189,10 +1328,10 @@ export const Playground: React.FC<PlaygroundProps> = ({
                 onCopySnippet={handleCopySnippet}
                 isUnified={true}
               />
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Main Response & Snippets Area (Split Mode Only) */}
       {workbenchLayout === 'split' && (
@@ -1236,6 +1375,66 @@ export const Playground: React.FC<PlaygroundProps> = ({
             />
           )}
         </div>
+      )}
+
+      {/* Global API Auth Credentials Modal (Playground Fallback) */}
+      {!onOpenAuthModal && (
+        <ApiAuthModal
+          isOpen={isInternalAuthModalOpen}
+          onClose={() => setIsInternalAuthModalOpen(false)}
+          api={api}
+        />
+      )}
+
+      {/* Global Request Settings Modal (Playground Fallback) */}
+      {!onOpenSettingsModal && (
+        <RequestSettingsModal
+          isOpen={isInternalSettingsModalOpen}
+          onClose={() => setIsInternalSettingsModalOpen(false)}
+          requestTimeout={requestTimeout}
+          onSetRequestTimeout={setRequestTimeout}
+          bypassCache={bypassCache}
+          onToggleBypassCache={() => setBypassCache(!bypassCache)}
+          followRedirects={followRedirects}
+          onToggleFollowRedirects={() => setFollowRedirects(!followRedirects)}
+        />
+      )}
+
+      {/* Global Request History Modal (Playground Fallback) */}
+      {!onOpenHistoryModal && (
+        <RequestHistoryModal
+          isOpen={isInternalHistoryModalOpen}
+          onClose={() => setIsInternalHistoryModalOpen(false)}
+          api={api}
+          history={history}
+          onSelectHistoryItem={handleSelectHistoryItem}
+          onReRun={(item) => handleRunTest(item.url, item.method, item.body)}
+          onClearHistory={() => {
+            setHistory([]);
+            sessionStorage.removeItem(`fah_history_${api?.slug || 'api'}`);
+          }}
+          currentHistoryId={currentHistoryId}
+        />
+      )}
+
+      {/* Global Client Code Modal (Playground Fallback) */}
+      {!onOpenClientCodeModal && (
+        <ClientCodeModal
+          isOpen={isInternalClientCodeModalOpen}
+          onClose={() => setIsInternalClientCodeModalOpen(false)}
+          api={api}
+          endpointUrl={endpointUrl}
+          method={method}
+          params={params.reduce<Record<string, string>>((acc, p) => {
+            if (p.key.trim()) acc[p.key.trim()] = p.value;
+            return acc;
+          }, {})}
+          headers={headers.reduce<Record<string, string>>((acc, h) => {
+            if (h.key.trim()) acc[h.key.trim()] = h.value;
+            return acc;
+          }, {})}
+          body={requestBody}
+        />
       )}
     </div>
   );

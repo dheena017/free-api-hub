@@ -13,6 +13,49 @@ export interface HealthInfo {
   freshness?: string;
 }
 
+export interface HealthObservation {
+  timestamp: string;
+  status: HealthStatus;
+  status_code: number;
+  latency_ms: number;
+  message?: string | null;
+}
+
+export interface DailyUptimeRecord {
+  date: string;
+  uptime_percent: number;
+  status: HealthStatus;
+  total_probes: number;
+  avg_latency_ms: number;
+}
+
+export interface NetworkWaterfall {
+  dns_ms: number;
+  tcp_ms: number;
+  tls_ms?: number | null;
+  ttfb_ms: number;
+  download_ms: number;
+}
+
+export interface HealthHistoryResponse {
+  slug: string;
+  name: string;
+  target_url: string;
+  current_status: HealthStatus;
+  uptime_percent: number;
+  current_latency_ms: number;
+  min_latency_ms: number;
+  avg_latency_ms: number;
+  p95_latency_ms: number;
+  max_latency_ms: number;
+  jitter_ms: number;
+  total_probes: number;
+  last_checked: string;
+  network_waterfall: NetworkWaterfall;
+  observations: HealthObservation[];
+  daily_uptime: DailyUptimeRecord[];
+}
+
 export interface HealthCheckResult {
   slug: string;
   name: string;

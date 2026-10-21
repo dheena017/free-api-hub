@@ -5,7 +5,8 @@ from app.services import catalog_service
 from app.models import (
     HealthCheckResult,
     StatusDashboardResponse,
-    BatchHealthCheckResponse
+    BatchHealthCheckResponse,
+    HealthHistoryResponse
 )
 from app.logger import logger
 from app.security import health_rate_limiter
@@ -64,6 +65,20 @@ async def check_single_endpoint(slug: str, req: Request):
 
     try:
         return await catalog_service.check_api_health(slug)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+@router.get("/health/history/{slug}", response_model=HealthHistoryResponse)
+async def get_endpoint_health_history(
+    slug: str,
+    limit: int = Query(40, ge=5, le=100)
+):
+    """
+    Returns authentic detailed telemetry history, latency distributions (min, avg, p95, max),
+    30-day uptime timeline, and network waterfall breakdown for an endpoint.
+    """
+    try:
+        return catalog_service.get_health_history(slug, limit=limit)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 

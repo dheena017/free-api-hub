@@ -10,7 +10,8 @@ import {
   SubmissionPayload,
   HealthCheckResult,
   BatchHealthCheckResponse,
-  StatusDashboardResponse
+  StatusDashboardResponse,
+  HealthHistoryResponse
 } from '../types/api';
 import { logger } from '../utils/logger';
 
@@ -184,6 +185,14 @@ export async function checkApiHealth(slug: string): Promise<HealthCheckResult> {
   return loggedFetch<HealthCheckResult>(`${API_PREFIX}/health/check/${encodeURIComponent(slug)}`, {
     method: 'POST'
   }, `Real-time health probe failed for '${slug}'`);
+}
+
+export async function fetchHealthHistory(slug: string, limit: number = 40): Promise<HealthHistoryResponse> {
+  return loggedFetch<HealthHistoryResponse>(
+    `${API_PREFIX}/health/history/${encodeURIComponent(slug)}?limit=${limit}`,
+    undefined,
+    `Failed to fetch health telemetry history for '${slug}'`
+  );
 }
 
 export async function checkBatchHealth(params?: { slugs?: string[]; limit?: number }): Promise<BatchHealthCheckResponse> {

@@ -34,7 +34,8 @@ import {
   Zap,
   ArrowRight,
   ExternalLink,
-  Info
+  Info,
+  Send
 } from 'lucide-react';
 
 function getErrorDiagnostics(statusCode: number, errorMessage?: string | null) {
@@ -117,6 +118,9 @@ export interface ResponseInspectorProps {
   viewLayout?: 'split' | 'focus' | 'stacked';
   onSetViewLayout?: (layout: 'split' | 'focus' | 'stacked') => void;
   setEndpointUrl?: (url: string) => void;
+  controlledResponseTab?: 'json' | 'preview' | 'media' | 'headers' | 'request' | 'table' | 'types' | 'raw';
+  onSelectResponseTab?: (tab: 'json' | 'preview' | 'media' | 'headers' | 'request' | 'table' | 'types' | 'raw') => void;
+  hideToolbarTabs?: boolean;
 }
 
 export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
@@ -135,10 +139,16 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
   viewLayout = 'split',
   onSetViewLayout,
   setEndpointUrl,
+  controlledResponseTab,
+  onSelectResponseTab,
+  hideToolbarTabs = false
 }) => {
-  const [activeResponseTab, setActiveResponseTab] = useState<
-    'json' | 'preview' | 'media' | 'headers' | 'table' | 'types' | 'raw' | 'history'
+  const [internalActiveTab, setInternalActiveTab] = useState<
+    'json' | 'preview' | 'media' | 'headers' | 'request' | 'table' | 'types' | 'raw'
   >('json');
+
+  const activeResponseTab = controlledResponseTab || internalActiveTab;
+  const setActiveResponseTab = onSelectResponseTab || setInternalActiveTab;
   const [jsonDisplayMode, setJsonDisplayMode] = useState<'tree' | 'raw'>('tree');
   const [typesDisplayMode, setTypesDisplayMode] = useState<'typescript' | 'schema'>('typescript');
   const [jsonSearchQuery, setJsonSearchQuery] = useState('');
@@ -146,6 +156,27 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
   const [copiedJson, setCopiedJson] = useState(false);
   const [copiedTypes, setCopiedTypes] = useState(false);
   const [copiedError, setCopiedError] = useState(false);
+  const [copiedReqUrl, setCopiedReqUrl] = useState(false);
+
+  const currentHistoryItem = useMemo(() => {
+    if (currentHistoryId) {
+      return history.find((h) => h.id === currentHistoryId) || history[0];
+    }
+    return history[0];
+  }, [history, currentHistoryId]);
+
+  const queryParamsList = useMemo(() => {
+    try {
+      const urlObj = new URL(endpointUrl.startsWith('http') ? endpointUrl : `https://example.com${endpointUrl}`);
+      const list: Array<[string, string]> = [];
+      urlObj.searchParams.forEach((value, key) => {
+        list.push([key, value]);
+      });
+      return list;
+    } catch {
+      return [];
+    }
+  }, [endpointUrl]);
 
   const getPayloadSize = (data: unknown) => {
     try {
@@ -161,16 +192,22 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
   const isHtmlResponse = useMemo(() => {
     if (!response) return false;
     const ct = response.headers?.['content-type'] || response.headers?.['Content-Type'] || '';
-    if (typeof ct === 'string' && ct.toLowerCase().includes('text/html')) return true;
-    if (typeof response.data === 'string' && /<(!doctype|html|head|body)[^>]*>/i.test(response.data)) {
+    if (typeof ct === 'string' && (ct.toLowerCase().includes('text/html') || ct.toLowerCase().includes('application/xhtml+xml'))) {
       return true;
+    }
+    if (typeof response.data === 'string') {
+      const trimmed = response.data.trim().toLowerCase();
+      if (/<(!doctype|html|head|body)[^>]*>/i.test(trimmed)) return true;
+      if (/^<(div|p|span|table|ul|ol|h[1-6]|section|article|header|footer|form)[\s>]/i.test(trimmed) && trimmed.includes('</')) {
+        return true;
+      }
     }
     return false;
   }, [response]);
 
   const mediaItems = useMemo(() => {
     if (!response) return [];
-    return extractMediaItems(response.data, endpointUrl);
+    return extractMediaItems(response.data, endpointUrl, response.headers);
   }, [response, endpointUrl]);
 
   const handleCopyJson = () => {
@@ -273,26 +310,227 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
   }, [response?.data]);
 
   return (
-    <div className={`${isUnified ? "rounded-xl border border-border bg-surface-elevated/20 flex flex-col min-h-[460px] h-[540px] overflow-hidden shadow-sm transition-colors" : "bg-surface rounded-2xl border border-border flex flex-col min-h-[480px] h-[540px] overflow-hidden shadow-sm transition-colors"}`}>
-          {/* Header Bar */}
-          <div className="px-4 py-3 border-b border-border bg-surface-elevated/60 flex flex-wrap items-center justify-between gap-2">
-            {/* Left Title & Status */}
-            <div className="flex items-center gap-2.5">
-              <div className="p-1 rounded-lg bg-accent/10 text-accent">
-                <Database className="h-4 w-4" />
+    <div className={`${isUnified ? "flex-1 flex flex-col h-full overflow-hidden" : "bg-surface rounded-2xl border border-border flex flex-col min-h-[480px] h-[540px] overflow-hidden shadow-sm transition-colors"}`}>
+          {/* Standalone/Split Mode Header Bar */}
+          {!isUnified && (
+            <div className="px-4 py-2.5 border-b border-border bg-surface-elevated/60 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1 rounded-lg bg-accent/10 text-accent">
+                  <Database className="h-3.5 w-3.5" />
+                </div>
+                <span className="text-xs font-bold text-text-base tracking-tight">Response Payload</span>
               </div>
-              <span className="text-xs font-bold text-text-base tracking-tight">Response Payload</span>
 
-              {/* Status Code badge */}
+              {onSetViewLayout && (
+                <div className="flex items-center bg-surface p-0.5 rounded-xl border border-border">
+                  <button
+                    type="button"
+                    onClick={() => onSetViewLayout('split')}
+                    className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                      viewLayout === 'split' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
+                    }`}
+                    title="Side-by-side Split View"
+                  >
+                    <Columns className="h-3 w-3" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onSetViewLayout('focus')}
+                    className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                      viewLayout === 'focus' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
+                    }`}
+                    title="Full Width Focus View"
+                  >
+                    <Maximize2 className="h-3 w-3" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onSetViewLayout('stacked')}
+                    className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                      viewLayout === 'stacked' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
+                    }`}
+                    title="Stacked Top/Bottom View"
+                  >
+                    <Rows className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Unified Response Toolbar (Sub-tabs hidden when controlled by unified single top bar) */}
+          <div className="px-3 py-2 bg-surface-elevated/40 border-b border-border flex flex-wrap items-center justify-between gap-2.5">
+            {!hideToolbarTabs ? (
+              /* Left: Response View Selector Sub-Tabs */
+              <div className="flex items-center gap-1 flex-wrap overflow-x-auto scrollbar-none">
+                <button
+                  type="button"
+                  onClick={() => setActiveResponseTab('json')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
+                    activeResponseTab === 'json'
+                      ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
+                      : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
+                  }`}
+                >
+                  <Code2 className="h-3 w-3" />
+                  <span>JSON</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveResponseTab('preview')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
+                    activeResponseTab === 'preview'
+                      ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
+                      : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
+                  }`}
+                >
+                  <FileCode className="h-3 w-3" />
+                  <span>HTML</span>
+                  {isHtmlResponse && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                      OUTPUT
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveResponseTab('media')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
+                    activeResponseTab === 'media'
+                      ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
+                      : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
+                  }`}
+                >
+                  <ImageIcon className="h-3 w-3" />
+                  <span>Media</span>
+                  {mediaItems.length > 0 && (
+                    <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
+                      activeResponseTab === 'media' ? 'bg-black/20 text-background' : 'bg-accent/20 text-accent'
+                    }`}>
+                      {mediaItems.length}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveResponseTab('headers')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
+                    activeResponseTab === 'headers'
+                      ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
+                      : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
+                  }`}
+                >
+                  <FileText className="h-3 w-3" />
+                  <span>Headers</span>
+                  {response?.headers && Object.keys(response.headers).length > 0 && (
+                    <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
+                      activeResponseTab === 'headers' ? 'bg-black/20 text-background' : 'bg-surface text-text-muted'
+                    }`}>
+                      {Object.keys(response.headers).length}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveResponseTab('request')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
+                    activeResponseTab === 'request'
+                      ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
+                      : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
+                  }`}
+                >
+                  <Send className="h-3 w-3" />
+                  <span>Request</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveResponseTab('table')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
+                    activeResponseTab === 'table'
+                      ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
+                      : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
+                  }`}
+                >
+                  <TableIcon className="h-3 w-3" />
+                  <span>Schema</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveResponseTab('types')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
+                    activeResponseTab === 'types'
+                      ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
+                      : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
+                  }`}
+                >
+                  <FileCode className="h-3 w-3" />
+                  <span>Types</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveResponseTab('raw')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
+                    activeResponseTab === 'raw'
+                      ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
+                      : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
+                  }`}
+                >
+                  <AlignLeft className="h-3 w-3" />
+                  <span>Raw</span>
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-xs">
+                <div className="p-1 rounded-lg bg-accent/10 text-accent">
+                  {activeResponseTab === 'table' ? (
+                    <TableIcon className="h-3.5 w-3.5" />
+                  ) : activeResponseTab === 'types' ? (
+                    <FileCode className="h-3.5 w-3.5" />
+                  ) : activeResponseTab === 'headers' ? (
+                    <FileText className="h-3.5 w-3.5" />
+                  ) : activeResponseTab === 'raw' ? (
+                    <AlignLeft className="h-3.5 w-3.5" />
+                  ) : activeResponseTab === 'preview' ? (
+                    <Globe className="h-3.5 w-3.5" />
+                  ) : (
+                    <Code2 className="h-3.5 w-3.5" />
+                  )}
+                </div>
+                <span className="font-bold text-text-base tracking-tight font-sans">
+                  {activeResponseTab === 'table'
+                    ? 'JSON Schema Hierarchy'
+                    : activeResponseTab === 'types'
+                      ? 'TypeScript Types & Schema'
+                      : activeResponseTab === 'headers'
+                        ? `HTTP Response Headers (${Object.keys(response?.headers || {}).length})`
+                        : activeResponseTab === 'raw'
+                          ? 'Raw Server Response'
+                          : activeResponseTab === 'preview'
+                            ? 'Rendered Output Preview'
+                            : 'JSON Response Payload'}
+                </span>
+              </div>
+            )}
+
+            {/* Right: Live Telemetry + Format Switcher + Quick Actions */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Telemetry pill */}
               {response ? (
-                <div className="flex items-center gap-2 ml-1">
+                <div className="flex items-center gap-2 font-mono text-[11px]">
                   <span
-                    className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border flex items-center gap-1.5 ${
+                    className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full flex items-center gap-1.5 ${
                       response.status_code >= 200 && response.status_code < 300
-                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                        ? 'bg-emerald-500/15 text-emerald-400'
                         : response.status_code >= 400
-                          ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
-                          : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                          ? 'bg-rose-500/15 text-rose-400'
+                          : 'bg-amber-500/15 text-amber-400'
                     }`}
                   >
                     <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
@@ -305,24 +543,50 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
                   </span>
 
                   {Boolean(response?.data) && (
-                    <span className="text-[10px] font-mono text-text-muted px-2 py-0.5 rounded-md bg-surface border border-border">
+                    <span className="text-[10px] font-mono text-text-muted px-1.5 py-0.5 rounded bg-surface">
                       {getPayloadSize(response.data)}
                     </span>
                   )}
                 </div>
               ) : (
-                <span className="text-[10px] font-mono text-text-muted/70 px-2 py-0.5 rounded-full bg-surface border border-border flex items-center gap-1.5">
+                <span className="text-[10px] font-mono text-text-muted/70 px-2 py-0.5 rounded-full bg-surface flex items-center gap-1.5">
                   <span className="h-1.5 w-1.5 rounded-full bg-text-muted/40" />
                   <span>Awaiting Request</span>
                 </span>
               )}
-            </div>
 
-            {/* Header Right Actions (Search, Copy, Download, Layout controls) */}
-            <div className="flex items-center gap-1.5">
-              {Boolean(response?.data) && (
-                <>
+              {/* Tree vs Raw switch (when on JSON tab) */}
+              {activeResponseTab === 'json' && Boolean(response?.data) && (
+                <div className="flex items-center bg-surface p-0.5 rounded-lg ml-1">
                   <button
+                    type="button"
+                    onClick={() => setJsonDisplayMode('tree')}
+                    className={`px-2 py-0.5 rounded-md text-[10px] font-mono transition-colors cursor-pointer ${
+                      jsonDisplayMode === 'tree' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
+                    }`}
+                  >
+                    Tree
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setJsonDisplayMode('raw')}
+                    className={`px-2 py-0.5 rounded-md text-[10px] font-mono transition-colors cursor-pointer ${
+                      jsonDisplayMode === 'raw' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
+                    }`}
+                  >
+                    Plain
+                  </button>
+                </div>
+              )}
+
+              {/* Action Divider */}
+              {Boolean(response?.data) && <div className="h-3.5 w-px bg-border/70 mx-0.5 hidden sm:block" />}
+
+              {/* Search, Copy, Export */}
+              {Boolean(response?.data) && (
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
                     onClick={() => setIsSearchOpen(!isSearchOpen)}
                     className={`p-1.5 rounded-lg text-xs transition-colors border cursor-pointer ${
                       isSearchOpen
@@ -335,6 +599,7 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
                   </button>
 
                   <button
+                    type="button"
                     onClick={handleCopyJson}
                     className="text-xs text-text-muted hover:text-text-base flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-elevated border border-border transition-colors cursor-pointer"
                     title="Copy full JSON"
@@ -344,6 +609,7 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
                   </button>
 
                   <button
+                    type="button"
                     onClick={handleDownloadJson}
                     className="text-xs text-text-muted hover:text-text-base flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-elevated border border-border transition-colors cursor-pointer"
                     title="Download JSON file"
@@ -351,193 +617,9 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
                     <Download className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline">Export</span>
                   </button>
-                </>
-              )}
-
-              {!isUnified && onSetViewLayout && (
-                <div className="flex items-center bg-surface p-0.5 rounded-xl border border-border ml-1">
-                <button
-                  type="button"
-                  onClick={() => onSetViewLayout('split')}
-                  className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                    viewLayout === 'split' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
-                  }`}
-                  title="Side-by-side Split View"
-                >
-                  <Columns className="h-3 w-3" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onSetViewLayout('focus')}
-                  className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                    viewLayout === 'focus' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
-                  }`}
-                  title="Full Width Focus View"
-                >
-                  <Maximize2 className="h-3 w-3" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onSetViewLayout('stacked')}
-                  className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                    viewLayout === 'stacked' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
-                  }`}
-                  title="Stacked Top/Bottom View"
-                >
-                  <Rows className="h-3 w-3" />
-                </button>
-              </div>
+                </div>
               )}
             </div>
-          </div>
-
-          {/* Response View Selector Tabs */}
-          <div className="px-3 py-1.5 bg-surface-elevated/40 border-b border-border flex items-center justify-between gap-1 overflow-x-auto scrollbar-none">
-            <div className="flex items-center gap-1 flex-wrap">
-              <button
-                onClick={() => setActiveResponseTab('json')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
-                  activeResponseTab === 'json'
-                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
-                }`}
-              >
-                <Code2 className="h-3 w-3" />
-                <span>JSON</span>
-              </button>
-
-              <button
-                onClick={() => setActiveResponseTab('preview')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
-                  activeResponseTab === 'preview'
-                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
-                }`}
-              >
-                <Globe className="h-3 w-3" />
-                <span>Preview</span>
-                {isHtmlResponse && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                    HTML
-                  </span>
-                )}
-              </button>
-
-              <button
-                onClick={() => setActiveResponseTab('media')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
-                  activeResponseTab === 'media'
-                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
-                }`}
-              >
-                <ImageIcon className="h-3 w-3" />
-                <span>Media</span>
-                {mediaItems.length > 0 && (
-                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
-                    activeResponseTab === 'media' ? 'bg-black/20 text-background' : 'bg-accent/20 text-accent'
-                  }`}>
-                    {mediaItems.length}
-                  </span>
-                )}
-              </button>
-
-              <button
-                onClick={() => setActiveResponseTab('headers')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
-                  activeResponseTab === 'headers'
-                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
-                }`}
-              >
-                <FileText className="h-3 w-3" />
-                <span>Headers</span>
-                {response?.headers && Object.keys(response.headers).length > 0 && (
-                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
-                    activeResponseTab === 'headers' ? 'bg-black/20 text-background' : 'bg-surface text-text-muted border border-border'
-                  }`}>
-                    {Object.keys(response.headers).length}
-                  </span>
-                )}
-              </button>
-
-              <button
-                onClick={() => setActiveResponseTab('table')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
-                  activeResponseTab === 'table'
-                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
-                }`}
-              >
-                <TableIcon className="h-3 w-3" />
-                <span>Schema</span>
-              </button>
-
-              <button
-                onClick={() => setActiveResponseTab('types')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
-                  activeResponseTab === 'types'
-                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
-                }`}
-              >
-                <FileCode className="h-3 w-3" />
-                <span>Types</span>
-              </button>
-
-              <button
-                onClick={() => setActiveResponseTab('raw')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
-                  activeResponseTab === 'raw'
-                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
-                }`}
-              >
-                <AlignLeft className="h-3 w-3" />
-                <span>Raw</span>
-              </button>
-
-              <button
-                onClick={() => setActiveResponseTab('history')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
-                  activeResponseTab === 'history'
-                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                    : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
-                }`}
-              >
-                <History className="h-3 w-3" />
-                <span>History</span>
-                {history.length > 0 && (
-                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
-                    activeResponseTab === 'history' ? 'bg-black/20 text-background' : 'bg-surface text-text-muted border border-border'
-                  }`}>
-                    {history.length}
-                  </span>
-                )}
-              </button>
-            </div>
-
-            {/* Tree vs Raw text toggle if on JSON tab */}
-            {activeResponseTab === 'json' && Boolean(response?.data) && (
-              <div className="flex items-center bg-surface p-0.5 rounded-lg border border-border">
-                <button
-                  onClick={() => setJsonDisplayMode('tree')}
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-mono transition-colors cursor-pointer ${
-                    jsonDisplayMode === 'tree' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
-                  }`}
-                >
-                  Tree
-                </button>
-                <button
-                  onClick={() => setJsonDisplayMode('raw')}
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-mono transition-colors cursor-pointer ${
-                    jsonDisplayMode === 'raw' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
-                  }`}
-                >
-                  Plain
-                </button>
-              </div>
-            )}
           </div>
 
           {/* Quick Search Bar */}
@@ -571,23 +653,6 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent" />
                 <p className="text-xs font-medium">Executing live request through proxy...</p>
               </div>
-            ) : activeResponseTab === 'history' ? (
-              <RequestHistoryView
-                history={history}
-                onSelect={(item) => {
-                  onSelectHistoryItem(item);
-                  setActiveResponseTab('json');
-                }}
-                onReRun={(item) => {
-                  onSelectHistoryItem(item);
-                  onRunTest(item.url, item.method, item.body);
-                }}
-                onClear={() => {
-                  onClearHistory();
-                  sessionStorage.removeItem(`fah_history_${api?.slug || 'api'}`);
-                }}
-                currentHistoryId={currentHistoryId}
-              />
             ) : response?.error || (response?.status_code && response.status_code >= 400) ? (
               (() => {
                 const diag = getErrorDiagnostics(response.status_code, response.error);
@@ -695,16 +760,16 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
                   {isHtmlResponse && (
                     <div className="p-3 rounded-xl bg-accent/10 border border-accent/30 flex flex-wrap items-center justify-between gap-2.5 font-sans">
                       <div className="flex items-center gap-2 text-text-base text-xs">
-                        <Globe className="h-4 w-4 text-accent flex-shrink-0" />
+                        <FileCode className="h-4 w-4 text-accent flex-shrink-0" />
                         <span>
-                          <strong>HTML Web Document Detected:</strong> This endpoint returned a rendered HTML web page ({response.status_code} OK).
+                          <strong>HTML Output Detected:</strong> This endpoint returned rendered HTML markup ({response.status_code} OK).
                         </span>
                       </div>
                       <button
                         onClick={() => setActiveResponseTab('preview')}
                         className="px-3 py-1 rounded-lg bg-accent hover:bg-accent-hover text-background font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
                       >
-                        <span>Switch to Web Preview</span>
+                        <span>Switch to HTML View</span>
                         <ArrowRight className="h-3.5 w-3.5" />
                       </button>
                     </div>
@@ -763,6 +828,116 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
                     </div>
                   ) : (
                     <p className="text-text-muted font-sans text-xs py-4 text-center">No explicit headers forwarded by target server.</p>
+                  )}
+                </div>
+              ) : activeResponseTab === 'request' ? (
+                /* Sent Request Inspector Tab */
+                <div className="space-y-4 font-mono text-xs">
+                  {/* Endpoint Banner */}
+                  <div className="p-3 bg-surface-elevated/40 border border-border rounded-xl space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-sans text-text-muted uppercase tracking-wider font-semibold">
+                        Executed Target Endpoint
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(endpointUrl);
+                          setCopiedReqUrl(true);
+                          setTimeout(() => setCopiedReqUrl(false), 2000);
+                        }}
+                        className="text-xs text-text-muted hover:text-text-base flex items-center gap-1 cursor-pointer"
+                      >
+                        {copiedReqUrl ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                        <span>{copiedReqUrl ? 'Copied' : 'Copy URL'}</span>
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs uppercase font-bold px-2 py-0.5 rounded bg-accent/15 text-accent border border-accent/30">
+                        {currentHistoryItem?.method || 'GET'}
+                      </span>
+                      <span className="text-xs text-text-base break-all font-semibold select-all">{endpointUrl}</span>
+                    </div>
+                  </div>
+
+                  {/* Sent Query Parameters */}
+                  <div className="space-y-2">
+                    <div className="text-[11px] font-sans text-text-muted pb-1 border-b border-border flex items-center justify-between">
+                      <span>Query Parameters Sent:</span>
+                      <span className="font-mono text-[10px]">
+                        {queryParamsList.length} items
+                      </span>
+                    </div>
+                    {queryParamsList.length > 0 ? (
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="border-b border-border text-text-muted text-[10px] uppercase">
+                            <th className="py-1.5 pr-4">Parameter</th>
+                            <th className="py-1.5">Value</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/50 text-xs">
+                          {queryParamsList.map(([k, v], idx) => (
+                            <tr key={idx} className="hover:bg-surface-elevated/30">
+                              <td className="py-1.5 pr-4 text-accent font-semibold">{k}</td>
+                              <td className="py-1.5 text-text-base select-all break-all">{v}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <p className="text-text-muted text-xs italic py-2">No query parameters included in request.</p>
+                    )}
+                  </div>
+
+                  {/* Sent Request Headers */}
+                  <div className="space-y-2">
+                    <div className="text-[11px] font-sans text-text-muted pb-1 border-b border-border flex items-center justify-between">
+                      <span>Request Headers Forwarded:</span>
+                      <span className="font-mono text-[10px]">
+                        {(currentHistoryItem?.headers?.length || 0) + 2} headers
+                      </span>
+                    </div>
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-border text-text-muted text-[10px] uppercase">
+                          <th className="py-1.5 pr-4">Header</th>
+                          <th className="py-1.5">Value</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border/50 text-xs">
+                        <tr className="hover:bg-surface-elevated/30">
+                          <td className="py-1.5 pr-4 text-accent font-semibold">User-Agent</td>
+                          <td className="py-1.5 text-text-muted">FreeAPIHub-Proxy/1.0 (+https://freeapihub.dev)</td>
+                        </tr>
+                        <tr className="hover:bg-surface-elevated/30">
+                          <td className="py-1.5 pr-4 text-accent font-semibold">Accept</td>
+                          <td className="py-1.5 text-text-muted">application/json, text/plain, */*</td>
+                        </tr>
+                        {currentHistoryItem?.headers?.map((h, idx) => (
+                          <tr key={idx} className="hover:bg-surface-elevated/30">
+                            <td className="py-1.5 pr-4 text-accent font-semibold">{h.key}</td>
+                            <td className="py-1.5 text-text-base select-all break-all">{h.value}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Sent Request Body (if any) */}
+                  {Boolean(currentHistoryItem?.body) && (
+                    <div className="space-y-1.5">
+                      <div className="text-[11px] font-sans text-text-muted pb-1 border-b border-border">
+                        Request Body Sent:
+                      </div>
+                      <div className="rounded-xl border border-border overflow-hidden">
+                        <CodeSnippetViewer
+                          code={currentHistoryItem?.body || ''}
+                          language="json"
+                          showLineNumbers={true}
+                        />
+                      </div>
+                    </div>
                   )}
                 </div>
               ) : activeResponseTab === 'types' ? (

@@ -1,19 +1,10 @@
 import React, { useMemo } from 'react';
 import { Terminal, Copy, Check } from 'lucide-react';
 import { CodeSnippetViewer } from '../../viewers/CodeSnippetViewer';
-import { SnippetLanguage, SUPPORTED_LANGUAGES } from '../../../utils/codeSnippets';
+import { SnippetLanguage, SUPPORTED_LANGUAGES, POPULAR_LANG_LIST } from '../../../utils/codeSnippets';
 
 export type { SnippetLanguage };
-export { SUPPORTED_LANGUAGES };
-
-export const POPULAR_LANG_LIST: Array<{ id: SnippetLanguage; label: string }> = [
-  { id: 'curl', label: 'cURL' },
-  { id: 'js', label: 'Fetch' },
-  { id: 'axios', label: 'Axios' },
-  { id: 'ts', label: 'TypeScript' },
-  { id: 'python', label: 'Python' },
-  { id: 'go', label: 'Go' },
-];
+export { SUPPORTED_LANGUAGES, POPULAR_LANG_LIST };
 
 export interface CodeSnippetsTabProps {
   activeSnippetLang: SnippetLanguage;
@@ -50,7 +41,7 @@ export const CodeSnippetsTab: React.FC<CodeSnippetsTabProps> = ({
     <div
       className={`${
         isUnified
-          ? 'rounded-xl border border-border bg-surface-elevated/20 flex flex-col min-h-[460px] h-[540px] overflow-hidden shadow-sm transition-colors'
+          ? 'flex-1 flex flex-col h-full overflow-hidden'
           : 'bg-surface rounded-2xl border border-border flex flex-col min-h-[480px] h-[540px] overflow-hidden shadow-sm transition-colors'
       }`}
     >

@@ -38,6 +38,15 @@ export const SUPPORTED_LANGUAGES: LanguageOption[] = [
   { id: 'ruby', label: 'Ruby (Net::HTTP)', category: 'Backend', fileExt: 'rb' }
 ];
 
+export const POPULAR_LANG_LIST: Array<{ id: SnippetLanguage; label: string }> = [
+  { id: 'curl', label: 'cURL' },
+  { id: 'js', label: 'Fetch' },
+  { id: 'axios', label: 'Axios' },
+  { id: 'ts', label: 'TypeScript' },
+  { id: 'python', label: 'Python' },
+  { id: 'go', label: 'Go' },
+];
+
 export function buildFullUrl(url: string, params: Record<string, string> = {}): string {
   try {
     const parsed = new URL(url);

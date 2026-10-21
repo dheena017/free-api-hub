@@ -3,19 +3,11 @@ import { ApiItem } from '../../types/api';
 import { getFullApiDocumentation, ApiEndpointDoc } from '../../utils/apiDocumentationData';
 import {
   Globe,
-  KeyRound,
-  ShieldCheck,
   Copy,
   Check,
-  ExternalLink,
   Play,
   ChevronDown,
   ChevronRight,
-  Code2,
-  CheckCircle2,
-  Lock,
-  Layers,
-  Sparkles,
   Terminal
 } from 'lucide-react';
 import { useToast } from '../../utils/useToast';
@@ -377,89 +369,6 @@ export const ApiDocumentationView: React.FC<ApiDocumentationViewProps> = ({
               </div>
             );
           })}
-        </div>
-      </div>
-
-      {/* Authentication & Access Guide */}
-      <div className="bg-surface border border-border rounded-2xl p-6 sm:p-7 space-y-5 shadow-sm transition-colors">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
-          <div className="space-y-1">
-            <h3 className="text-base font-bold text-text-base flex items-center gap-2">
-              <KeyRound className="h-5 w-5 text-amber-400" />
-              <span>Authentication & Access Credentials</span>
-            </h3>
-            <p className="text-xs text-text-muted">
-              Identity verification and authorization requirements for {api.name}.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span
-              className={`px-3 py-1 rounded-xl text-xs font-mono font-bold border flex items-center gap-1.5 ${
-                doc.auth.type === 'none'
-                  ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border-emerald-500/30'
-                  : doc.auth.type === 'api_key'
-                  ? 'bg-amber-500/10 text-amber-500 dark:text-amber-400 border-amber-500/30'
-                  : 'bg-purple-500/10 text-purple-500 dark:text-purple-400 border-purple-500/30'
-              }`}
-            >
-              {doc.auth.type === 'none' ? (
-                <CheckCircle2 className="h-3.5 w-3.5" />
-              ) : (
-                <Lock className="h-3.5 w-3.5" />
-              )}
-              <span>{doc.auth.title}</span>
-            </span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-3 p-4 bg-surface-elevated/40 rounded-xl border border-border">
-            <h4 className="text-xs font-mono uppercase tracking-wider font-semibold text-text-base flex items-center gap-1.5">
-              <ShieldCheck className="h-4 w-4 text-emerald-400" />
-              <span>How It Works</span>
-            </h4>
-            <p className="text-xs text-text-muted leading-relaxed">{doc.auth.description}</p>
-            <ol className="space-y-2 text-xs text-text-base pt-1">
-              {doc.auth.instructions.map((step, idx) => (
-                <li key={idx} className="flex items-start gap-2">
-                  <span className="w-4 h-4 rounded-full bg-accent/15 text-accent font-bold flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">
-                    {idx + 1}
-                  </span>
-                  <span className="leading-relaxed">{step}</span>
-                </li>
-              ))}
-            </ol>
-          </div>
-
-          <div className="space-y-3 p-4 bg-surface-elevated/40 rounded-xl border border-border flex flex-col justify-between">
-            <div className="space-y-3">
-              <h4 className="text-xs font-mono uppercase tracking-wider font-semibold text-text-base flex items-center gap-1.5">
-                <Code2 className="h-4 w-4 text-accent" />
-                <span>Security Guidelines</span>
-              </h4>
-              <ul className="space-y-2 text-xs text-text-muted">
-                {doc.auth.securityBestPractices.map((rec, i) => (
-                  <li key={i} className="flex items-start gap-2">
-                    <span className="text-amber-400 font-bold mt-0.5">•</span>
-                    <span className="leading-relaxed">{rec}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {doc.auth.docUrl && (
-              <a
-                href={doc.auth.docUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-surface hover:bg-surface-elevated text-xs font-medium text-accent border border-border hover:border-accent/40 transition-colors w-full mt-2"
-              >
-                <span>Upstream Developer Documentation</span>
-                <ExternalLink className="h-3.5 w-3.5" />
-              </a>
-            )}
-          </div>
         </div>
       </div>
     </div>

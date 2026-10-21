@@ -74,7 +74,7 @@ export function getEndpointPresets(api: ApiItem): EndpointPreset[] {
   if (api.endpoints && api.endpoints.length > 0) {
     return api.endpoints.map((ep, idx) => {
       const epPath = ep?.path || '/';
-      const rawPath = epPath.startsWith('/') ? epPath : `/${epPath}`;
+      const rawPath = epPath.startsWith('http') ? epPath : (epPath.startsWith('/') ? epPath : `/${epPath}`);
       const { params: extractedParams } = extractParamsFromEndpoint(rawPath);
       const mergedParams = {
         ...extractedParams,

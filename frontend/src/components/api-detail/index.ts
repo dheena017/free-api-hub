@@ -15,3 +15,21 @@ export type { HealthTelemetryTabProps } from './HealthTelemetryTab';
 
 export { ArchitectureSdkTab } from './ArchitectureSdkTab';
 export type { ArchitectureSdkTabProps } from './ArchitectureSdkTab';
+
+export { HistoryTab } from './HistoryTab';
+export type { HistoryTabProps } from './HistoryTab';
+
+export { ClientCodeTab } from './ClientCodeTab';
+export type { ClientCodeTabProps } from './ClientCodeTab';
+
+export { AuthTab as ApiAuthTab } from './AuthTab';
+export type { AuthTabProps as ApiAuthTabProps } from './AuthTab';
+
+export { SettingsTab as ApiSettingsTab } from './SettingsTab';
+export type { SettingsTabProps as ApiSettingsTabProps } from './SettingsTab';
+
+export { LiveLatencySparkline } from './LiveLatencySparkline';
+export type { LiveLatencySparklineProps } from './LiveLatencySparkline';
+
+export { ApiAuthModal } from './ApiAuthModal';
+export type { ApiAuthModalProps } from './ApiAuthModal';

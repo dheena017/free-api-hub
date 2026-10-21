@@ -7,10 +7,22 @@ function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1).replace(/[^a-zA-Z0-9]/g, '');
 }
 
+function toPascalCase(str: string): string {
+  if (!str) return 'ApiResponse';
+  const cleaned = str
+    .replace(/[^a-zA-Z0-9]+/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join('');
+  return cleaned ? (cleaned.endsWith('Response') ? cleaned : `${cleaned}Response`) : 'ApiResponse';
+}
+
 /**
  * Generate TypeScript interfaces from a JavaScript object or array
  */
-export function generateTypeScriptTypes(data: unknown, rootName = 'ApiResponse'): string {
+export function generateTypeScriptTypes(data: unknown, rawRootName = 'ApiResponse'): string {
+  const rootName = toPascalCase(rawRootName);
   if (data === null || data === undefined) {
     return `export type ${rootName} = null;`;
   }

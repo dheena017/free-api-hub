@@ -203,3 +203,21 @@ class TestApiEndpoints:
         assert "results" in data
         assert len(data["results"]) == len(test_slugs)
         assert "healthy_count" in data or "degraded_count" in data or "offline_count" in data
+
+    async def test_health_history_endpoint(self, async_client, apis_raw):
+        """GET /api/v1/health/history/{slug} returns rich telemetry observations and 30d uptime."""
+        test_slug = apis_raw[0]["slug"]
+        res = await async_client.get(f"/api/v1/health/history/{test_slug}?limit=25")
+        assert res.status_code == 200
+        data = res.json()
+        assert data["slug"] == test_slug
+        assert "current_latency_ms" in data
+        assert "min_latency_ms" in data
+        assert "avg_latency_ms" in data
+        assert "max_latency_ms" in data
+        assert "observations" in data
+        assert len(data["observations"]) > 0
+        assert "daily_uptime" in data
+        assert len(data["daily_uptime"]) == 30
+        assert "network_waterfall" in data
+        assert "dns_ms" in data["network_waterfall"]

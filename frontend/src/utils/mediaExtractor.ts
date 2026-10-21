@@ -6,6 +6,7 @@ export interface MediaItem {
   keyPath: string;
   title: string;
   extension?: string;
+  isDirectResponse?: boolean;
   metadata?: Record<string, string | number>;
 }
 
@@ -98,7 +99,11 @@ function resolveUrl(url: string, baseUrl?: string): string {
   }
 }
 
-export function extractMediaItems(data: unknown, baseUrl?: string): MediaItem[] {
+export function extractMediaItems(
+  data: unknown,
+  baseUrl?: string,
+  headers?: Record<string, string>
+): MediaItem[] {
   const items: MediaItem[] = [];
   const visitedUrls = new Set<string>();
 
@@ -108,11 +113,12 @@ export function extractMediaItems(data: unknown, baseUrl?: string): MediaItem[] 
     keyPath: string,
     title: string,
     extension?: string,
-    embedUrl?: string
+    embedUrl?: string,
+    isDirectResponse?: boolean
   ) {
     const finalUrl = resolveUrl(rawUrl, baseUrl);
     if (!finalUrl || visitedUrls.has(finalUrl)) return;
-    if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://') && !finalUrl.startsWith('data:image/')) {
+    if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://') && !finalUrl.startsWith('data:')) {
       return;
     }
     visitedUrls.add(finalUrl);
@@ -123,8 +129,26 @@ export function extractMediaItems(data: unknown, baseUrl?: string): MediaItem[] 
       embedUrl,
       keyPath: keyPath || 'root',
       title: title || 'Media Item',
-      extension: extension || type.toUpperCase()
+      extension: extension || type.toUpperCase(),
+      isDirectResponse: Boolean(isDirectResponse)
     });
+  }
+
+  // Check response headers for direct media content types
+  if (headers) {
+    const ct = Object.entries(headers).find(([k]) => k.toLowerCase() === 'content-type')?.[1]?.toLowerCase() || '';
+    if (ct.startsWith('image/') || ct.startsWith('audio/') || ct.startsWith('video/')) {
+      const mediaType: 'image' | 'audio' | 'video' = ct.startsWith('audio/')
+        ? 'audio'
+        : ct.startsWith('video/')
+        ? 'video'
+        : 'image';
+      const rawExt = ct.split('/')[1]?.split(';')[0]?.toUpperCase() || mediaType.toUpperCase();
+      const ext = rawExt.includes('SVG') ? 'SVG' : rawExt;
+      if (typeof data === 'string' && (data.startsWith('data:') || data.startsWith('http'))) {
+        registerMedia(data, mediaType, 'response.body', 'Direct API Media Response', ext, undefined, true);
+      }
+    }
   }
 
   function extractFromHtml(html: string) {
@@ -177,7 +201,7 @@ export function extractMediaItems(data: unknown, baseUrl?: string): MediaItem[] 
     const iconRegex = /<link\s+[^>]*rel=["'](?:shortcut icon|icon|apple-touch-icon)["'][^>]*href=["']([^"']+)["']/gi;
     while ((match = iconRegex.exec(html)) !== null) {
       const href = match[1];
-      registerMedia(href, 'image', '<link rel="icon">', 'Website Favicon / Icon', 'ICON');
+      registerMedia(href, 'image', '<link rel="icon">', 'Icon / Badge Asset', 'ICON');
     }
 
     // 6. Generic URLs embedded in HTML / text matching image extensions
@@ -194,14 +218,75 @@ export function extractMediaItems(data: unknown, baseUrl?: string): MediaItem[] 
     if (typeof val === 'string') {
       const str = cleanUrl(val);
 
-      // Check base64 image data URL
-      if (str.startsWith('data:image/')) {
-        registerMedia(str, 'image', keyPath || 'root', parentKey || 'Base64 Image', str.slice(5, str.indexOf(';')));
+      // Direct SVG Vector markup detection
+      if (/<svg[\s>]/i.test(str)) {
+        const svgDataUri = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(str)}`;
+        registerMedia(
+          svgDataUri,
+          'image',
+          keyPath || 'response.body',
+          parentKey || 'Direct SVG Vector Output',
+          'SVG',
+          undefined,
+          !keyPath || keyPath === 'root'
+        );
         return;
       }
 
-      // Check if string contains HTML
-      const isHtml = str.includes('<html') || str.includes('<!doctype') || str.includes('<meta') || str.includes('<img');
+      // Check base64 data URLs for image, audio, or video
+      if (str.startsWith('data:image/')) {
+        const mime = str.slice(5, str.indexOf(';'));
+        const ext = mime.includes('svg') ? 'SVG' : mime.split('/')[1]?.toUpperCase() || 'IMAGE';
+        registerMedia(
+          str,
+          'image',
+          keyPath || 'root',
+          parentKey || 'Direct API Image Output',
+          ext,
+          undefined,
+          !keyPath || keyPath === 'root'
+        );
+        return;
+      }
+
+      if (str.startsWith('data:audio/')) {
+        const mime = str.slice(5, str.indexOf(';'));
+        const ext = mime.split('/')[1]?.toUpperCase() || 'AUDIO';
+        registerMedia(
+          str,
+          'audio',
+          keyPath || 'root',
+          parentKey || 'Direct API Audio Output',
+          ext,
+          undefined,
+          !keyPath || keyPath === 'root'
+        );
+        return;
+      }
+
+      if (str.startsWith('data:video/')) {
+        const mime = str.slice(5, str.indexOf(';'));
+        const ext = mime.split('/')[1]?.toUpperCase() || 'VIDEO';
+        registerMedia(
+          str,
+          'video',
+          keyPath || 'root',
+          parentKey || 'Direct API Video Output',
+          ext,
+          undefined,
+          !keyPath || keyPath === 'root'
+        );
+        return;
+      }
+
+      // Check if string contains HTML markup
+      const isHtml =
+        str.includes('<html') ||
+        str.includes('<!doctype') ||
+        str.includes('<meta') ||
+        str.includes('<img') ||
+        str.includes('<video') ||
+        str.includes('<audio');
       if (isHtml) {
         extractFromHtml(str);
       }
@@ -292,3 +377,4 @@ export function extractMediaItems(data: unknown, baseUrl?: string): MediaItem[] 
   inspectValue(data, '', '');
   return items;
 }
+

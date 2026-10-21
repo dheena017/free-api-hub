@@ -9,6 +9,10 @@ export interface PlaygroundTabProps {
   initialParams?: Record<string, string>;
   initialBody?: string;
   onOpenDocs: () => void;
+  onOpenAuthModal?: () => void;
+  onOpenSettingsModal?: () => void;
+  onOpenHistoryModal?: () => void;
+  onOpenClientCodeModal?: () => void;
 }
 
 export const PlaygroundTab: React.FC<PlaygroundTabProps> = ({
@@ -17,7 +21,11 @@ export const PlaygroundTab: React.FC<PlaygroundTabProps> = ({
   initialMethod,
   initialParams,
   initialBody,
-  onOpenDocs
+  onOpenDocs,
+  onOpenAuthModal,
+  onOpenSettingsModal,
+  onOpenHistoryModal,
+  onOpenClientCodeModal
 }) => {
   return (
     <section
@@ -33,6 +41,10 @@ export const PlaygroundTab: React.FC<PlaygroundTabProps> = ({
         initialParams={initialParams}
         initialBody={initialBody}
         onOpenDocs={onOpenDocs}
+        onOpenAuthModal={onOpenAuthModal}
+        onOpenSettingsModal={onOpenSettingsModal}
+        onOpenHistoryModal={onOpenHistoryModal}
+        onOpenClientCodeModal={onOpenClientCodeModal}
       />
     </section>
   );

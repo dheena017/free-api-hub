@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ApiItem } from '../../types/api';
 import {
   Layers,
@@ -10,11 +10,8 @@ import {
   Zap,
   Globe,
   ExternalLink,
-  Code2,
-  Terminal
+  Code2
 } from 'lucide-react';
-import { CodeSnippetViewer } from '../viewers/CodeSnippetViewer';
-import { generateSnippetForLanguage, SnippetLanguage } from '../../utils/codeSnippets';
 
 export interface ArchitectureSdkTabProps {
   api: ApiItem;
@@ -33,21 +30,7 @@ const getApiUseCases = (api: ApiItem): string[] => {
 };
 
 export const ArchitectureSdkTab: React.FC<ArchitectureSdkTabProps> = ({ api }) => {
-  const [selectedSdkLang, setSelectedSdkLang] = useState<SnippetLanguage>('js');
 
-  const defaultEndpoint = api.endpoints?.[0]?.path || api.endpoint || '';
-  const fullTargetUrl = defaultEndpoint.startsWith('http')
-    ? defaultEndpoint
-    : `${api.base_url.replace(/\/+$/, '')}/${defaultEndpoint.replace(/^\/+/, '')}`;
-
-  const currentSnippet = generateSnippetForLanguage(
-    selectedSdkLang,
-    fullTargetUrl,
-    api.endpoints?.[0]?.method || 'GET',
-    {},
-    {},
-    undefined
-  );
 
   return (
     <div
@@ -208,56 +191,7 @@ export const ArchitectureSdkTab: React.FC<ArchitectureSdkTabProps> = ({ api }) =
           )}
         </div>
       </div>
-
-      {/* Quickstart SDKs & Client Integration Section */}
-      <div className="bg-surface border border-border rounded-2xl p-6 sm:p-7 space-y-4 shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border">
-          <div>
-            <h3 className="text-sm font-bold text-text-base flex items-center gap-2">
-              <Terminal className="h-4 w-4 text-accent" />
-              <span>Quickstart SDK & Client Integration</span>
-            </h3>
-            <p className="text-xs text-text-muted">
-              Copy ready-to-run client integration code in your preferred programming language.
-            </p>
-          </div>
-
-          {/* Language Selector Pills */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {(
-              [
-                { id: 'js', label: 'Fetch (Browser/Node)' },
-                { id: 'axios', label: 'Axios' },
-                { id: 'python', label: 'Python (requests)' },
-                { id: 'curl', label: 'cURL' }
-              ] as const
-            ).map((lang) => (
-              <button
-                key={lang.id}
-                type="button"
-                onClick={() => setSelectedSdkLang(lang.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-colors border cursor-pointer ${
-                  selectedSdkLang === lang.id
-                    ? 'bg-accent text-background border-accent font-bold'
-                    : 'bg-surface-elevated border-border text-text-muted hover:text-text-base'
-                }`}
-              >
-                {lang.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-xl overflow-hidden border border-border bg-[#0d1117]">
-          <CodeSnippetViewer
-            code={currentSnippet}
-            language={selectedSdkLang === 'curl' ? 'curl' : selectedSdkLang === 'python' ? 'python' : 'js'}
-            showLineNumbers
-            showCopyButton
-            maxHeight="320px"
-          />
-        </div>
-      </div>
     </div>
   );
 };
+

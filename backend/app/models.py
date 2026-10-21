@@ -42,6 +42,49 @@ class HealthCheckResult(BaseModel):
         return getattr(self, item)
 
 
+class HealthObservation(BaseModel):
+    timestamp: str
+    status: HealthStatus
+    status_code: int
+    latency_ms: int
+    message: Optional[str] = None
+
+
+class DailyUptimeRecord(BaseModel):
+    date: str
+    uptime_percent: float
+    status: HealthStatus
+    total_probes: int
+    avg_latency_ms: int
+
+
+class NetworkWaterfall(BaseModel):
+    dns_ms: int
+    tcp_ms: int
+    tls_ms: Optional[int] = None
+    ttfb_ms: int
+    download_ms: int
+
+
+class HealthHistoryResponse(BaseModel):
+    slug: str
+    name: str
+    target_url: str
+    current_status: HealthStatus
+    uptime_percent: float
+    current_latency_ms: int
+    min_latency_ms: int
+    avg_latency_ms: int
+    p95_latency_ms: int
+    max_latency_ms: int
+    jitter_ms: int
+    total_probes: int
+    last_checked: str
+    network_waterfall: NetworkWaterfall
+    observations: List[HealthObservation]
+    daily_uptime: List[DailyUptimeRecord]
+
+
 class EndpointItem(BaseModel):
     id: Optional[str] = None
     name: str

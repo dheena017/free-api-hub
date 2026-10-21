@@ -3,25 +3,35 @@ import {
   SlidersHorizontal,
   FileText,
   Braces,
-  KeyRound,
-  Settings2,
   Database,
   Terminal,
   Loader2,
-  Plus,
-  Sparkles,
-  Trash2,
-  Check,
-  Copy,
-  Download,
   LayoutTemplate,
-  Columns
+  Columns,
+  Code2,
+  AlignLeft,
+  Table as TableIcon,
+  FileCode,
+  Globe
 } from 'lucide-react';
 import { ProxyResponse } from '../../../types/api';
 import { SnippetLanguage, SUPPORTED_LANGUAGES } from './CodeSnippetsTab';
 import { RequestAuthMode } from './AuthTab';
 
-export type RequestTab = 'params' | 'headers' | 'body' | 'response' | 'snippets' | 'auth' | 'settings';
+export type RequestTab =
+  | 'params'
+  | 'headers'
+  | 'body'
+  | 'snippets'
+  | 'response'
+  | 'request'
+  | 'json'
+  | 'raw'
+  | 'resp-headers'
+  | 'schema'
+  | 'types'
+  | 'preview';
+
 export type WorkbenchLayout = 'tabs' | 'split';
 
 export interface PlaygroundTabsNavProps {
@@ -37,13 +47,12 @@ export interface PlaygroundTabsNavProps {
   isLoading: boolean;
   response: ProxyResponse | null;
   activeSnippetLang: SnippetLanguage;
-  // Contextual actions
-  onAddParam: () => void;
-  onAddHeader: () => void;
-  onFormatBody: () => void;
-  onClearBody: () => void;
-  onClearAuth: () => void;
-  onResetSettings: () => void;
+  onAddParam?: () => void;
+  onAddHeader?: () => void;
+  onFormatBody?: () => void;
+  onClearBody?: () => void;
+  onClearAuth?: () => void;
+  onResetSettings?: () => void;
   onCopyJson?: () => void;
   copiedJson?: boolean;
   onDownloadJson?: () => void;
@@ -59,330 +68,357 @@ export const PlaygroundTabsNav: React.FC<PlaygroundTabsNavProps> = ({
   paramsCount,
   headersCount,
   hasBody,
-  authType,
-  bypassCache,
   isLoading,
   response,
-  activeSnippetLang,
-  onAddParam,
-  onAddHeader,
-  onFormatBody,
-  onClearBody,
-  onClearAuth,
-  onResetSettings,
-  onCopyJson,
-  copiedJson,
-  onDownloadJson,
-  onCopySnippet,
-  copiedSnippet,
+  activeSnippetLang
 }) => {
+  const isResponseActive = [
+    'response',
+    'json',
+    'raw',
+    'resp-headers',
+    'schema',
+    'types',
+    'preview'
+  ].includes(activeTab);
+
+  const activeSection: 'request' | 'response' = isResponseActive ? 'response' : 'request';
+  const responseHeadersCount = response?.headers ? Object.keys(response.headers).length : 0;
+
   return (
-    <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5">
-      {/* The Request & Response Tabs */}
-      <div className="flex items-center gap-1 bg-surface-elevated p-1 rounded-xl border border-border overflow-x-auto scrollbar-none flex-nowrap shrink max-w-full">
-        {/* Tab 1: Params */}
-        <button
-          type="button"
-          onClick={() => onSelectTab('params')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'params'
-              ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-              : 'text-text-muted hover:text-text-base'
-          }`}
-        >
-          <SlidersHorizontal className="h-3 w-3" />
-          <span>Params</span>
-          <span
-            className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-              activeTab === 'params'
-                ? 'bg-black/20 text-background'
-                : 'bg-surface text-text-muted border border-border'
+    <div className="flex flex-wrap items-center justify-between gap-2.5">
+      {/* Left: Primary Section Switch + Contextual Sub-Tabs in One Single Row */}
+      <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
+        {/* Primary Switch: [REQUEST] vs [RESPONSE] */}
+        <div className="flex items-center bg-surface-elevated/70 p-1 rounded-xl shadow-none shrink-0">
+          <button
+            type="button"
+            id="switch-to-request"
+            onClick={() => onSelectTab('params')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer select-none ${
+              activeSection === 'request'
+                ? 'bg-surface text-text-base shadow-sm'
+                : 'text-text-muted hover:text-text-base hover:bg-surface/40'
             }`}
           >
-            {paramsCount}
-          </span>
-        </button>
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            <span>REQUEST</span>
+          </button>
 
-        {/* Tab 2: Headers */}
-        <button
-          type="button"
-          onClick={() => onSelectTab('headers')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'headers'
-              ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-              : 'text-text-muted hover:text-text-base'
-          }`}
-        >
-          <FileText className="h-3 w-3" />
-          <span>Headers</span>
-          <span
-            className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-              activeTab === 'headers'
-                ? 'bg-black/20 text-background'
-                : 'bg-surface text-text-muted border border-border'
+          <button
+            type="button"
+            id="switch-to-response"
+            onClick={() => onSelectTab('json')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer select-none ${
+              activeSection === 'response'
+                ? 'bg-surface text-text-base shadow-sm'
+                : 'text-text-muted hover:text-text-base hover:bg-surface/40'
             }`}
           >
-            {headersCount}
-          </span>
-        </button>
-
-        {/* Tab 3: Body */}
-        <button
-          type="button"
-          onClick={() => onSelectTab('body')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'body'
-              ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-              : 'text-text-muted hover:text-text-base'
-          }`}
-        >
-          <Braces className="h-3 w-3" />
-          <span>Body</span>
-          {hasBody && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />}
-        </button>
-
-        {/* Tab 4: Auth */}
-        <button
-          type="button"
-          onClick={() => onSelectTab('auth')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'auth'
-              ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-              : 'text-text-muted hover:text-text-base'
-          }`}
-        >
-          <KeyRound className="h-3 w-3" />
-          <span>Auth</span>
-          {authType !== 'none' && (
-            <span
-              className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
-                activeTab === 'auth'
-                  ? 'bg-black/20 text-background'
-                  : 'bg-emerald-500/20 text-emerald-400'
-              }`}
-            >
-              ✓
-            </span>
-          )}
-        </button>
-
-        {/* Tab 5: Settings */}
-        <button
-          type="button"
-          onClick={() => onSelectTab('settings')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'settings'
-              ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-              : 'text-text-muted hover:text-text-base'
-          }`}
-        >
-          <Settings2 className="h-3 w-3" />
-          <span>Settings</span>
-          {bypassCache && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
-        </button>
-
-        {/* Divider and Result Tabs (Only shown in Tabs mode) */}
-        {workbenchLayout === 'tabs' && (
-          <>
-            <div className="h-4 w-px bg-border mx-1 self-center shrink-0" />
-
-            {/* Tab 6: Response */}
-            <button
-              type="button"
-              onClick={() => onSelectTab('response')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === 'response'
-                  ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                  : 'text-text-muted hover:text-text-base'
-              }`}
-            >
-              <Database className="h-3 w-3" />
-              <span>Response</span>
-              {isLoading ? (
-                <Loader2 className="h-3 w-3 animate-spin text-current" />
-              ) : response ? (
-                <span
-                  className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full font-mono ${
-                    activeTab === 'response'
-                      ? 'bg-black/20 text-background'
-                      : response.status_code >= 200 && response.status_code < 300
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                        : response.status_code >= 400
-                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                          : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                  }`}
-                >
-                  {response.status_code}
-                </span>
-              ) : null}
-            </button>
-
-            {/* Tab 7: Client Code */}
-            <button
-              type="button"
-              onClick={() => onSelectTab('snippets')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === 'snippets'
-                  ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                  : 'text-text-muted hover:text-text-base'
-              }`}
-            >
-              <Terminal className="h-3 w-3" />
-              <span>Client Code</span>
+            <Database className="h-3.5 w-3.5" />
+            <span>RESPONSE</span>
+            {isLoading ? (
+              <Loader2 className="h-3 w-3 animate-spin text-accent" />
+            ) : response ? (
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                  activeTab === 'snippets'
-                    ? 'bg-black/20 text-background'
-                    : 'bg-surface text-text-muted border border-border'
+                className={`text-[9px] font-mono px-1.5 py-0.2 rounded-full font-bold ${
+                  response.status_code >= 200 && response.status_code < 300
+                    ? 'bg-emerald-500/15 text-emerald-400'
+                    : 'bg-rose-500/15 text-rose-400'
                 }`}
               >
-                {SUPPORTED_LANGUAGES.find((l) => l.id === activeSnippetLang)?.label || 'cURL'}
+                {response.status_code}
               </span>
-            </button>
-          </>
-        )}
-      </div>
-
-      {/* Contextual Action Buttons & Mode Switcher */}
-      <div className="flex items-center gap-2 flex-wrap justify-end shrink-0">
-        {activeTab === 'params' && (
-          <button
-            type="button"
-            onClick={onAddParam}
-            className="text-xs text-accent hover:text-accent-hover font-medium flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            <span>Add Query Param</span>
-          </button>
-        )}
-
-        {activeTab === 'headers' && (
-          <button
-            type="button"
-            onClick={onAddHeader}
-            className="text-xs text-accent hover:text-accent-hover font-medium flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            <span>Add Header</span>
-          </button>
-        )}
-
-        {activeTab === 'body' && (
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onFormatBody}
-              className="text-xs text-text-base hover:text-accent flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
-              title="Pretty-format JSON syntax"
-            >
-              <Sparkles className="h-3 w-3 text-accent" />
-              <span>Format JSON</span>
-            </button>
-            <button
-              type="button"
-              onClick={onClearBody}
-              className="text-xs text-text-muted hover:text-rose-400 flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
-              title="Clear body"
-            >
-              <Trash2 className="h-3 w-3" />
-              <span>Clear</span>
-            </button>
-          </div>
-        )}
-
-        {activeTab === 'response' && Boolean(response?.data) && onCopyJson && onDownloadJson && (
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={onCopyJson}
-              className="text-xs text-text-base hover:text-accent flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
-              title="Copy full JSON"
-            >
-              {copiedJson ? (
-                <Check className="h-3.5 w-3.5 text-emerald-400" />
-              ) : (
-                <Copy className="h-3.5 w-3.5 text-text-muted" />
-              )}
-              <span>{copiedJson ? 'Copied' : 'Copy JSON'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={onDownloadJson}
-              className="text-xs text-text-base hover:text-accent flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
-              title="Download JSON file"
-            >
-              <Download className="h-3.5 w-3.5" />
-              <span>Export</span>
-            </button>
-          </div>
-        )}
-
-        {activeTab === 'snippets' && onCopySnippet && (
-          <button
-            type="button"
-            onClick={onCopySnippet}
-            className="text-xs text-text-base hover:text-accent flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
-            title="Copy integration code"
-          >
-            {copiedSnippet ? (
-              <Check className="h-3.5 w-3.5 text-emerald-400" />
             ) : (
-              <Copy className="h-3.5 w-3.5 text-text-muted" />
+              <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-surface-elevated text-text-muted/60">
+                Idle
+              </span>
             )}
-            <span>{copiedSnippet ? 'Copied' : 'Copy Code'}</span>
-          </button>
-        )}
-
-        {activeTab === 'auth' && authType !== 'none' && (
-          <button
-            type="button"
-            onClick={onClearAuth}
-            className="text-xs text-text-muted hover:text-rose-400 font-medium flex items-center gap-1 px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            <span>Clear Auth</span>
-          </button>
-        )}
-
-        {activeTab === 'settings' && (
-          <button
-            type="button"
-            onClick={onResetSettings}
-            className="text-xs text-text-muted hover:text-text-base flex items-center gap-1 px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-hover border border-border transition-colors cursor-pointer"
-          >
-            <span>Reset Defaults</span>
-          </button>
-        )}
-
-        {/* Workbench Mode Toggle: Tabs vs Split */}
-        <div className="flex items-center bg-surface-elevated p-0.5 rounded-xl border border-border ml-1 shrink-0">
-          <button
-            type="button"
-            onClick={() => onSetWorkbenchLayout('tabs')}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-              workbenchLayout === 'tabs'
-                ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                : 'text-text-muted hover:text-text-base'
-            }`}
-            title="Single Tabbed Workbench"
-          >
-            <LayoutTemplate className="h-3 w-3" />
-            <span className="hidden sm:inline">Tabs</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => onSetWorkbenchLayout('split')}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-              workbenchLayout === 'split'
-                ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                : 'text-text-muted hover:text-text-base'
-            }`}
-            title="Split Multi-Pane Layout"
-          >
-            <Columns className="h-3 w-3" />
-            <span className="hidden sm:inline">Split</span>
           </button>
         </div>
+
+        {/* Contextual Sub-Tabs Strip (No white borders) */}
+        <div className="flex items-center gap-1 p-1 bg-surface-elevated/50 rounded-xl overflow-x-auto scrollbar-none flex-nowrap">
+          {activeSection === 'request' ? (
+            /* === REQUEST SUB-TABS === */
+            <>
+              {/* Params */}
+              <button
+                type="button"
+                id="playground-tab-params"
+                onClick={() => onSelectTab('params')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                  activeTab === 'params'
+                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/25'
+                    : 'text-text-muted hover:text-text-base hover:bg-surface/50'
+                }`}
+              >
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                <span>Params</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    activeTab === 'params'
+                      ? 'bg-black/25 text-background'
+                      : 'bg-surface/80 text-text-muted'
+                  }`}
+                >
+                  {paramsCount}
+                </span>
+              </button>
+
+              {/* Headers */}
+              <button
+                type="button"
+                id="playground-tab-headers"
+                onClick={() => onSelectTab('headers')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                  activeTab === 'headers'
+                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/25'
+                    : 'text-text-muted hover:text-text-base hover:bg-surface/50'
+                }`}
+              >
+                <FileText className="h-3.5 w-3.5" />
+                <span>Headers</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    activeTab === 'headers'
+                      ? 'bg-black/25 text-background'
+                      : 'bg-surface/80 text-text-muted'
+                  }`}
+                >
+                  {headersCount}
+                </span>
+              </button>
+
+              {/* Body */}
+              <button
+                type="button"
+                id="playground-tab-body"
+                onClick={() => onSelectTab('body')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                  activeTab === 'body'
+                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/25'
+                    : 'text-text-muted hover:text-text-base hover:bg-surface/50'
+                }`}
+              >
+                <Braces className="h-3.5 w-3.5" />
+                <span>Body</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    activeTab === 'body'
+                      ? 'bg-black/25 text-background'
+                      : hasBody
+                        ? 'bg-emerald-500/20 text-emerald-400'
+                        : 'bg-surface/80 text-text-muted'
+                  }`}
+                >
+                  {hasBody ? 'JSON' : '0'}
+                </span>
+              </button>
+
+              {/* Client Code */}
+              <button
+                type="button"
+                id="playground-tab-snippets"
+                onClick={() => onSelectTab('snippets')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                  activeTab === 'snippets'
+                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/25'
+                    : 'text-text-muted hover:text-text-base hover:bg-surface/50'
+                }`}
+              >
+                <Terminal className="h-3.5 w-3.5" />
+                <span>Client Code</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    activeTab === 'snippets'
+                      ? 'bg-black/25 text-background'
+                      : 'bg-surface/80 text-text-muted'
+                  }`}
+                >
+                  {SUPPORTED_LANGUAGES.find((l) => l.id === activeSnippetLang)?.label || 'cURL'}
+                </span>
+              </button>
+            </>
+          ) : (
+            /* === RESPONSE SUB-TABS === */
+            <>
+              {/* JSON */}
+              <button
+                type="button"
+                id="playground-tab-json"
+                onClick={() => onSelectTab('json')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                  activeTab === 'json' || activeTab === 'response'
+                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/25'
+                    : 'text-text-muted hover:text-text-base hover:bg-surface/50'
+                }`}
+              >
+                <Code2 className="h-3.5 w-3.5" />
+                <span>JSON</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    activeTab === 'json' || activeTab === 'response'
+                      ? 'bg-black/25 text-background'
+                      : 'bg-surface/80 text-text-muted'
+                  }`}
+                >
+                  Tree
+                </span>
+              </button>
+
+              {/* Raw */}
+              <button
+                type="button"
+                id="playground-tab-raw"
+                onClick={() => onSelectTab('raw')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                  activeTab === 'raw'
+                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/25'
+                    : 'text-text-muted hover:text-text-base hover:bg-surface/50'
+                }`}
+              >
+                <AlignLeft className="h-3.5 w-3.5" />
+                <span>Raw</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    activeTab === 'raw'
+                      ? 'bg-black/25 text-background'
+                      : 'bg-surface/80 text-text-muted'
+                  }`}
+                >
+                  Text
+                </span>
+              </button>
+
+              {/* Response Headers */}
+              <button
+                type="button"
+                id="playground-tab-resp-headers"
+                onClick={() => onSelectTab('resp-headers')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                  activeTab === 'resp-headers'
+                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/25'
+                    : 'text-text-muted hover:text-text-base hover:bg-surface/50'
+                }`}
+              >
+                <FileText className="h-3.5 w-3.5" />
+                <span>Headers</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    activeTab === 'resp-headers'
+                      ? 'bg-black/25 text-background'
+                      : 'bg-surface/80 text-text-muted'
+                  }`}
+                >
+                  {responseHeadersCount}
+                </span>
+              </button>
+
+              {/* Schema */}
+              <button
+                type="button"
+                id="playground-tab-schema"
+                onClick={() => onSelectTab('schema')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                  activeTab === 'schema'
+                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/25'
+                    : 'text-text-muted hover:text-text-base hover:bg-surface/50'
+                }`}
+              >
+                <TableIcon className="h-3.5 w-3.5" />
+                <span>Schema</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    activeTab === 'schema'
+                      ? 'bg-black/25 text-background'
+                      : 'bg-surface/80 text-text-muted'
+                  }`}
+                >
+                  Table
+                </span>
+              </button>
+
+              {/* Types */}
+              <button
+                type="button"
+                id="playground-tab-types"
+                onClick={() => onSelectTab('types')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                  activeTab === 'types'
+                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/25'
+                    : 'text-text-muted hover:text-text-base hover:bg-surface/50'
+                }`}
+              >
+                <FileCode className="h-3.5 w-3.5" />
+                <span>Types</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    activeTab === 'types'
+                      ? 'bg-black/25 text-background'
+                      : 'bg-surface/80 text-text-muted'
+                  }`}
+                >
+                  TS
+                </span>
+              </button>
+
+              {/* Preview */}
+              <button
+                type="button"
+                id="playground-tab-preview"
+                onClick={() => onSelectTab('preview')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                  activeTab === 'preview'
+                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/25'
+                    : 'text-text-muted hover:text-text-base hover:bg-surface/50'
+                }`}
+              >
+                <Globe className="h-3.5 w-3.5" />
+                <span>Preview</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    activeTab === 'preview'
+                      ? 'bg-black/25 text-background'
+                      : 'bg-surface/80 text-text-muted'
+                  }`}
+                >
+                  HTML
+                </span>
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Right: Workbench Mode Toggle (Tabs vs Split) (No white borders) */}
+      <div className="flex items-center bg-surface-elevated/80 p-1 rounded-xl shadow-none shrink-0 self-end sm:self-center">
+        <button
+          type="button"
+          onClick={() => onSetWorkbenchLayout('tabs')}
+          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+            workbenchLayout === 'tabs'
+              ? 'bg-accent text-background font-bold shadow-sm shadow-accent/25'
+              : 'text-text-muted hover:text-text-base'
+          }`}
+          title="Single Tabbed Workbench View"
+        >
+          <LayoutTemplate className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Tabs</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onSetWorkbenchLayout('split')}
+          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+            workbenchLayout === 'split'
+              ? 'bg-accent text-background font-bold shadow-sm shadow-accent/25'
+              : 'text-text-muted hover:text-text-base'
+          }`}
+          title="Split Multi-Pane Layout"
+        >
+          <Columns className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Split</span>
+        </button>
       </div>
     </div>
   );

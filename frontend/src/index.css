@@ -26,8 +26,8 @@ html.dark,
   --color-surface: #28292A;
   --color-surface-elevated: #303134;
   --color-surface-hover: #3C4043;
-  --color-border: #3C4043;
-  --color-border-light: #5F6368;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-light: rgba(255, 255, 255, 0.12);
   --color-text: #F1F5F9;
   --color-text-muted: #9AA0A6;
   --color-accent: #8AB4F8;
