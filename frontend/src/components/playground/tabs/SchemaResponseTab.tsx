@@ -204,7 +204,7 @@ export const SchemaResponseTab: React.FC<SchemaResponseTabProps> = ({
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-[11px]">
                 <thead>
-                  <tr className="border-b border-white/[0.06] text-text-muted text-[10px] uppercase font-mono tracking-wider">
+                  <tr className="border-b border-transparent text-text-muted text-[10px] uppercase font-mono tracking-wider">
                     <th className="py-2.5 px-3 font-semibold w-1/4 min-w-[160px]">PROPERTY PATH</th>
                     <th className="py-2.5 px-3 font-semibold w-28">TYPE</th>
                     <th className="py-2.5 px-3 font-semibold">SAMPLE VALUE</th>
@@ -215,7 +215,7 @@ export const SchemaResponseTab: React.FC<SchemaResponseTabProps> = ({
                   {filteredData.map((row, idx) => (
                     <tr
                       key={idx}
-                      className="group hover:bg-surface-elevated/40 transition-colors rounded-lg border-b border-white/[0.03] last:border-b-0"
+                      className="group hover:bg-surface-elevated/40 transition-colors rounded-lg border-b border-transparent last:border-b-0"
                     >
                       <td className="py-2.5 px-3 text-sky-400 dark:text-sky-300 font-medium whitespace-nowrap align-top select-all">
                         {row.key || '(root)'}

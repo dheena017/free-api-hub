@@ -11,8 +11,7 @@ import {
   Code2,
   AlignLeft,
   Table as TableIcon,
-  FileCode,
-  Globe
+  FileCode
 } from 'lucide-react';
 import { ProxyResponse } from '../../../types/api';
 import { SnippetLanguage, SUPPORTED_LANGUAGES } from './CodeSnippetsTab';
@@ -29,8 +28,7 @@ export type RequestTab =
   | 'raw'
   | 'resp-headers'
   | 'schema'
-  | 'types'
-  | 'preview';
+  | 'types';
 
 export type WorkbenchLayout = 'tabs' | 'split';
 
@@ -78,12 +76,42 @@ export const PlaygroundTabsNav: React.FC<PlaygroundTabsNavProps> = ({
     'raw',
     'resp-headers',
     'schema',
-    'types',
-    'preview'
+    'types'
   ].includes(activeTab);
 
   const activeSection: 'request' | 'response' = isResponseActive ? 'response' : 'request';
   const responseHeadersCount = response?.headers ? Object.keys(response.headers).length : 0;
+
+  const isHtml = React.useMemo(() => {
+    if (!response) return false;
+    const ct = response.headers?.['content-type'] || response.headers?.['Content-Type'] || '';
+    if (typeof ct === 'string' && (ct.toLowerCase().includes('text/html') || ct.toLowerCase().includes('application/xhtml+xml'))) {
+      return true;
+    }
+    if (typeof response.data === 'string') {
+      const trimmed = response.data.trim().toLowerCase();
+      if (/<(!doctype|html|head|body)[^>]*>/i.test(trimmed)) return true;
+    }
+    return false;
+  }, [response]);
+
+  const isTreeable = React.useMemo(() => {
+    if (!response?.data) return true;
+    if (typeof response.data === 'object' && response.data !== null) return true;
+    if (typeof response.data === 'string') {
+      const trimmed = response.data.trim();
+      if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          return typeof parsed === 'object' && parsed !== null;
+        } catch {
+          return false;
+        }
+      }
+      return false;
+    }
+    return false;
+  }, [response?.data]);
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-2.5">
@@ -255,7 +283,7 @@ export const PlaygroundTabsNav: React.FC<PlaygroundTabsNavProps> = ({
                 }`}
               >
                 <Code2 className="h-3.5 w-3.5" />
-                <span>JSON</span>
+                <span>{isHtml ? 'HTML' : isTreeable ? 'JSON' : 'Body'}</span>
                 <span
                   className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
                     activeTab === 'json' || activeTab === 'response'
@@ -263,7 +291,7 @@ export const PlaygroundTabsNav: React.FC<PlaygroundTabsNavProps> = ({
                       : 'bg-surface/80 text-text-muted'
                   }`}
                 >
-                  Tree
+                  {isTreeable ? 'Tree' : isHtml ? 'Markup' : 'Plain'}
                 </span>
               </button>
 
@@ -360,30 +388,6 @@ export const PlaygroundTabsNav: React.FC<PlaygroundTabsNavProps> = ({
                   }`}
                 >
                   TS
-                </span>
-              </button>
-
-              {/* Preview */}
-              <button
-                type="button"
-                id="playground-tab-preview"
-                onClick={() => onSelectTab('preview')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                  activeTab === 'preview'
-                    ? 'bg-accent text-background font-bold shadow-sm shadow-accent/25'
-                    : 'text-text-muted hover:text-text-base hover:bg-surface/50'
-                }`}
-              >
-                <Globe className="h-3.5 w-3.5" />
-                <span>Preview</span>
-                <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                    activeTab === 'preview'
-                      ? 'bg-black/25 text-background'
-                      : 'bg-surface/80 text-text-muted'
-                  }`}
-                >
-                  HTML
                 </span>
               </button>
             </>

@@ -107,6 +107,30 @@ export const CodeSnippetViewer: React.FC<CodeSnippetViewerProps> = ({
       });
     }
 
+    // HTML / XML styling
+    if (['html', 'xml', 'svg'].includes(language)) {
+      if (line.trim().startsWith('<!--')) {
+        return <span className="text-slate-500 italic">{line}</span>;
+      }
+      const parts = line.split(/(".*?"|'.*?'|<\/?[a-zA-Z0-9:_-]+|(?:\/?>))/g);
+      return parts.map((part, i) => {
+        if (!part) return null;
+        if (part.startsWith('<!--')) {
+          return <span key={i} className="text-slate-500 italic">{part}</span>;
+        }
+        if (part.startsWith('"') || part.startsWith("'")) {
+          return <span key={i} className="text-emerald-400">{part}</span>;
+        }
+        if (part.startsWith('<') || part.endsWith('>')) {
+          return <span key={i} className="text-sky-400 font-semibold">{part}</span>;
+        }
+        if (part.includes('=')) {
+          return <span key={i} className="text-amber-300">{part}</span>;
+        }
+        return <span key={i} className="text-slate-200">{part}</span>;
+      });
+    }
+
     // Default fallback
     return <span className="text-slate-200">{line}</span>;
   };

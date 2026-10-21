@@ -25,6 +25,9 @@ export default {
         degraded: 'var(--color-degraded)',
         offline: 'var(--color-offline)'
       },
+      borderColor: {
+        DEFAULT: 'transparent',
+      },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         mono: ['Fira Code', 'JetBrains Mono', 'monospace']

@@ -34,8 +34,7 @@ import {
   RawResponseTab,
   ResponseHeadersTab,
   SchemaResponseTab,
-  TypesResponseTab,
-  PreviewResponseTab
+  TypesResponseTab
 } from './tabs';
 import { RequestSettingsModal } from './RequestSettingsModal';
 import { RequestHistoryModal } from './RequestHistoryModal';
@@ -366,11 +365,11 @@ export const Playground: React.FC<PlaygroundProps> = ({
   );
 
   const isResponseTab = (tab: RequestTab): boolean =>
-    ['response', 'json', 'raw', 'resp-headers', 'schema', 'types', 'preview'].includes(tab);
+    ['response', 'json', 'raw', 'resp-headers', 'schema', 'types'].includes(tab);
 
   const mapToResponseSubtab = (
     tab: RequestTab
-  ): 'json' | 'preview' | 'media' | 'headers' | 'request' | 'table' | 'types' | 'raw' => {
+  ): 'json' | 'media' | 'headers' | 'request' | 'table' | 'types' | 'raw' => {
     switch (tab) {
       case 'resp-headers':
         return 'headers';
@@ -380,8 +379,6 @@ export const Playground: React.FC<PlaygroundProps> = ({
         return 'raw';
       case 'types':
         return 'types';
-      case 'preview':
-        return 'preview';
       case 'json':
       case 'response':
       default:
@@ -501,7 +498,7 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
   // Response Inspector Tabs
   const [activeResponseTab, setActiveResponseTab] = useState<
-    'json' | 'preview' | 'media' | 'headers' | 'table' | 'types' | 'raw' | 'history'
+    'json' | 'media' | 'headers' | 'table' | 'types' | 'raw' | 'history'
   >('json');
   const [jsonDisplayMode, setJsonDisplayMode] = useState<'tree' | 'raw'>('tree');
   const [typesDisplayMode, setTypesDisplayMode] = useState<'typescript' | 'schema'>('typescript');
@@ -689,14 +686,7 @@ export const Playground: React.FC<PlaygroundProps> = ({
         return false;
       })();
 
-      const detected = extractMediaItems(result.data, targetUrl, result.headers);
-      if (isResultHtml && activeResponseTab !== 'headers' && activeResponseTab !== 'raw') {
-        setActiveResponseTab('preview');
-        if (workbenchLayout === 'tabs') setActiveParamTab('preview');
-      } else if (detected.length > 0 && activeResponseTab !== 'types' && activeResponseTab !== 'headers') {
-        setActiveResponseTab('media');
-        if (workbenchLayout === 'tabs') setActiveParamTab('preview');
-      } else if (workbenchLayout === 'tabs' && !isResponseTab(activeParamTab)) {
+      if (workbenchLayout === 'tabs' && !isResponseTab(activeParamTab)) {
         setActiveParamTab('json');
       }
 
@@ -1227,7 +1217,6 @@ export const Playground: React.FC<PlaygroundProps> = ({
                 response={response}
                 isLoading={isLoading}
                 onRunTest={() => handleRunTest()}
-                onSwitchToPreview={() => setActiveParamTab('preview')}
                 isUnified={true}
               />
             )}
@@ -1266,17 +1255,6 @@ export const Playground: React.FC<PlaygroundProps> = ({
                 onRunTest={() => handleRunTest()}
                 apiName={api?.name}
                 apiSlug={api?.slug}
-                isUnified={true}
-              />
-            )}
-
-            {activeParamTab === 'preview' && (
-              <PreviewResponseTab
-                response={response}
-                endpointUrl={endpointUrl}
-                isLoading={isLoading}
-                onRunTest={(url) => handleRunTest(url)}
-                onSwitchToJson={() => setActiveParamTab('json')}
                 isUnified={true}
               />
             )}

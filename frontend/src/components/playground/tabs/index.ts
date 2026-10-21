@@ -12,4 +12,3 @@ export * from './RawResponseTab';
 export * from './ResponseHeadersTab';
 export * from './SchemaResponseTab';
 export * from './TypesResponseTab';
-export * from './PreviewResponseTab';

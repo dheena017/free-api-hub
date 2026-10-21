@@ -165,7 +165,7 @@ export const ResponseHeadersTab: React.FC<ResponseHeadersTabProps> = ({
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-[11px]">
                 <thead>
-                  <tr className="border-b border-white/[0.06] text-text-muted text-[10px] uppercase font-mono tracking-wider">
+                  <tr className="border-b border-transparent text-text-muted text-[10px] uppercase font-mono tracking-wider">
                     <th className="py-2.5 px-3 font-semibold w-1/4 min-w-[160px]">HEADER</th>
                     <th className="py-2.5 px-3 font-semibold">VALUE</th>
                     <th className="py-2.5 px-3 text-right font-semibold w-16">ACTION</th>
@@ -175,7 +175,7 @@ export const ResponseHeadersTab: React.FC<ResponseHeadersTabProps> = ({
                   {filteredHeaders.map(([key, value]) => (
                     <tr
                       key={key}
-                      className="group hover:bg-surface-elevated/40 transition-colors rounded-lg border-b border-white/[0.03] last:border-b-0"
+                      className="group hover:bg-surface-elevated/40 transition-colors rounded-lg border-b border-transparent last:border-b-0"
                     >
                       <td className="py-2.5 px-3 text-sky-400 dark:text-sky-300 font-medium whitespace-nowrap align-top select-all">
                         {key}

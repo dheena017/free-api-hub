@@ -9,7 +9,6 @@ import {
   Download,
   Clock,
   FileCode,
-  ArrowRight,
   Zap,
   AlertCircle,
   HelpCircle,
@@ -85,7 +84,6 @@ export interface JsonResponseTabProps {
   response: ProxyResponse | null;
   isLoading: boolean;
   onRunTest: () => void;
-  onSwitchToPreview?: () => void;
   isUnified?: boolean;
 }
 
@@ -93,7 +91,6 @@ export const JsonResponseTab: React.FC<JsonResponseTabProps> = ({
   response,
   isLoading,
   onRunTest,
-  onSwitchToPreview,
   isUnified = true
 }) => {
   const [jsonDisplayMode, setJsonDisplayMode] = useState<'tree' | 'raw'>('tree');
@@ -131,6 +128,41 @@ export const JsonResponseTab: React.FC<JsonResponseTabProps> = ({
     return false;
   }, [response]);
 
+  // Check if response data is structured JSON (object/array or valid JSON string that parses to object/array)
+  const parsedJsonData = useMemo(() => {
+    if (!response?.data) return null;
+    if (typeof response.data === 'object' && response.data !== null) {
+      return response.data;
+    }
+    if (typeof response.data === 'string') {
+      const trimmed = response.data.trim();
+      if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (typeof parsed === 'object' && parsed !== null) {
+            return parsed;
+          }
+        } catch {
+          return null;
+        }
+      }
+    }
+    return null;
+  }, [response?.data]);
+
+  const isTreeable = Boolean(parsedJsonData);
+
+  // Automatically default to 'raw' (Plain) if payload is not structured JSON (e.g. HTML or string)
+  React.useEffect(() => {
+    if (response?.data) {
+      if (!isTreeable) {
+        setJsonDisplayMode('raw');
+      } else {
+        setJsonDisplayMode('tree');
+      }
+    }
+  }, [response?.data, isTreeable]);
+
   const handleCopyJson = () => {
     if (!response?.data) return;
     const text = typeof response.data === 'string' ? response.data : JSON.stringify(response.data, null, 2);
@@ -142,11 +174,13 @@ export const JsonResponseTab: React.FC<JsonResponseTabProps> = ({
   const handleDownloadJson = () => {
     if (!response?.data) return;
     const text = typeof response.data === 'string' ? response.data : JSON.stringify(response.data, null, 2);
-    const blob = new Blob([text], { type: 'application/json' });
+    const mimeType = isHtmlResponse ? 'text/html' : isTreeable ? 'application/json' : 'text/plain';
+    const ext = isHtmlResponse ? 'html' : isTreeable ? 'json' : 'txt';
+    const blob = new Blob([text], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `response_${Date.now()}.json`;
+    a.download = `response_${Date.now()}.${ext}`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -176,8 +210,20 @@ export const JsonResponseTab: React.FC<JsonResponseTabProps> = ({
     if (typeof response.data === 'object' && response.data !== null) {
       return `Object (${Object.keys(response.data as object).length} root keys)`;
     }
+    if (typeof response.data === 'string') {
+      if (isTreeable && parsedJsonData) {
+        if (Array.isArray(parsedJsonData)) {
+          return `Array (${parsedJsonData.length} items)`;
+        }
+        return `Object (${Object.keys(parsedJsonData as object).length} root keys)`;
+      }
+      if (isHtmlResponse) {
+        return 'HTML Document';
+      }
+      return 'Plain Text';
+    }
     return typeof response.data;
-  }, [response?.data]);
+  }, [response?.data, isTreeable, parsedJsonData, isHtmlResponse]);
 
   return (
     <div
@@ -228,36 +274,44 @@ export const JsonResponseTab: React.FC<JsonResponseTabProps> = ({
 
         {/* Right Tools: Segmented View, Tree Controls, Search, Copy, Export */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          {/* Tree vs Plain Segmented Switcher */}
+          {/* Tree vs Plain Segmented Switcher (Only show Tree option when response is structured JSON) */}
           {Boolean(response?.data) && (
             <div className="flex items-center bg-surface-elevated/80 p-0.5 rounded-lg">
-              <button
-                type="button"
-                onClick={() => setJsonDisplayMode('tree')}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-mono transition-all cursor-pointer ${
-                  jsonDisplayMode === 'tree'
-                    ? 'bg-accent text-background font-bold shadow-sm'
-                    : 'text-text-muted hover:text-text-base'
-                }`}
-              >
-                Tree
-              </button>
-              <button
-                type="button"
-                onClick={() => setJsonDisplayMode('raw')}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-mono transition-all cursor-pointer ${
-                  jsonDisplayMode === 'raw'
-                    ? 'bg-accent text-background font-bold shadow-sm'
-                    : 'text-text-muted hover:text-text-base'
-                }`}
-              >
-                Plain
-              </button>
+              {isTreeable ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setJsonDisplayMode('tree')}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-mono transition-all cursor-pointer ${
+                      jsonDisplayMode === 'tree'
+                        ? 'bg-accent text-background font-bold shadow-sm'
+                        : 'text-text-muted hover:text-text-base'
+                    }`}
+                  >
+                    Tree
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setJsonDisplayMode('raw')}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-mono transition-all cursor-pointer ${
+                      jsonDisplayMode === 'raw'
+                        ? 'bg-accent text-background font-bold shadow-sm'
+                        : 'text-text-muted hover:text-text-base'
+                    }`}
+                  >
+                    Plain
+                  </button>
+                </>
+              ) : (
+                <span className="px-2.5 py-1 rounded-md text-[11px] font-mono bg-accent text-background font-bold shadow-sm">
+                  Plain
+                </span>
+              )}
             </div>
           )}
 
-          {/* Quick Expand / Collapse for Tree Mode */}
-          {jsonDisplayMode === 'tree' && Boolean(response?.data) && (
+          {/* Quick Expand / Collapse for Tree Mode (only when treeable JSON) */}
+          {jsonDisplayMode === 'tree' && isTreeable && (
             <div className="flex items-center bg-surface-elevated/80 p-0.5 rounded-lg">
               <button
                 type="button"
@@ -410,28 +464,10 @@ export const JsonResponseTab: React.FC<JsonResponseTabProps> = ({
           })()
         ) : response?.data ? (
           <div className="h-full flex flex-col space-y-2">
-            {isHtmlResponse && onSwitchToPreview && (
-              <div className="p-2.5 rounded-xl bg-accent/10 flex flex-wrap items-center justify-between gap-2 font-sans mb-1">
-                <div className="flex items-center gap-2 text-text-base text-xs">
-                  <FileCode className="h-4 w-4 text-accent shrink-0" />
-                  <span>
-                    <strong>HTML Detected:</strong> This endpoint returned rendered HTML markup.
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={onSwitchToPreview}
-                  className="px-2.5 py-1 rounded-lg bg-accent text-background font-semibold text-xs transition-colors flex items-center gap-1 shadow-sm cursor-pointer"
-                >
-                  <span>Open HTML Preview</span>
-                  <ArrowRight className="h-3 w-3" />
-                </button>
-              </div>
-            )}
 
-            {jsonDisplayMode === 'tree' ? (
+            {jsonDisplayMode === 'tree' && isTreeable ? (
               <JsonTreeViewer
-                data={response.data}
+                data={parsedJsonData || response.data}
                 searchQuery={jsonSearchQuery}
                 hideHeader={true}
                 expandAllTrigger={expandAllTrigger}
@@ -440,7 +476,7 @@ export const JsonResponseTab: React.FC<JsonResponseTabProps> = ({
             ) : (
               <CodeSnippetViewer
                 code={filteredJsonContent}
-                language="json"
+                language={isHtmlResponse ? 'html' : isTreeable ? 'json' : 'text'}
                 showLineNumbers={true}
                 showCopyButton={true}
               />

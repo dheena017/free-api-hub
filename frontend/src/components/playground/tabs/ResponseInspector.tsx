@@ -7,7 +7,6 @@ import { generateTypeScriptTypes, generateJsonSchema } from '../../../utils/type
 import {
   CodeSnippetViewer,
   JsonTreeViewer,
-  HtmlPreviewViewer,
   MediaPreviewViewer
 } from '../../viewers';
 import {
@@ -118,8 +117,8 @@ export interface ResponseInspectorProps {
   viewLayout?: 'split' | 'focus' | 'stacked';
   onSetViewLayout?: (layout: 'split' | 'focus' | 'stacked') => void;
   setEndpointUrl?: (url: string) => void;
-  controlledResponseTab?: 'json' | 'preview' | 'media' | 'headers' | 'request' | 'table' | 'types' | 'raw';
-  onSelectResponseTab?: (tab: 'json' | 'preview' | 'media' | 'headers' | 'request' | 'table' | 'types' | 'raw') => void;
+  controlledResponseTab?: 'json' | 'media' | 'headers' | 'request' | 'table' | 'types' | 'raw';
+  onSelectResponseTab?: (tab: 'json' | 'media' | 'headers' | 'request' | 'table' | 'types' | 'raw') => void;
   hideToolbarTabs?: boolean;
 }
 
@@ -144,7 +143,7 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
   hideToolbarTabs = false
 }) => {
   const [internalActiveTab, setInternalActiveTab] = useState<
-    'json' | 'preview' | 'media' | 'headers' | 'request' | 'table' | 'types' | 'raw'
+    'json' | 'media' | 'headers' | 'request' | 'table' | 'types' | 'raw'
   >('json');
 
   const activeResponseTab = controlledResponseTab || internalActiveTab;
@@ -205,6 +204,41 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
     return false;
   }, [response]);
 
+  // Check if response data is structured JSON (object/array or valid JSON string that parses to object/array)
+  const parsedJsonData = useMemo(() => {
+    if (!response?.data) return null;
+    if (typeof response.data === 'object' && response.data !== null) {
+      return response.data;
+    }
+    if (typeof response.data === 'string') {
+      const trimmed = response.data.trim();
+      if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (typeof parsed === 'object' && parsed !== null) {
+            return parsed;
+          }
+        } catch {
+          return null;
+        }
+      }
+    }
+    return null;
+  }, [response?.data]);
+
+  const isTreeable = Boolean(parsedJsonData);
+
+  // Auto-switch to 'raw' (Plain) if payload is not structured JSON (e.g. HTML or string)
+  React.useEffect(() => {
+    if (response?.data) {
+      if (!isTreeable) {
+        setJsonDisplayMode('raw');
+      } else {
+        setJsonDisplayMode('tree');
+      }
+    }
+  }, [response?.data, isTreeable]);
+
   const mediaItems = useMemo(() => {
     if (!response) return [];
     return extractMediaItems(response.data, endpointUrl, response.headers);
@@ -221,11 +255,13 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
   const handleDownloadJson = () => {
     if (!response?.data) return;
     const text = typeof response.data === 'string' ? response.data : JSON.stringify(response.data, null, 2);
-    const blob = new Blob([text], { type: 'application/json' });
+    const mimeType = isHtmlResponse ? 'text/html' : isTreeable ? 'application/json' : 'text/plain';
+    const ext = isHtmlResponse ? 'html' : isTreeable ? 'json' : 'txt';
+    const blob = new Blob([text], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = (api.slug || 'api-response') + '-result.json';
+    a.download = `${api.slug || 'api-response'}-result.${ext}`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -378,24 +414,6 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
 
                 <button
                   type="button"
-                  onClick={() => setActiveResponseTab('preview')}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
-                    activeResponseTab === 'preview'
-                      ? 'bg-accent text-background font-bold shadow-sm shadow-accent/20'
-                      : 'text-text-muted hover:text-text-base hover:bg-surface-elevated'
-                  }`}
-                >
-                  <FileCode className="h-3 w-3" />
-                  <span>HTML</span>
-                  {isHtmlResponse && (
-                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                      OUTPUT
-                    </span>
-                  )}
-                </button>
-
-                <button
-                  type="button"
                   onClick={() => setActiveResponseTab('media')}
                   className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
                     activeResponseTab === 'media'
@@ -497,8 +515,6 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
                     <FileText className="h-3.5 w-3.5" />
                   ) : activeResponseTab === 'raw' ? (
                     <AlignLeft className="h-3.5 w-3.5" />
-                  ) : activeResponseTab === 'preview' ? (
-                    <Globe className="h-3.5 w-3.5" />
                   ) : (
                     <Code2 className="h-3.5 w-3.5" />
                   )}
@@ -512,9 +528,7 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
                         ? `HTTP Response Headers (${Object.keys(response?.headers || {}).length})`
                         : activeResponseTab === 'raw'
                           ? 'Raw Server Response'
-                          : activeResponseTab === 'preview'
-                            ? 'Rendered Output Preview'
-                            : 'JSON Response Payload'}
+                          : 'JSON Response Payload'}
                 </span>
               </div>
             )}
@@ -558,24 +572,32 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
               {/* Tree vs Raw switch (when on JSON tab) */}
               {activeResponseTab === 'json' && Boolean(response?.data) && (
                 <div className="flex items-center bg-surface p-0.5 rounded-lg ml-1">
-                  <button
-                    type="button"
-                    onClick={() => setJsonDisplayMode('tree')}
-                    className={`px-2 py-0.5 rounded-md text-[10px] font-mono transition-colors cursor-pointer ${
-                      jsonDisplayMode === 'tree' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
-                    }`}
-                  >
-                    Tree
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setJsonDisplayMode('raw')}
-                    className={`px-2 py-0.5 rounded-md text-[10px] font-mono transition-colors cursor-pointer ${
-                      jsonDisplayMode === 'raw' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
-                    }`}
-                  >
-                    Plain
-                  </button>
+                  {isTreeable ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setJsonDisplayMode('tree')}
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-mono transition-colors cursor-pointer ${
+                          jsonDisplayMode === 'tree' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
+                        }`}
+                      >
+                        Tree
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setJsonDisplayMode('raw')}
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-mono transition-colors cursor-pointer ${
+                          jsonDisplayMode === 'raw' ? 'bg-accent text-background font-bold shadow-sm' : 'text-text-muted hover:text-text-base'
+                        }`}
+                      >
+                        Plain
+                      </button>
+                    </>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-mono bg-accent text-background font-bold shadow-sm">
+                      Plain
+                    </span>
+                  )}
                 </div>
               )}
 
@@ -747,42 +769,25 @@ export const ResponseInspector: React.FC<ResponseInspectorProps> = ({
               })()
             ) : response ? (
               /* Success Response Views */
-              activeResponseTab === 'preview' ? (
-                /* Web Page / HTML Preview Tab */
-                <HtmlPreviewViewer
-                  html={typeof response.data === 'string' ? response.data : JSON.stringify(response.data, null, 2)}
-                  url={endpointUrl}
-                  statusCode={response.status_code}
-                  latencyMs={response.latency_ms}
-                />
-              ) : activeResponseTab === 'json' ? (
+              activeResponseTab === 'json' ? (
                 <div className="space-y-3">
                   {isHtmlResponse && (
-                    <div className="p-3 rounded-xl bg-accent/10 border border-accent/30 flex flex-wrap items-center justify-between gap-2.5 font-sans">
-                      <div className="flex items-center gap-2 text-text-base text-xs">
-                        <FileCode className="h-4 w-4 text-accent flex-shrink-0" />
-                        <span>
-                          <strong>HTML Output Detected:</strong> This endpoint returned rendered HTML markup ({response.status_code} OK).
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => setActiveResponseTab('preview')}
-                        className="px-3 py-1 rounded-lg bg-accent hover:bg-accent-hover text-background font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
-                      >
-                        <span>Switch to HTML View</span>
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </button>
+                    <div className="p-3 rounded-xl bg-accent/10 border border-accent/30 flex items-center gap-2 text-text-base text-xs font-sans">
+                      <FileCode className="h-4 w-4 text-accent flex-shrink-0" />
+                      <span>
+                        <strong>HTML Output Detected:</strong> This endpoint returned rendered HTML markup ({response.status_code} OK).
+                      </span>
                     </div>
                   )}
-                  {jsonDisplayMode === 'tree' ? (
+                  {jsonDisplayMode === 'tree' && isTreeable ? (
                     <JsonTreeViewer
-                      data={response.data}
+                      data={parsedJsonData || response.data}
                       searchQuery={jsonSearchQuery}
                     />
                   ) : (
                     <CodeSnippetViewer
                       code={filteredJsonContent}
-                      language="json"
+                      language={isHtmlResponse ? 'html' : isTreeable ? 'json' : 'text'}
                       showLineNumbers={true}
                       showCopyButton={true}
                     />

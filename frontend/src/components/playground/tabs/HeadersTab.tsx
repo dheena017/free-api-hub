@@ -125,7 +125,7 @@ export const HeadersTab: React.FC<HeadersTabProps> = ({
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-[11px]">
                 <thead>
-                  <tr className="border-b border-white/[0.06] text-text-muted text-[10px] uppercase font-mono tracking-wider">
+                  <tr className="border-b border-transparent text-text-muted text-[10px] uppercase font-mono tracking-wider">
                     <th className="py-2 px-3 font-semibold w-1/3 min-w-[160px]">HEADER NAME</th>
                     <th className="py-2 px-3 font-semibold">VALUE</th>
                     <th className="py-2 px-3 text-right font-semibold w-14"></th>
@@ -135,7 +135,7 @@ export const HeadersTab: React.FC<HeadersTabProps> = ({
                   {headers.map((h, index) => (
                     <tr
                       key={index}
-                      className="group hover:bg-surface-elevated/40 transition-colors border-b border-white/[0.03] last:border-b-0"
+                      className="group hover:bg-surface-elevated/40 transition-colors border-b border-transparent last:border-b-0"
                     >
                       {/* Header Name */}
                       <td className="py-1 px-1 align-top">

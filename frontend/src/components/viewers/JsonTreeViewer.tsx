@@ -253,7 +253,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
 
       {/* Children list with vertical indentation guide */}
       {isExpanded && !isSelfEmpty && (
-        <div className="relative ml-2 pl-3 border-l border-white/10 dark:border-white/5 hover:border-accent/30 transition-colors my-0.5">
+        <div className="relative ml-2 pl-3 border-l border-transparent hover:border-accent/30 transition-colors my-0.5">
           {entries.map(([k, v, childPath]) => (
             <TreeNode
               key={k}
